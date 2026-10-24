@@ -31,6 +31,8 @@ SillyTavern（酒馆）1.18 的 UI 扩展，纯前端：`manifest.json` 只加�
 
 - **酒馆给所有元素都加了字影**：`* { text-shadow: 0 0 2px var(--SmartThemeShadowColor) }`。深色模式下这个颜色更浓，浅色纸面的卡片上字会发糊。要去掉某一块的字影，就在那一块上把 `--SmartThemeShadowColor` 设成 `transparent`（变量会往下继承）。直接写 `text-shadow: none` 会顺带覆盖卡片自己写的字影。
 - **酒馆手机样式把 `#leftSendForm` / `#rightSendForm` 定死成 1.15em 宽**，原本靠换行竖着摆。我们改成一行后必须同时设 `width: auto`，不然按钮会溢出到输入框底下点不到。
+- **停止键 `#mes_stop` 不是普通按钮**：酒馆只给它 34px 圆底 + `padding-right: 2px`，里面的 `<i class="fa-solid fa-circle-stop">` 是 `::before` 的 `inline-block`，落在基线上，所以红点总是偏右下、圆底顶到胶囊圆角外。要覆盖 `icons.css` 里的 `html.ilg.ilg-icons #mes_stop`，规则得加 `body #nonQRFormItems` 并写在 `style.css` 末尾；图标要 `display: flex` 居中，别用字号撑盒子。
+- **预设的时间栏会画到框外**：`NVWA 前端美化` 的「凝嘤嘤」把像素爱心画在 SVG 的 viewBox 外面（靠 `overflow: visible`），而酒馆的 `.mes_block` 是 `overflow-x: hidden`。用 `.mes:has(.nvt-bar) .mes_block { overflow: visible }` 只放开这类消息，别全局放开。
 - **`--mes-right-spacing`（30px）** 是给翻页箭头留的，但箭头在气泡最底下一行。手机上已经把正文右边这块去掉，最后一条消息底下单独让出 38px 给箭头。
 - 酒馆有些按钮是用样式表 `display:none` 藏的（比如 `#mes_stop`），**不要给它们设 `display`**。
 - **弹窗 ×**（`.ilg-popup-x`）派发 dialog 的 `cancel` 事件，和按 Esc 完全一样，结果是 `null`（取消）。不要改成点 `.popup-button-cancel` 或 `data-result="0"`：在“是 / 否 / 取消”三选一的弹窗里，“否”可能是有后果的选项。
@@ -53,6 +55,9 @@ node server.js --configPath D:/SillyTavern/config.yaml --dataRoot D:/SillyTavern
 | 脚本 | 查什么 |
 |---|---|
 | `mob.mjs` | 手机输入框按钮能不能点到、聊天区左右留白、仿状态栏卡片字色、预设面板字色 |
+| `mob2.mjs` | 手机排版回归：正文左右留白（两种头像排版都量）、停止键和左边按钮同尺寸且同心、时间栏溢出、正文字号 |
+| `overflow.mjs` | 时间栏两侧装饰有没有被 `.mes_block` 裁掉（插一条假消息，数框外的像素） |
+| `typo.mjs` | 挑一个带正文的聊天截手机版排版，量字号 / 行高 / 段距 |
 | `swipe.mjs` | 最后一条消息的翻页箭头是否压在正文上 |
 | `dim.mjs` | 浅色模式里的深色小面板会不会被识别并换字色 |
 | `mem.mjs` | 记忆窗口、预设面板、确认框的截图和 × 的位置 |

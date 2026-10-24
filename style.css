@@ -2042,3 +2042,78 @@ html.ilg body #nvwa-memory .m-btn.pri { background-color: color-mix(in srgb, var
 
 /* ---------- 角色卡挂在页面上的浮窗（人物册、悬浮球等）：去掉酒馆那圈字影 ---------- */
 html.ilg body > .ilg-foreign { --SmartThemeShadowColor: transparent; }
+
+/* ---------- 手机：正文左右真正对称、停止键和左边按钮一样大、时间栏不被裁、字号收一档 ----------
+   这一段的每一条都能在本机 380×872 下量出来（dev/verify/probe.mjs）： */
+
+/* 1) 停止键。酒馆给它 34px 圆底 + padding-right 2px + 左右各 2px 外边距，图标是 ::before 的
+   inline-block，落在基线上——所以那颗红点总偏右下，圆底还顶到胶囊的圆角外面。
+   左边三个按钮是 40px，这里也 40px，外边距归零，图标改成块级 + flex 居中。 */
+html.ilg.ilg-icons body #nonQRFormItems #mes_stop {
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    background-color: rgba(255, 69, 58, 0.14);
+    color: #ff453a;
+}
+html.ilg.ilg-icons body #nonQRFormItems #mes_stop i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 0;
+    line-height: 0;
+}
+html.ilg.ilg-icons body #nonQRFormItems #mes_stop i::before {
+    display: block;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+}
+/* 发送键同样是 40px，别带酒馆那 2px 外边距，不然右边总比左边多缩一点 */
+html.ilg.ilg-icons body #nonQRFormItems #send_but { margin: 0; }
+
+/* 2) 左右对称。酒馆给 .mes_block 留了 10px 左内边距（1.2.0 只把右边的 30px 去掉了），
+   头像不给在同一行的排版下，正文就还是往右偏 10px。两边一起归零，交给 .mes 的内边距统一管。 */
+@media screen and (max-width: 1000px) {
+    html.ilg body.bubblechat #chat .mes:not(.smallSysMes) .mes_block { padding-left: 0; padding-right: 0; }
+}
+
+/* 3) 预设自带的时间栏（「凝嘤嘤」：两侧一串像素爱心）。大爱心故意画在 SVG 框外
+   （.nvt-side svg 是 overflow: visible），但 .mes_block 是 overflow-x: hidden，外侧那颗就被切了。
+   只放开带时间栏的那条消息，别动别的消息的裁切。 */
+html.ilg body #chat .mes:has(.nvt-bar) .mes_block {
+    overflow: visible;
+}
+
+/* 4) 正文字号。手机上按 --mainFontSize 走，设到 115% 以后一行只剩十六七个字，
+   长段落读起来整屏都是字。封顶 16px（小屏再收一点），行高和段距一起调，光封字号会显得挤。 */
+@media screen and (max-width: 1000px) {
+    html.ilg body #chat .mes .mes_text {
+        font-size: min(var(--mainFontSize), 16px);
+        line-height: 1.68;
+        letter-spacing: 0.01em;
+    }
+    html.ilg body #chat .mes .mes_text > p {
+        line-height: 1.68;
+        margin: 0.45em 0;
+    }
+    html.ilg body #chat .mes .mes_text > :is(p, div, blockquote):first-child { margin-top: 0; }
+    html.ilg body #chat .mes .mes_text > :is(p, div, blockquote):last-child { margin-bottom: 0; }
+    html.ilg body #chat .mes .mes_text :is(q, em, i) { line-height: inherit; }
+}
+@media screen and (max-width: 380px) {
+    html.ilg body #chat .mes .mes_text { font-size: min(var(--mainFontSize), 15.5px); }
+}
+
+/* 名字和时间戳跟着正文的比例，别一大一小 */
+@media screen and (max-width: 1000px) {
+    html.ilg body #chat .mes .name_text { font-size: min(var(--mainFontSize), 16px); }
+    html.ilg body #chat .mes .timestamp { font-size: 11px; }
+}
