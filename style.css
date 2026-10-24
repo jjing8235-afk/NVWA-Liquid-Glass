@@ -1,4 +1,4 @@
-/* iOS 液态玻璃 · 所有规则都挂在 html.ilg 下，关掉扩展开关即全部失效 */
+﻿/* iOS 液态玻璃 · 所有规则都挂在 html.ilg 下，关掉扩展开关即全部失效 */
 html.ilg {
     --ilg-radius: 22px;
     --ilg-tint: rgba(255, 255, 255, 0.08);
@@ -1783,7 +1783,7 @@ html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .
 }
 html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .ch_name > .flex1 { justify-content: flex-end; }
 @media screen and (max-width: 1000px) {
-    html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) { --ilg-av: 36px; padding: 10px 12px 8px; }
+    html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) { --ilg-av: 36px; padding: 10px 18px 8px; }
     html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) .mesAvatarWrapper { top: 10px; bottom: 8px; left: 12px; }
     html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .mesAvatarWrapper { left: auto; right: 12px; }
 }
@@ -2130,8 +2130,8 @@ html.ilg.ilg-icons body #nonQRFormItems #send_but { margin: 0; }
     html.ilg body #chat .mes :is(.mes_text, .mes_media_wrapper) { padding-right: 0; }
     html.ilg body #chat .mes .mes_reasoning_details,
     html.ilg body #chat .mes .mes_reasoning_details .mes_reasoning_summary { margin-right: 0; }
-    /* 消息卡片自己左右各 12px，两种聊天样式统一（酒馆默认是 10px，气泡模式我们原来写的 14px） */
-    html.ilg body #chat .mes:not(.smallSysMes) { padding-left: 12px; padding-right: 12px; }
+    /* 消息卡片自己左右各 18px：手机上这是「不挤」最直观的一半，原来 10px 太贴边了 */
+    html.ilg body #chat .mes:not(.smallSysMes) { padding-left: 18px; padding-right: 18px; }
 }
 
 /* 3) 预设自带的时间栏（「凝嘤嘤」：两侧一串像素爱心）。大爱心故意画在 SVG 框外
@@ -2141,28 +2141,31 @@ html.ilg body #chat .mes:has(.nvt-bar) .mes_block {
     overflow: visible;
 }
 
-/* 4) 正文：字号封顶、行高 1.7、段距 0.5em、两端对齐。
-   手机版酒馆的 --mainFontSize 一旦被调到 115% 以上，一行只剩十六七个字，长段落整屏都是字。 */
+/* 4) 正文：比酒馆设的字号再大一档、行高 1.9、段距 0.85em、左对齐（不两端对齐）。
+   手机屏窄，酒馆的 --mainFontSize 掉到 15 以下就太小了，长段落读着费劲。
+   所以这头保底 16.5px、按 1.08 倍放大、封顶 19px——比用户自己设的大一点，又不至于一行只剩十几个字。
+   两端对齐会把每一行都顶满，整段看成一个实心块，最显挤；右边缘参差一点反而有呼吸。 */
 @media screen and (max-width: 1000px) {
     html.ilg body #chat .mes .mes_text {
-        font-size: min(var(--mainFontSize), 16px);
-        line-height: 1.7;
-        letter-spacing: 0.012em;
-        text-align: justify;
-        text-justify: inter-ideograph;
+        font-size: clamp(16.5px, calc(var(--mainFontSize) * 1.08), 19px);
+        line-height: 1.9;
+        letter-spacing: 0.015em;
+        text-align: left;
+        word-break: break-word;
     }
     html.ilg body #chat .mes .mes_text > p {
-        line-height: 1.7;
-        margin: 0.5em 0;
+        line-height: 1.9;
+        margin: 0.85em 0;
     }
     html.ilg body #chat .mes .mes_text > :first-child { margin-top: 0; }
     html.ilg body #chat .mes .mes_text > :last-child { margin-bottom: 0; }
     html.ilg body #chat .mes .mes_text :is(q, em, i, b, strong) { line-height: inherit; }
     /* 名字 / 时间戳：和正文同一档，只靠字重和透明度分层 */
-    html.ilg body #chat .mes .name_text { font-size: min(var(--mainFontSize), 16px); font-weight: 650; letter-spacing: 0.01em; }
-    html.ilg body #chat .mes .timestamp { font-size: 11.5px; letter-spacing: 0.02em; opacity: 0.55; }
+    html.ilg body #chat .mes .name_text { font-size: clamp(16.5px, calc(var(--mainFontSize) * 1.08), 19px); font-weight: 650; letter-spacing: 0.01em; }
+    html.ilg body #chat .mes .timestamp { font-size: 12px; letter-spacing: 0.02em; opacity: 0.55; }
 }
-@media screen and (max-width: 380px) {
-    html.ilg body #chat .mes .mes_text { font-size: min(var(--mainFontSize), 15.5px); }
-    html.ilg body #chat .mes .name_text { font-size: min(var(--mainFontSize), 15.5px); }
+/* 特别窄的屏（≤340px）再收回到 16px，不然一行十个字 */
+@media screen and (max-width: 340px) {
+    html.ilg body #chat .mes .mes_text { font-size: 16px; }
+    html.ilg body #chat .mes .name_text { font-size: 16px; }
 }
