@@ -1,4 +1,4 @@
-﻿/* iOS 液态玻璃 · 所有规则都挂在 html.ilg 下，关掉扩展开关即全部失效 */
+/* iOS 液态玻璃 · 所有规则都挂在 html.ilg 下，关掉扩展开关即全部失效 */
 html.ilg {
     --ilg-radius: 22px;
     --ilg-tint: rgba(255, 255, 255, 0.08);
@@ -1028,15 +1028,19 @@ html.ilg body #ilg-home { transition: opacity .25s ease, transform .35s cubic-be
 /* 聊天记录打开时问候让开，免得和卡片叠在一起（淡出写在外层：里面几行有入场动画，动画会盖住 opacity） */
 html.ilg.ilg-recent-open body #ilg-home { opacity: 0; transform: scale(.97); }
 html.ilg.ilg-recent-open body #ilg-home .ilg-home-recent { pointer-events: none; }
-/* logo：透明底的银河图，原样显示（它本来就是为深色背景画的）；浅色壁纸上整体反相，变成白纸上的墨色银河 */
+/* logo：NVWA 的星形标记（`home-logo-mark.svg`，从 `nvwa-vector/NVWA-logo-currentColor.svg`
+   里把字标裁掉、viewBox 收到 0 0 1215 888 的版本——首页下面已经有「NVWA 用户」，字标放这儿重复）。
+   走 mask 而不是 background-image：SVG 里填什么颜色都不算，颜色由 currentColor 决定，
+   深色主题白、浅色主题黑，不用再 invert */
 html.ilg body #ilg-home .ilg-home-logo {
-    width: clamp(128px, 36vw, 196px);
-    aspect-ratio: 1;
-    margin-bottom: 2px;
-    background: var(--ilg-logo) center / contain no-repeat;
+    width: clamp(172px, 50vw, 250px);
+    aspect-ratio: 1215 / 888;
+    margin-bottom: 10px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-logo) center / contain no-repeat;
+    mask: var(--ilg-logo) center / contain no-repeat;
     animation: ilg-logo-in 1s cubic-bezier(.2, .8, .2, 1) both;
 }
-html.ilg.ilg-light body #ilg-home .ilg-home-logo { filter: invert(1); }
 @keyframes ilg-logo-in {
     from { opacity: 0; transform: scale(.94); }
 }

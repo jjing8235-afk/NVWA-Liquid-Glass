@@ -701,7 +701,7 @@ function greetingNow() {
     return h < 5 ? GREETINGS[GREETINGS.length - 1] : g;
 }
 // logo 是透明底的银河图（st-verify/logo-crop.mjs 裁成 512 方图），深色壁纸原样显示，浅色壁纸 CSS 反相
-root.style.setProperty('--ilg-logo', `url("${new URL('./logo.png', import.meta.url).href}")`);
+root.style.setProperty('--ilg-logo', `url("${new URL('./home-logo-mark.svg', import.meta.url).href}")`);
 const home = document.createElement('div');
 home.id = 'ilg-home';
 home.innerHTML = '<div class="ilg-home-logo" role="img" aria-label="NVWA"></div><h1 class="ilg-home-title" aria-live="polite"></h1><p class="ilg-home-sub"></p>' +

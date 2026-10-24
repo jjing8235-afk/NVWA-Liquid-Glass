@@ -2,6 +2,13 @@
 
 日期按开发时的本地时间。版本号写在 `manifest.json` 里。
 
+## 1.3.2 · 2026-10-24
+
+**首页 logo 换成新的矢量标记**
+- 首页那颗银河换成新的星形标记（`home-logo-mark.svg`，从用户给的 `NVWA-logo-currentColor.svg` 里把字标裁掉、`viewBox` 收到 `0 0 1215 888`）。
+- 不再用 `logo.png` + 浅色模式 `filter: invert(1)` 那套：改成 `mask` + `background-color: currentColor`，颜色跟着主题走（深色白、浅色墨），缩放不失真。
+- 尺寸 172–250px（原来 128–196），比例按矢量 1215:888。
+
 ## 1.3.1 · 2026-10-24
 
 **正文字号放大一档**
