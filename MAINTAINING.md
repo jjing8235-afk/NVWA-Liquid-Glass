@@ -26,6 +26,7 @@ SillyTavern（酒馆）1.18 的 UI 扩展，纯前端：`manifest.json` 只加�
 5. 设置面板控件的 id 一律 `ilg-opt-*`。不要用 `ilg-<设置名>`，曾经和首页的 `#ilg-home` 撞过。
 6. 产品名 NVWA，默认问候里的名字是“NVWA 用户”。作者署名 zytteell8698。
 7. 用户主要在**手机**上用（Termux 跑酒馆，从 GitHub 装扩展）。改完要按手机尺寸检查，推到 GitHub 后手机才拿得到。
+8. **改完不许自己上传。** 代码、样式、版本号、CHANGELOG 改完，先跟用户说改了什么，等用户确认“可以了 / 上传吧”，才 `git commit` + `git push`。用户要自己在手机上先看效果，没确认就推，等于跳过他的测试。就算改的只是一个字、一份说明，也一样要等。
 
 ## 踩过的坑
 
@@ -58,6 +59,7 @@ node server.js --configPath D:/SillyTavern/config.yaml --dataRoot D:/SillyTavern
 | `mob2.mjs` | 手机排版回归：正文左右留白（两种头像排版都量）、停止键和左边按钮同尺寸且同心、时间栏溢出、正文字号 |
 | `overflow.mjs` | 时间栏两侧装饰有没有被 `.mes_block` 裁掉（插一条假消息，数框外的像素） |
 | `typo.mjs` | 挑一个带正文的聊天截手机版排版，量字号 / 行高 / 段距 |
+| `typo2.mjs` | 同一件事，但气泡 / 非气泡两种聊天样式各量一遍（左右留白必须都不偏） |
 | `swipe.mjs` | 最后一条消息的翻页箭头是否压在正文上 |
 | `dim.mjs` | 浅色模式里的深色小面板会不会被识别并换字色 |
 | `mem.mjs` | 记忆窗口、预设面板、确认框的截图和 × 的位置 |
@@ -72,14 +74,15 @@ node server.js --configPath D:/SillyTavern/config.yaml --dataRoot D:/SillyTavern
 ## 发布
 
 1. 改 `manifest.json` 的 `version`，在 `CHANGELOG.md` 最上面写一段。
-2. 提交、推到 `main`（https://github.com/jjing8235-afk/NVWA-Liquid-Glass）。
-3. 这台电脑上 git 全局配置里写着 `http.https://github.com.proxy=http://127.0.0.1:7890`，但那个端口经常没开（7892 也一样）。直连 github 是通的，所以推送时把这个键清空即可，不需要等代理：
+2. **停下来，等用户确认。** 把改了什么、影响哪些地方讲清楚（最好带一张 380×872 的截图），用户说“可以了 / 推吧”，再往下走。用户没发话就不要 commit、更不要 push。
+3. 提交、推到 `main`（https://github.com/jjing8235-afk/NVWA-Liquid-Glass）。
+4. 这台电脑上 git 全局配置里写着 `http.https://github.com.proxy=http://127.0.0.1:7890`，但那个端口经常没开（7892 也一样）。直连 github 是通的，所以推送时把这个键清空即可，不需要等代理：
    ```
    git -c "http.https://github.com.proxy=" -c credential.helper= -c "credential.helper=!gh auth git-credential" push
    ```
    注意是 `http.https://github.com.proxy=`（空值覆盖），只写 `-c http.proxy=` 覆盖不掉，git 还会去连 127.0.0.1。
    Windows 自带的凭据管理器会弹窗卡住，所以用 gh 当凭据助手。
-4. 用户更新的方式：酒馆助手脚本的“检查更新”按钮，或者 扩展 → 管理扩展 → 更新。
+5. 用户更新的方式：酒馆助手脚本的“检查更新”按钮，或者 扩展 → 管理扩展 → 更新。更新后要强制刷新一次，不然旧的 `style.css` 还在缓存里。
 
 ## 还没验证 / 已知问题
 

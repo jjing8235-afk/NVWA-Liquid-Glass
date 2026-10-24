@@ -1236,6 +1236,58 @@ chatEl.addEventListener('scroll', scheduleLights, { passive: true });
 new MutationObserver(scheduleAdapt).observe(chatEl, { childList: true, subtree: true });
 window.addEventListener('resize', scheduleAdapt);
 
+/* ---------- 楼层：顶栏中间显示「现在读到第几楼」 ----------
+   编号用酒馆的 mesid（和 NVWA 记忆面板里的「第 N 楼」、召回里的楼层号是同一个数，从 0 起），
+   所以记忆面板写「第 12 楼」，这里也是 12。跟着滚动走，显示的是屏幕最上面那一楼；点一下回最新。 */
+const floorChip = document.createElement('div');
+floorChip.id = 'ilg-floor';
+floorChip.className = 'ilg-floor';
+floorChip.title = '现在读到第几楼（和 NVWA 记忆里的 refs 同一个编号）。点一下回最新一楼';
+floorChip.addEventListener('click', () => {
+    const c = document.getElementById('chat');
+    if (c) c.scrollTo({ top: c.scrollHeight, behavior: 'smooth' });
+});
+let floorRaf = 0;
+let floorHide = 0;
+function flashFloor() {
+    floorChip.classList.add('is-on');
+    clearTimeout(floorHide);
+    floorHide = setTimeout(() => floorChip.classList.remove('is-on'), 1600);
+}
+function visibleFloor() {
+    const bar = document.getElementById('top-bar');
+    const chat = document.getElementById('chat');
+    const mes = chat ? chat.querySelectorAll('.mes[mesid]') : [];
+    if (!mes.length) return null;
+    const last = Number(mes[mes.length - 1].getAttribute('mesid'));
+    // 已经滚到底：直接显示最后一楼，别显示屏幕顶上那条（读到底的人想知道的是「现在到第几楼」）
+    if (chat && chat.scrollTop + chat.clientHeight >= chat.scrollHeight - 8) return last;
+    const top = (bar ? bar.getBoundingClientRect().bottom : 43) + 6;
+    let cur = mes[mes.length - 1];
+    for (const m of mes) {
+        if (m.getBoundingClientRect().bottom > top) { cur = m; break; }
+    }
+    const id = Number(cur.getAttribute('mesid'));
+    return Number.isFinite(id) ? id : null;
+}
+function paintFloor() {
+    floorRaf = 0;
+    const bar = document.getElementById('top-bar');
+    if (!bar) return;
+    if (floorChip.parentElement !== bar) bar.appendChild(floorChip);
+    const id = visibleFloor();
+    if (id === null) { floorChip.hidden = true; return; }
+    floorChip.hidden = false;
+    const label = `第 ${id} 楼`;
+    if (floorChip.textContent !== label) { floorChip.textContent = label; flashFloor(); }
+}
+function scheduleFloor() { if (!floorRaf) floorRaf = requestAnimationFrame(paintFloor); }
+// 滚动时才亮出来（1.6 秒后自己淡下去）：常驻会正好压在消息头上那行名字和日期上
+chatEl.addEventListener('scroll', () => { scheduleFloor(); flashFloor(); }, { passive: true });
+new MutationObserver(scheduleFloor).observe(chatEl, { childList: true, subtree: true });
+window.addEventListener('resize', scheduleFloor);
+scheduleFloor();
+
 // 右上角提示：toastr 弹出时才创建容器、最后一条消失就删掉，所以盯着容器给每条提示挂上玻璃
 const toastWatched = new WeakSet();
 function watchToasts(box) {

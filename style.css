@@ -2043,12 +2043,55 @@ html.ilg body #nvwa-memory .m-btn.pri { background-color: color-mix(in srgb, var
 /* ---------- 角色卡挂在页面上的浮窗（人物册、悬浮球等）：去掉酒馆那圈字影 ---------- */
 html.ilg body > .ilg-foreign { --SmartThemeShadowColor: transparent; }
 
-/* ---------- 手机：正文左右真正对称、停止键和左边按钮一样大、时间栏不被裁、字号收一档 ----------
-   这一段的每一条都能在本机 380×872 下量出来（dev/verify/probe.mjs）： */
+/* ---------- 顶栏中间的楼层数 ----------
+   JS（index.js 的 paintFloor）把屏幕最上面那一楼的 mesid 写进来，编号和 NVWA 记忆面板的「第 N 楼」一致。
+   不参与 #top-settings-holder 的排版，绝对定位到中间那截空处，两边的小岛各归各的。 */
+html.ilg body #top-bar > #ilg-floor {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    z-index: 2;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font: 600 11.5px/1 var(--ilg-ui-font);
+    letter-spacing: 0.02em;
+    color: var(--SmartThemeBodyColor);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    background-color: var(--SmartThemeBlurTintColor);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.16), 0 3px 12px rgba(0, 0, 0, 0.22);
+    opacity: 0;
+    scale: 0.94;
+    pointer-events: none;
+    transition: opacity .22s ease, scale .28s cubic-bezier(.3, 1.6, .5, 1), background-color .2s;
+}
+/* 滚动或换楼时才亮，停手 1.6 秒后淡回去：常驻会压在消息头上那行名字和日期上 */
+html.ilg body #top-bar > #ilg-floor.is-on {
+    opacity: 1;
+    scale: 1;
+    pointer-events: auto;
+}
+html.ilg.ilg-light body #top-bar > #ilg-floor {
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.08), 0 3px 12px rgba(30, 40, 70, 0.12);
+}
+html.ilg body #top-bar > #ilg-floor:hover { background-color: var(--ilg-chip-hover); }
+html.ilg body #top-bar > #ilg-floor:active { scale: 0.94; }
+html.ilg body #top-bar > #ilg-floor[hidden] { display: none; }
+/* 特别窄的屏，中间没剩多少地方，先让出来 */
+@media screen and (max-width: 340px) {
+    html.ilg body #top-bar > #ilg-floor { display: none; }
+}
+/* ---------- 手机排版 ----------
+   这一段的每一条都能在 380×872 下量出来（dev/verify/mob2.mjs）。
+   注意：不挂在 body.bubblechat 上——手机上聊天样式不一定开着气泡，挂上去就会漏。 */
 
 /* 1) 停止键。酒馆给它 34px 圆底 + padding-right 2px + 左右各 2px 外边距，图标是 ::before 的
-   inline-block，落在基线上——所以那颗红点总偏右下，圆底还顶到胶囊的圆角外面。
-   左边三个按钮是 40px，这里也 40px，外边距归零，图标改成块级 + flex 居中。 */
+   inline-block，落在基线上——红点总偏右下，圆底顶到胶囊圆角外。统一成和左边按钮一样的 40px，
+   外边距归零，图标块级 + flex 居中。 */
 html.ilg.ilg-icons body #nonQRFormItems #mes_stop {
     width: 40px;
     height: 40px;
@@ -2076,13 +2119,19 @@ html.ilg.ilg-icons body #nonQRFormItems #mes_stop i::before {
     height: 20px;
     margin: 0;
 }
-/* 发送键同样是 40px，别带酒馆那 2px 外边距，不然右边总比左边多缩一点 */
+/* 发送键也去掉酒馆那 2px 外边距，右边才和左边一样缩进 */
 html.ilg.ilg-icons body #nonQRFormItems #send_but { margin: 0; }
 
-/* 2) 左右对称。酒馆给 .mes_block 留了 10px 左内边距（1.2.0 只把右边的 30px 去掉了），
-   头像不给在同一行的排版下，正文就还是往右偏 10px。两边一起归零，交给 .mes 的内边距统一管。 */
+/* 2) 左右留白。酒馆的规矩是「右边留 --mes-right-spacing 给翻页箭头，左边给 .mes_block 垫 10px」，
+   所以不管哪种聊天样式，正文都是左边窄、右边宽。箭头其实在消息最底下一行，手机上这两块都该让出来。 */
 @media screen and (max-width: 1000px) {
-    html.ilg body.bubblechat #chat .mes:not(.smallSysMes) .mes_block { padding-left: 0; padding-right: 0; }
+    html.ilg body #chat { --mes-right-spacing: 0px; }
+    html.ilg body #chat .mes .mes_block { padding-left: 0; }
+    html.ilg body #chat .mes :is(.mes_text, .mes_media_wrapper) { padding-right: 0; }
+    html.ilg body #chat .mes .mes_reasoning_details,
+    html.ilg body #chat .mes .mes_reasoning_details .mes_reasoning_summary { margin-right: 0; }
+    /* 消息卡片自己左右各 12px，两种聊天样式统一（酒馆默认是 10px，气泡模式我们原来写的 14px） */
+    html.ilg body #chat .mes:not(.smallSysMes) { padding-left: 12px; padding-right: 12px; }
 }
 
 /* 3) 预设自带的时间栏（「凝嘤嘤」：两侧一串像素爱心）。大爱心故意画在 SVG 框外
@@ -2092,28 +2141,28 @@ html.ilg body #chat .mes:has(.nvt-bar) .mes_block {
     overflow: visible;
 }
 
-/* 4) 正文字号。手机上按 --mainFontSize 走，设到 115% 以后一行只剩十六七个字，
-   长段落读起来整屏都是字。封顶 16px（小屏再收一点），行高和段距一起调，光封字号会显得挤。 */
+/* 4) 正文：字号封顶、行高 1.7、段距 0.5em、两端对齐。
+   手机版酒馆的 --mainFontSize 一旦被调到 115% 以上，一行只剩十六七个字，长段落整屏都是字。 */
 @media screen and (max-width: 1000px) {
     html.ilg body #chat .mes .mes_text {
         font-size: min(var(--mainFontSize), 16px);
-        line-height: 1.68;
-        letter-spacing: 0.01em;
+        line-height: 1.7;
+        letter-spacing: 0.012em;
+        text-align: justify;
+        text-justify: inter-ideograph;
     }
     html.ilg body #chat .mes .mes_text > p {
-        line-height: 1.68;
-        margin: 0.45em 0;
+        line-height: 1.7;
+        margin: 0.5em 0;
     }
-    html.ilg body #chat .mes .mes_text > :is(p, div, blockquote):first-child { margin-top: 0; }
-    html.ilg body #chat .mes .mes_text > :is(p, div, blockquote):last-child { margin-bottom: 0; }
-    html.ilg body #chat .mes .mes_text :is(q, em, i) { line-height: inherit; }
+    html.ilg body #chat .mes .mes_text > :first-child { margin-top: 0; }
+    html.ilg body #chat .mes .mes_text > :last-child { margin-bottom: 0; }
+    html.ilg body #chat .mes .mes_text :is(q, em, i, b, strong) { line-height: inherit; }
+    /* 名字 / 时间戳：和正文同一档，只靠字重和透明度分层 */
+    html.ilg body #chat .mes .name_text { font-size: min(var(--mainFontSize), 16px); font-weight: 650; letter-spacing: 0.01em; }
+    html.ilg body #chat .mes .timestamp { font-size: 11.5px; letter-spacing: 0.02em; opacity: 0.55; }
 }
 @media screen and (max-width: 380px) {
     html.ilg body #chat .mes .mes_text { font-size: min(var(--mainFontSize), 15.5px); }
-}
-
-/* 名字和时间戳跟着正文的比例，别一大一小 */
-@media screen and (max-width: 1000px) {
-    html.ilg body #chat .mes .name_text { font-size: min(var(--mainFontSize), 16px); }
-    html.ilg body #chat .mes .timestamp { font-size: 11px; }
+    html.ilg body #chat .mes .name_text { font-size: min(var(--mainFontSize), 15.5px); }
 }
