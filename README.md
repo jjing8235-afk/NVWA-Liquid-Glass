@@ -35,3 +35,7 @@ https://github.com/jjing8235-afk/NVWA-Liquid-Glass
 
 - 图标：[Ionicons](https://ionic.io/ionicons)，MIT，见 `LICENSE-ionicons.txt`
 - 字体：思源黑体 Noto Sans SC，SIL OFL 1.1，见 `fonts/LICENSE-noto-sans-sc-OFL.txt`
+
+## 维护
+
+更新记录见 [`CHANGELOG.md`](CHANGELOG.md)，接手维护先读 [`MAINTAINING.md`](MAINTAINING.md)。

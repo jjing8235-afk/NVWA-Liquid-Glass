@@ -1889,3 +1889,156 @@ html.ilg #ilg-think-float {
     html.ilg .ilg-think-label, html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header_title { color: var(--ilg-think-fg); background: none; }
 }
 body.reduced-motion .ilg-think, body.reduced-motion .ilg-think-label { animation: none !important; }
+
+/* ---------- 角色卡自带的状态栏 / 小面板：底色和当前深浅相反时，字色和阴影跟着它的底色走 ----------
+   JS（tagCards）量出 .mes_text 里有自己底色的块，比周围亮很多的标 .ilg-lit、暗很多的标 .ilg-dim。
+   这里只改变量和继承的颜色，卡片自己写死的颜色照常生效；酒馆全局 * 的那圈黑色字影在亮块里换成透明 */
+html.ilg body #chat .mes_text .ilg-lit {
+    --ilg-say: #b84a1c;
+    --ilg-say-bg: rgba(255, 140, 70, 0.14);
+    --ilg-narr: rgba(29, 29, 31, 0.86);
+    --ilg-think: rgba(60, 60, 67, 0.62);
+    --SmartThemeBodyColor: rgb(29, 29, 31);
+    --SmartThemeQuoteColor: rgba(184, 74, 28, 1);
+    --SmartThemeEmColor: rgba(60, 60, 67, 0.62);
+    --SmartThemeShadowColor: transparent;
+    color: var(--ilg-narr);
+}
+html.ilg body #chat .mes_text .ilg-dim {
+    --ilg-say: #ffc48c;
+    --ilg-say-bg: rgba(255, 170, 100, 0.14);
+    --ilg-narr: rgba(242, 242, 247, 0.9);
+    --ilg-think: rgba(235, 235, 245, 0.62);
+    --SmartThemeBodyColor: rgb(245, 247, 251);
+    --SmartThemeQuoteColor: rgba(255, 196, 140, 1);
+    --SmartThemeEmColor: rgba(235, 235, 245, 0.62);
+    --SmartThemeShadowColor: rgba(0, 0, 0, 0.5);
+    color: var(--ilg-narr);
+}
+/* 亮块里的台词荧光笔太淡，加深一点 */
+html.ilg body #chat .mes_text .ilg-lit q { --ilg-say-bg: rgba(255, 140, 70, 0.2); }
+
+/* ---------- 手机：聊天正文右边不再空出 30px ----------
+   酒馆给 .mes_text 右边预留了翻页箭头的位置，但箭头在气泡最底下那一行，不在正文旁边。
+   空着的这 30px 让正文和卡片里的状态栏整体偏左，右边总比左边宽一截 */
+@media screen and (max-width: 1000px) {
+    html.ilg body.bubblechat #chat .mes :is(.mes_text, .mes_media_wrapper) { padding-right: 0; }
+    html.ilg body.bubblechat #chat .mes .mes_reasoning_details { margin-right: 0; }
+    html.ilg body.bubblechat #chat .mes .mes_reasoning_details .mes_reasoning_summary { margin-right: 0; }
+    /* 右边不留空了，翻页箭头（最后一条，或开了“所有消息都能翻页”）就在正文下面单独让出一行，不压在卡片右下角 */
+    html.ilg body.bubblechat:not(.hideAllSwipeButtons) #chat .mes.last_mes:not(.smallSysMes) .mes_block,
+    html.ilg body.bubblechat.swipeAllMessages:not(.hideAllSwipeButtons) #chat .mes:not(.smallSysMes) .mes_block { padding-bottom: 38px; }
+}
+
+/* ---------- 手机输入胶囊：左边几个按钮（+ / 魔棒 / 快捷回复）不再被输入框盖住 ----------
+   酒馆手机样式把 #leftSendForm 定死成 1.15em 宽，原本靠换行竖着摆；我们改成一行后，
+   后两个按钮溢出到输入框底下，点不到，长文字也直接压在图标上。宽度交还给按钮本身 */
+html.ilg body #nonQRFormItems :is(#leftSendForm, #rightSendForm) { width: auto; height: auto; }
+/* 输入框聚焦时酒馆会给外层 #send_form 画一圈方框；胶囊自己有聚焦光圈，方框去掉 */
+html.ilg body #form_sheld #send_form,
+html.ilg body #form_sheld #send_form:has(#send_textarea:focus-visible) { outline: 0; border-color: transparent; }
+
+/* ---------- 预设（提示词管理）面板 ----------
+   “提示词 / 总 Token 数量”和每条前面的星号、禁用条目，酒馆写死成半透明白：浅色模式下白底白字看不见。
+   列表每一行原本透明，深色模式下后面滚过的亮内容会把白字冲淡，所以给每行一层和当前深浅匹配的底 */
+html.ilg body #completion_prompt_manager {
+    --ilg-pm-dim: rgba(235, 235, 245, 0.62);
+    --ilg-pm-faint: rgba(235, 235, 245, 0.38);
+    --ilg-pm-row: rgba(14, 12, 24, 0.68);
+    --ilg-pm-row-off: rgba(14, 12, 24, 0.5);
+    --ilg-pm-line: rgba(255, 255, 255, 0.1);
+}
+html.ilg.ilg-light body #completion_prompt_manager {
+    --ilg-pm-dim: rgba(60, 60, 67, 0.72);
+    --ilg-pm-faint: rgba(60, 60, 67, 0.42);
+    --ilg-pm-row: rgba(255, 255, 255, 0.82);
+    --ilg-pm-row-off: rgba(255, 255, 255, 0.55);
+    --ilg-pm-line: rgba(0, 0, 0, 0.07);
+}
+html.ilg body #completion_prompt_manager .completion_prompt_manager_header { color: var(--ilg-pm-dim); }
+html.ilg.ilg-light body #completion_prompt_manager .completion_prompt_manager_header { text-shadow: none; }
+html.ilg body #completion_prompt_manager .completion_prompt_manager_header_advanced span { filter: none; }
+html.ilg body #completion_prompt_manager #completion_prompt_manager_list .completion_prompt_manager_prompt .completion_prompt_manager_prompt_name .fa-solid:not(.prompt-manager-overridden) { color: var(--ilg-pm-dim); }
+html.ilg body #completion_prompt_manager #completion_prompt_manager_list li.completion_prompt_manager_prompt {
+    border: 1px solid var(--ilg-pm-line);
+    border-radius: 12px;
+    background-color: var(--ilg-pm-row);
+}
+html.ilg body #completion_prompt_manager #completion_prompt_manager_list li.completion_prompt_manager_prompt.completion_prompt_manager_prompt_disabled {
+    border-color: var(--ilg-pm-line);
+    background-color: var(--ilg-pm-row-off);
+}
+html.ilg body #completion_prompt_manager #completion_prompt_manager_list .completion_prompt_manager_prompt_disabled .completion_prompt_manager_prompt_name,
+html.ilg body #completion_prompt_manager #completion_prompt_manager_list .completion_prompt_manager_prompt_disabled .completion_prompt_manager_prompt_name .prompt-manager-inspect-action { color: var(--ilg-pm-faint); }
+html.ilg body #completion_prompt_manager #completion_prompt_manager_list li.completion_prompt_manager_list_head { color: var(--ilg-pm-dim); }
+html.ilg.ilg-light body #completion_prompt_manager :is(li, .completion_prompt_manager_footer, .completion_prompt_manager_list_head) { text-shadow: none; }
+
+/* ---------- 弹窗统一的右上角 × ----------
+   JS 给每个弹窗补一个 .ilg-popup-x，点它等于按 Esc（结果是“取消”，不保存）。
+   酒馆自己只在“纯展示”弹窗里露一个小圆叉，样式不统一，藏掉，统一用这个 */
+html.ilg body .popup .popup-button-close { display: none !important; }
+html.ilg body .popup > .ilg-popup-x {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--SmartThemeBodyColor);
+    background-color: var(--ilg-chip);
+    transition: background-color .2s, transform .2s cubic-bezier(.3, 1.6, .5, 1);
+}
+html.ilg body .popup > .ilg-popup-x::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-svg-close) center / contain no-repeat;
+    mask: var(--ilg-svg-close) center / contain no-repeat;
+    opacity: 0.8;
+}
+html.ilg body .popup > .ilg-popup-x:hover { background-color: var(--ilg-chip-hover); }
+html.ilg body .popup > .ilg-popup-x:active { transform: scale(.9); }
+html.ilg body .popup > .ilg-popup-x:focus-visible { outline: 2px solid var(--ilg-accent, #0a84ff); outline-offset: 2px; }
+/* 放大看图时酒馆本来就藏关闭键，这里跟着藏 */
+html.ilg body .popup:has(.img_enlarged.zoomed).large_dialogue_popup > .ilg-popup-x { display: none; }
+/* 普通弹窗顶上让出一条给 ×；NVWA 两个面板有自己的标题行，只在标题行右边让位 */
+html.ilg body .popup:not(:has(#nvwa-panel, #nvwa-memory)) .popup-body { padding-top: 22px; }
+html.ilg body :is(#nvwa-panel .nvp-head, #nvwa-memory .m-head) { padding-right: 30px; }
+
+/* ---------- NVWA 记忆窗口：正文区垫一张卡片 ----------
+   外壳是清透玻璃，记忆窗口又没有预设面板那种一格一格的底，后面的聊天字直接透进来和说明文字打架。
+   只给标签栏下面的正文垫底，玻璃边缘那一圈照样清透（不糊、不盖住折射的弧） */
+html.ilg body #nvwa-memory .m-page.on {
+    padding: 10px 12px 12px;
+    border-radius: 16px;
+    background-color: rgba(14, 10, 22, 0.66);
+}
+html.ilg.ilg-light body #nvwa-memory .m-page.on { background-color: rgba(255, 255, 255, 0.74); }
+/* 标题行同样直接压在玻璃上：给一条和正文卡片同色的胶囊底 */
+html.ilg body #nvwa-memory .m-head {
+    padding: 6px 30px 6px 12px;
+    border-radius: 14px;
+    background-color: rgba(14, 10, 22, 0.5);
+}
+html.ilg.ilg-light body #nvwa-memory .m-head { background-color: rgba(255, 255, 255, 0.7); }
+html.ilg:not(.ilg-light) body #nvwa-memory {
+    --m-muted: rgba(235, 235, 245, 0.66);
+    --m-text: rgba(245, 245, 250, 0.94);
+}
+html.ilg.ilg-light body #nvwa-memory {
+    --m-muted: rgba(60, 60, 67, 0.72);
+    --m-text: rgb(29, 29, 31);
+}
+/* 卡片里的字不用再加影子；浅色模式整窗都不要 */
+html.ilg body #nvwa-memory .m-page { --SmartThemeShadowColor: transparent; }
+html.ilg.ilg-light body #nvwa-memory { --SmartThemeShadowColor: transparent; }
+/* 工具按钮和小标签：原本是主题底色，压在玻璃上发灰，换成和当前深浅一致的小块 */
+html.ilg body #nvwa-memory :is(.m-btn, .m-chip, .m-tag) { background-color: var(--ilg-chip); border-color: transparent; }
+html.ilg body #nvwa-memory .m-btn:hover { background-color: var(--ilg-chip-hover); }
+html.ilg body #nvwa-memory .m-btn.pri { background-color: color-mix(in srgb, var(--m-accent) 26%, transparent); border-color: color-mix(in srgb, var(--m-accent) 60%, transparent); }
+
+/* ---------- 角色卡挂在页面上的浮窗（人物册、悬浮球等）：去掉酒馆那圈字影 ---------- */
+html.ilg body > .ilg-foreign { --SmartThemeShadowColor: transparent; }

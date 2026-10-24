@@ -886,6 +886,8 @@ async function applyTone() {
     const st = document.getElementById('ilg-status');
     if (st) st.textContent = statusText();
     scheduleAdapt();
+    // 深浅一换，正文里卡片小面板的“反色”判断要重来（推到下一拍：模块初始化时这里会先于 queueCards 那段代码执行）
+    setTimeout(() => queueCards(true));
     followTone();
 }
 setInterval(followTone, 60000);
@@ -967,6 +969,8 @@ new MutationObserver(muts => {
             if (n.nodeType !== 1) return;
             if (n.matches?.(PANEL_SEL)) track(n, 'panel');
             if (n.id === 'toast-container') watchToasts(n);
+            if (n.matches?.('dialog.popup')) addPopupClose(n);
+            tagForeign(n);
         });
         m.removedNodes.forEach(n => {
             if (n.nodeType !== 1) return;
@@ -976,6 +980,37 @@ new MutationObserver(muts => {
     }
     if (rescan) { scan(); repaintAll(); }
 }).observe(document.body, { childList: true, attributes: true, attributeFilter: ['class'] });
+// 弹窗右上角统一一个 ×：不是每个弹窗都有“取消”，有的只有“关闭”，有的只能按 Esc。
+// 点 × 等于按 Esc（派发 dialog 的 cancel 事件，结果是“取消”），不会触发保存；
+// 酒馆标成“不许随手关”的阻塞弹窗，Esc 本来就关不掉，× 也一样（连点两下会弹酒馆自己的强制关闭确认）
+function addPopupClose(dlg) {
+    if (dlg.querySelector(':scope > .ilg-popup-x')) return;
+    const x = document.createElement('div');
+    x.className = 'ilg-popup-x interactable';
+    x.setAttribute('role', 'button');
+    x.setAttribute('tabindex', '0');
+    x.setAttribute('aria-label', '关闭');
+    x.title = '关闭';
+    const close = () => dlg.dispatchEvent(new Event('cancel', { cancelable: true }));
+    x.addEventListener('click', close);
+    x.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); close(); } });
+    dlg.append(x);
+}
+document.querySelectorAll('dialog.popup').forEach(addPopupClose);
+
+// 角色卡脚本直接挂在页面上的浮窗（比如人物册、悬浮球）：酒馆给所有元素都加了一圈字影（深色模式下更浓），
+// 这些浮窗多半是浅色纸面，字被这圈影子糊开。标上 .ilg-foreign，CSS 把字影颜色设成透明；卡片自己写的字影照常
+const OWN_BODY = '#bg1, #bg_custom, #top-bar, #top-settings-holder, #movingDivs, #sheld, #options, #secrets_datalists, '
+    + '#character_context_menu, #extensionsMenu, #expression-wrapper, #visual-novel-wrapper, #sd_dropdown, #shadow_popup, #toast-container, '
+    + '#preloader, #load-spinner, .popup, dialog, script, style, link, iframe, audio, video, svg, template, '
+    + '.ui-menu, .ui-helper-hidden-accessible, .ui-widget, .select2-container, .ctx-menu, .list-group, [id^="ilg-"], [class^="ilg-"]';
+function tagForeign(n) {
+    if (n.nodeType !== 1 || n.parentElement !== document.body) return;
+    n.classList.toggle('ilg-foreign', !n.matches(OWN_BODY));
+}
+[...document.body.children].forEach(tagForeign);
+ctx.eventSource.on(ctx.eventTypes.APP_READY, () => [...document.body.children].forEach(tagForeign));
+
 function fmt(step, unit, v) {
     return (step < 1 ? Number(v).toFixed(step < 0.1 ? 2 : 1) : v) + unit;
 }
@@ -1320,6 +1355,55 @@ new MutationObserver(muts => {
     if (muts.every(m => m.target.closest?.('.ilg-think') || (m.type === 'childList' && [...m.addedNodes, ...m.removedNodes].every(own)))) return;
     queueThink();
 }).observe(chatEl, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['data-reasoning-state'] });
+
+// 角色卡状态栏：正文里自带底色的小面板，底色和当前深浅反着（深色模式里的白卡片、浅色模式里的黑卡片）时，
+// 标上 .ilg-lit / .ilg-dim，CSS 把那一块的字色变量和酒馆的字影换成配它底色的一套。
+// 半透明的底按“叠在外面那层上”算实际亮度；iframe 里的前端碰不到也不用管
+const cardDirty = new Set();
+let cardTimer = 0;
+const parseRgba = s => { const m = s && s.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+const lumOf = c => (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+function blockBg(el) {
+    const cs = getComputedStyle(el);
+    let c = parseRgba(cs.backgroundColor);
+    // 渐变底：取第一个颜色当近似
+    if ((!c || c.a < 0.05) && cs.backgroundImage.includes('gradient')) c = parseRgba(cs.backgroundImage);
+    return c && c.a >= 0.05 ? c : null;
+}
+function tagCard(text) {
+    // 以 <html> 上的 class 为准：CSS 也是按它配色的
+    const light = root.classList.contains('ilg-light');
+    const walk = (el, base) => {
+        for (const k of el.children) {
+            if (k.matches('iframe, img, video, svg, canvas, q, em, i, b, strong, br')) continue;
+            const c = blockBg(k);
+            let lum = base;
+            if (c) lum = lumOf(c) * c.a + base * (1 - c.a);
+            k.classList.toggle('ilg-lit', !!c && lum > 0.62 && !light);
+            k.classList.toggle('ilg-dim', !!c && lum < 0.38 && light);
+            if (k.children.length) walk(k, lum);
+        }
+    };
+    walk(text, light ? 0.95 : 0.08);
+}
+function queueCards(all) {
+    if (all) chatEl.querySelectorAll('.mes_text').forEach(t => cardDirty.add(t));
+    clearTimeout(cardTimer);
+    cardTimer = setTimeout(() => {
+        cardDirty.forEach(t => t.isConnected && tagCard(t));
+        cardDirty.clear();
+    }, 200);
+}
+new MutationObserver(muts => {
+    let hit = false;
+    for (const m of muts) {
+        // 只认真正的内容变化；自己切 class 不会进这里（没监听 attributes）
+        const t = (m.target.nodeType === 1 ? m.target : m.target.parentElement)?.closest?.('.mes_text');
+        if (t) { cardDirty.add(t); hit = true; continue; }
+        m.addedNodes.forEach(n => { if (n.nodeType === 1) (n.matches('.mes_text') ? [n] : n.querySelectorAll('.mes_text')).forEach(x => { cardDirty.add(x); hit = true; }); });
+    }
+    if (hit) queueCards(false);
+}).observe(chatEl, { childList: true, subtree: true, characterData: true });
 
 buildPanel();
 applyRoot();
