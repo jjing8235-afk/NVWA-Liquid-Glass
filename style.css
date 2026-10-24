@@ -1,0 +1,1891 @@
+/* iOS 液态玻璃 · 所有规则都挂在 html.ilg 下，关掉扩展开关即全部失效 */
+html.ilg {
+    --ilg-radius: 22px;
+    --ilg-tint: rgba(255, 255, 255, 0.08);
+    --ilg-hl: 0.55;
+    --ilg-gap: 8px;
+    --ilg-form-h: 64px;
+}
+
+/* 聊天区本身不能有模糊/底色，否则消息卡片只能“看到”聊天区而看不到壁纸 */
+html.ilg body #chat {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* ---------- 悬浮布局：聊天内容从顶栏和输入框下面滚过去 ---------- */
+html.ilg.ilg-float body:not(.movingUI) #sheld {
+    top: 0;
+    height: 100dvh;
+    max-height: 100dvh;
+}
+html.ilg.ilg-float body #chat {
+    max-height: none;
+    padding-top: calc(var(--topBarBlockSize) + var(--ilg-gap) * 2);
+    padding-bottom: calc(var(--ilg-form-h) + var(--ilg-gap) * 2);
+    scroll-padding-bottom: calc(var(--ilg-form-h) + var(--ilg-gap) * 2);
+}
+html.ilg.ilg-float body #form_sheld {
+    position: absolute;
+    left: var(--ilg-gap);
+    right: var(--ilg-gap);
+    bottom: max(var(--ilg-gap), env(safe-area-inset-bottom));
+    width: auto;
+    margin: 0;
+    z-index: 40;
+}
+html.ilg.ilg-float body #top-settings-holder {
+    margin-top: var(--ilg-gap);
+}
+html.ilg.ilg-float body #top-bar {
+    top: var(--ilg-gap);
+    width: calc(min(var(--sheldWidth), 100dvw) - var(--ilg-gap) * 2);
+    border-radius: 999px;
+}
+@media screen and (max-width: 1000px) {
+    html.ilg.ilg-float body #top-bar {
+        width: calc(100dvw - var(--ilg-gap) * 2);
+        left: var(--ilg-gap);
+        right: var(--ilg-gap);
+    }
+}
+
+/* ---------- 输入区（参考支付宝 AI 对话页）：只有输入框那一行是玻璃胶囊，快捷回复按钮浮在它上方 ---------- */
+/* 外层 #send_form 不画底色、不模糊，否则里面的玻璃只能“看到”它，看不到聊天内容 */
+html.ilg body #form_sheld #send_form {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    row-gap: 8px;
+}
+html.ilg body #nonQRFormItems {
+    position: relative;
+    align-items: center;
+    column-gap: 6px;
+    min-height: 52px;
+    border: 0;
+    border-radius: 26px;
+    background-color: var(--ilg-tint);
+    padding: 6px;
+}
+html.ilg body #send_textarea {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+/* ---------- 顶栏 ---------- */
+html.ilg body #top-bar {
+    background-color: var(--ilg-tint);
+}
+
+/* ---------- 消息卡片（仅气泡模式） ---------- */
+html.ilg body.bubblechat #chat .mes {
+    border: 0;
+    border-radius: var(--ilg-radius);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+
+/* ---------- 抽屉、弹窗、菜单：圆角 + 去硬边框，底色沿用主题 ---------- */
+html.ilg body .drawer-content,
+html.ilg body #character_popup,
+html.ilg body #world_popup,
+html.ilg body .popup,
+html.ilg body #options .options-content,
+html.ilg body #extensionsMenu {
+    border-color: transparent;
+    border-radius: 20px;
+}
+html.ilg body .fillLeft,
+html.ilg body .fillRight {
+    border-radius: 0 20px 20px 0;
+}
+html.ilg body .fillRight {
+    border-radius: 20px 0 0 20px;
+}
+
+/* ---------- 玻璃通用：立体感 = 双层亮边 + 底部内阴影 + 内侧光晕 + 按悬浮高度分层的投影 ---------- */
+html.ilg body {
+    --ilg-k: 1;          /* 高光整体倍率，浅色模式调高 */
+    --ilg-drop: 0.34;    /* 投影浓度，浅色模式调淡 */
+    --ilg-drop-rgb: 0, 0, 0;
+}
+html.ilg body :where(#top-bar, #nonQRFormItems, .ilg-glass) {
+    --ilg-lift-y: 14px;
+    --ilg-lift-b: 34px;
+}
+html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-island) { --ilg-lift-y: 18px; --ilg-lift-b: 44px; }
+html.ilg body .ilg-clear { --ilg-lift-y: 28px; --ilg-lift-b: 70px; }
+html.ilg body #chat .mes.ilg-glass { --ilg-lift-y: 8px; --ilg-lift-b: 22px; }
+html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-glass) {
+    box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, calc(var(--ilg-hl) * 1.15 * var(--ilg-k))),
+        inset 0 3px 0 -1.5px rgba(255, 255, 255, calc(var(--ilg-hl) * 0.35 * var(--ilg-k))),
+        inset 1px 0 0 rgba(255, 255, 255, calc(var(--ilg-hl) * 0.3 * var(--ilg-k))),
+        inset -1px 0 0 rgba(255, 255, 255, calc(var(--ilg-hl) * 0.2 * var(--ilg-k))),
+        inset 0 -2px 4px rgba(0, 0, 0, calc(var(--ilg-drop) * 0.75)),
+        inset 0 -1px 0 rgba(255, 255, 255, calc(var(--ilg-hl) * 0.25 * var(--ilg-k))),
+        inset 0 14px 28px -16px rgba(255, 255, 255, calc(var(--ilg-hl) * 0.4 * var(--ilg-k))),
+        0 var(--ilg-lift-y) var(--ilg-lift-b) rgba(var(--ilg-drop-rgb), var(--ilg-drop)),
+        0 2px 6px rgba(var(--ilg-drop-rgb), calc(var(--ilg-drop) * 0.55)),
+        0 0 0 0.5px rgba(var(--ilg-drop-rgb), calc(var(--ilg-drop) * 0.6));
+}
+/* 表面光泽：上半部一层柔和的反光，左上最亮，越往下越淡 */
+html.ilg body .ilg-sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: min(55%, 90px);
+    border-radius: inherit;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(120% 140% at 18% -20%, rgba(255, 255, 255, calc(var(--ilg-hl) * 0.30 * var(--ilg-k))), transparent 60%),
+        linear-gradient(180deg, rgba(255, 255, 255, calc(var(--ilg-hl) * 0.12 * var(--ilg-k))), transparent);
+}
+html.ilg body .ilg-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.6px;
+    pointer-events: none;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, calc(var(--ilg-hl) * 1.5 * var(--ilg-k))) 0%,
+        rgba(255, 255, 255, 0.12) 26%,
+        rgba(255, 255, 255, 0.03) 50%,
+        rgba(255, 255, 255, 0.12) 74%,
+        rgba(255, 255, 255, calc(var(--ilg-hl) * 1.0 * var(--ilg-k))) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+/* ---------- 浅色壁纸：深色文字 + 更白的玻璃（酒馆把颜色变量写在 html 上，这里在 body 层覆盖） ---------- */
+html.ilg.ilg-light body {
+    --SmartThemeBodyColor: rgba(28, 30, 38, 1);
+    --SmartThemeEmColor: rgba(60, 64, 78, 0.72);
+    --SmartThemeQuoteColor: rgba(176, 92, 0, 1);
+    --SmartThemeUnderlineColor: rgba(0, 102, 214, 1);
+    --SmartThemeBlurTintColor: rgba(255, 255, 255, 0.55);
+    --SmartThemeBotMesBlurTintColor: rgba(255, 255, 255, calc(var(--ilg-mes-a, 0.5) * 0.9 + 0.1));
+    --SmartThemeUserMesBlurTintColor: rgba(220, 236, 255, calc(var(--ilg-mes-a, 0.5) * 0.9 + 0.15));
+    --SmartThemeBorderColor: rgba(0, 0, 0, 0.08);
+    --SmartThemeShadowColor: rgba(255, 255, 255, 0);
+    --ilg-k: 1.25;
+    --ilg-drop: 0.15;
+    --ilg-drop-rgb: 30, 40, 70;
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg.ilg-light body .ilg-sheen::after { opacity: 0.6; }
+html.ilg.ilg-light.ilg-icons .drawer-icon.openIcon { color: #0a84ff; }
+/* 酒馆自带的“标题条”渐变写死了 70% 黑，浅色模式下换成白玻璃 */
+html.ilg.ilg-light body #extensions_settings .inline-drawer-toggle.inline-drawer-header,
+html.ilg.ilg-light body #extensions_settings2 .inline-drawer-toggle.inline-drawer-header,
+html.ilg.ilg-light body #user-settings-block h4,
+html.ilg.ilg-light body .standoutHeader {
+    background-image: linear-gradient(348deg, rgba(255, 255, 255, 0.35) 2%, rgba(255, 255, 255, 0.55) 60%, rgba(255, 255, 255, 0.8) 100%);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* ---------- 深色壁纸：消息卡片加一层半透明深色底，亮光带上的白字也能看清 ---------- */
+html.ilg:not(.ilg-light) body {
+    /* 消息卡片底色浓度由设置里的滑块控制（--ilg-mes-a，默认 0.5） */
+    --SmartThemeBotMesBlurTintColor: rgba(14, 16, 30, var(--ilg-mes-a, 0.5));
+    --SmartThemeUserMesBlurTintColor: rgba(22, 52, 104, calc(var(--ilg-mes-a, 0.5) + 0.02));
+    --SmartThemeBlurTintColor: rgba(18, 16, 28, 0.42);
+    --SmartThemeShadowColor: rgba(0, 0, 0, 0.75);
+}
+html.ilg:not(.ilg-light) body #chat .mes_text {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), 0 0 8px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- 弹窗背后不虚化：壁纸保持清晰，只压一层淡淡的暗色 ---------- */
+html.ilg body .popup[open]::backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-color: rgba(0, 0, 0, 0.18);
+}
+
+/* ---------- NVWA 预设面板 / 记忆窗口：只从外面套样式，预设本身一个字不改 ---------- */
+/* 外壳：和顶栏同一套清透折射玻璃（JS 把这个弹窗标成 .ilg-clear） */
+html.ilg:not(.ilg-light) body .popup.ilg-clear { background-color: rgba(255, 255, 255, 0.04); }
+html.ilg.ilg-light body .popup.ilg-clear { background-color: rgba(255, 255, 255, 0.22); }
+html.ilg body .popup.ilg-clear { border-radius: 28px; }
+
+/* 内部配色：凹进去的“槽”偏暗、托住文字；凸起的标题条偏亮 */
+html.ilg:not(.ilg-light) body #nvwa-panel,
+html.ilg:not(.ilg-light) body #nvwa-memory {
+    --nvp-surface: rgba(12, 8, 20, 0.34);
+    --nvp-bg: rgba(10, 6, 18, 0.40);
+    --nvp-line: rgba(255, 255, 255, 0.12);
+    --nvp-shadow: rgba(0, 0, 0, 0.35);
+    --m-surface: rgba(12, 8, 20, 0.34);
+    --m-bg: rgba(10, 6, 18, 0.40);
+    --m-line: rgba(255, 255, 255, 0.12);
+}
+html.ilg.ilg-light body #nvwa-panel,
+html.ilg.ilg-light body #nvwa-memory {
+    --nvp-surface: rgba(255, 255, 255, 0.45);
+    --nvp-bg: rgba(255, 255, 255, 0.38);
+    --nvp-line: rgba(0, 0, 0, 0.08);
+    --nvp-shadow: rgba(30, 40, 70, 0.15);
+    --m-surface: rgba(255, 255, 255, 0.45);
+    --m-bg: rgba(255, 255, 255, 0.38);
+    --m-line: rgba(0, 0, 0, 0.08);
+}
+/* 直接压在清透玻璃上的字（标题、底部说明）加一层阴影 */
+html.ilg:not(.ilg-light) body :is(#nvwa-panel .nvp-head, #nvwa-panel .nvp-foot, #nvwa-memory .m-head) {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 0 10px rgba(0, 0, 0, 0.4);
+}
+/* 吸顶标签栏：透明玻璃，下面滚过的内容会被折射（折射滤镜由 JS 挂上） */
+html.ilg body #nvwa-panel .nvp-tabbar,
+html.ilg body #nvwa-memory .m-tabbar {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 18px;
+    padding: 4px;
+    margin-bottom: 8px;
+    --ilg-lift-y: 6px;
+    --ilg-lift-b: 16px;
+}
+html.ilg.ilg-light body #nvwa-panel .nvp-tabbar,
+html.ilg.ilg-light body #nvwa-memory .m-tabbar {
+    background: rgba(255, 255, 255, 0.25);
+}
+/* 标签轨道：凹槽 */
+html.ilg body #nvwa-panel .nvp-tabs,
+html.ilg body #nvwa-memory .m-tabs {
+    border-radius: 14px;
+    border-color: transparent;
+    background: var(--nvp-bg, var(--m-bg));
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.38), inset 0 -1px 0 rgba(255, 255, 255, 0.10);
+}
+/* 选中的标签：凸起的小玻璃块 */
+html.ilg body #nvwa-panel .nvp-thumb {
+    border-radius: 11px;
+    background: linear-gradient(180deg,
+        color-mix(in srgb, var(--nvp-accent) 46%, rgba(255, 255, 255, 0.10)),
+        color-mix(in srgb, var(--nvp-accent) 22%, transparent));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.25),
+        0 4px 14px color-mix(in srgb, var(--nvp-accent) 32%, transparent);
+}
+/* 分区标题：凸起的玻璃条 */
+html.ilg body #nvwa-panel .nvp-sec-h {
+    border-radius: 16px;
+    border-color: rgba(255, 255, 255, 0.10);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 55%, rgba(255, 255, 255, 0.02));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.34),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.25),
+        0 6px 16px rgba(0, 0, 0, 0.22);
+}
+/* 标题条和说明框压在清透玻璃上，深色模式给一层暗底，背后的字不会透进来打架 */
+html.ilg:not(.ilg-light) body #nvwa-panel .nvp-sec-h { background-color: rgba(14, 10, 22, 0.42); }
+html.ilg:not(.ilg-light) body #nvwa-panel .nvp-note { background-color: rgba(14, 10, 22, 0.42); }
+html.ilg.ilg-light body #nvwa-panel .nvp-note { background-color: rgba(255, 255, 255, 0.5); }
+html.ilg.ilg-light body #nvwa-panel .nvp-sec-h {
+    border-color: rgba(255, 255, 255, 0.6);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.5));
+    box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(30, 40, 70, 0.12);
+}
+/* 分区内容：凹进去的槽 */
+html.ilg body #nvwa-panel .nvp-sec-inner {
+    border-radius: 16px;
+    border-color: transparent;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.32), inset 0 -1px 0 rgba(255, 255, 255, 0.10);
+}
+html.ilg.ilg-light body #nvwa-panel .nvp-sec-inner {
+    box-shadow: inset 0 2px 5px rgba(30, 40, 70, 0.10), inset 0 -1px 0 #fff;
+}
+/* 选项按钮：小玻璃块，选中时金色发光 */
+html.ilg body #nvwa-panel .nvp-chip {
+    border-radius: 12px;
+    border-color: rgba(255, 255, 255, 0.10);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 6px rgba(0, 0, 0, 0.18);
+    transition: transform .25s cubic-bezier(.3, 1.6, .5, 1), background-color .2s, box-shadow .2s;
+}
+html.ilg body #nvwa-panel .nvp-chip:active { transform: scale(.95); }
+html.ilg body #nvwa-panel .nvp-chip.on {
+    background-color: color-mix(in srgb, var(--nvp-accent) 28%, transparent);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.2),
+        0 4px 16px color-mix(in srgb, var(--nvp-accent) 34%, transparent);
+}
+/* 单选行：选中时同样是凸起的金色玻璃 */
+html.ilg body #nvwa-panel .nvp-row { border-radius: 14px; }
+html.ilg body #nvwa-panel .nvp-row.on {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.10), transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 14px color-mix(in srgb, var(--nvp-accent) 20%, transparent);
+}
+html.ilg body #nvwa-panel .nvp-tag { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.12); }
+html.ilg body #send_form .qr--button {
+    border-radius: 999px;
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.10);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+html.ilg body #send_form .qr--button:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+html.ilg body .popup .popup-controls .menu_button {
+    border-radius: 999px;
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(10, 6, 18, 0.38) linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), inset 0 -1px 2px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.22);
+    transition: transform .25s cubic-bezier(.3, 1.6, .5, 1);
+}
+html.ilg body .popup .popup-controls .menu_button:active { transform: scale(.94); }
+html.ilg.ilg-light body .popup .popup-controls .menu_button {
+    border-color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.55);
+    box-shadow: inset 0 1px 0 #fff, 0 3px 10px rgba(30, 40, 70, 0.12);
+}
+html.ilg body .popup .popup-controls .menu_button.popup-button-ok {
+    background: color-mix(in srgb, var(--SmartThemeQuoteColor) 32%, transparent) linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent);
+    border-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 45%, transparent);
+}
+html.ilg.ilg-icons:not(.ilg-light) #leftSendForm > div,
+html.ilg.ilg-icons:not(.ilg-light) #rightSendForm > div:not(.mes_stop):not(#send_but) {
+    color: #fff;
+    background-color: rgba(10, 132, 255, 0.55);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(10, 132, 255, 0.35);
+}
+html.ilg.ilg-icons:not(.ilg-light) #leftSendForm > div:hover,
+html.ilg.ilg-icons:not(.ilg-light) #rightSendForm > div:not(.mes_stop):not(#send_but):hover {
+    background-color: rgba(10, 132, 255, 0.7);
+}
+
+/* ---------- 细节 ---------- */
+/* 字体：开“统一字体”时全站用思源黑体（苹果设备优先苹方）；关掉时界面用系统字体、正文用酒馆里选的字体 */
+html.ilg body {
+    --ilg-ui-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI Variable Text", "Segoe UI",
+        "Microsoft YaHei UI", "Microsoft YaHei", var(--mainFontFamily), sans-serif;
+}
+html.ilg.ilg-font body {
+    --mainFontFamily: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC Variable", "Microsoft YaHei", sans-serif;
+    --ilg-ui-font: var(--mainFontFamily);
+    font-family: var(--mainFontFamily);
+}
+html.ilg body :is(#top-bar, #top-settings-holder, .drawer-content, .popup, #nonQRFormItems, #extensionsMenu, #options) {
+    font-family: var(--ilg-ui-font);
+    -webkit-font-smoothing: antialiased;
+}
+html.ilg body #chat .mes :is(.mes_text, .mes_reasoning) { font-family: var(--mainFontFamily); }
+html.ilg body #chat .mes .mes_text > p { line-height: 1.75; }
+html.ilg body #chat .name_text { font-weight: 700; letter-spacing: 0.01em; }
+html.ilg body #chat :is(.timestamp, .mesIDDisplay, .mes_timer) { opacity: 0.6; font-variant-numeric: tabular-nums; }
+
+/* 头像：一圈细细的玻璃描边 */
+html.ilg body #chat .mes .avatar img {
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.35), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 滚动条：细的半透明胶囊 */
+html.ilg body:not(.movingUI) ::-webkit-scrollbar-thumb:vertical {
+    background-color: rgba(255, 255, 255, 0.28);
+    box-shadow: none;
+    border: 3px solid transparent;
+    border-radius: 999px;
+}
+html.ilg.ilg-light body:not(.movingUI) ::-webkit-scrollbar-thumb:vertical { background-color: rgba(0, 0, 0, 0.22); }
+html.ilg body ::-webkit-scrollbar-track:hover { background-color: transparent; }
+
+/* 输入框光标和选中文字用系统蓝 */
+html.ilg body #send_textarea { caret-color: #0a84ff; }
+html.ilg body ::selection { background: rgba(10, 132, 255, 0.35); }
+
+/* 弹窗出现：轻轻放大 + 回弹，像 iOS 的卡片弹出 */
+@keyframes ilg-pop-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.94); }
+    to { opacity: 1; transform: none; }
+}
+html.ilg body .popup[opening] {
+    animation-name: ilg-pop-in;
+    animation-timing-function: cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+
+/* ---------- 顶栏 / 输入框 / 悬浮岛：更厚的玻璃块（亮边更宽、底部聚光；底部暗边调淡，避免看着像圆柱） ---------- */
+html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-island) {
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, calc(var(--ilg-hl) * 1.3 * var(--ilg-k))),
+        inset 0 4px 0 -2px rgba(255, 255, 255, calc(var(--ilg-hl) * 0.45 * var(--ilg-k))),
+        inset 1.5px 0 0 rgba(255, 255, 255, calc(var(--ilg-hl) * 0.35 * var(--ilg-k))),
+        inset -1.5px 0 0 rgba(255, 255, 255, calc(var(--ilg-hl) * 0.25 * var(--ilg-k))),
+        inset 0 -2px 4px rgba(0, 0, 0, calc(var(--ilg-drop) * 0.45)),
+        inset 0 -1.5px 0 rgba(255, 255, 255, calc(var(--ilg-hl) * 0.4 * var(--ilg-k))),
+        inset 0 -10px 18px -12px rgba(255, 255, 255, calc(var(--ilg-hl) * 0.3 * var(--ilg-k))),
+        inset 0 16px 30px -16px rgba(255, 255, 255, calc(var(--ilg-hl) * 0.45 * var(--ilg-k))),
+        0 var(--ilg-lift-y) var(--ilg-lift-b) rgba(var(--ilg-drop-rgb), var(--ilg-drop)),
+        0 4px 10px rgba(var(--ilg-drop-rgb), calc(var(--ilg-drop) * 0.6)),
+        0 0 0 0.5px rgba(var(--ilg-drop-rgb), calc(var(--ilg-drop) * 0.7));
+    transition: background-color .35s ease;
+}
+html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-island).ilg-glass::before { padding: 2px; }
+/* 浅色内容滚到下面时自动加深（深色模式）/ 深色内容时自动提亮（浅色模式） */
+html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-island).ilg-over-light { background-color: rgba(16, 10, 22, 0.52); }
+html.ilg.ilg-light body :is(#top-bar, #nonQRFormItems, .ilg-island).ilg-over-dark { background-color: rgba(255, 255, 255, 0.62); }
+html.ilg:not(.ilg-light).ilg-icons #top-settings-holder .drawer-icon { filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45)); }
+html.ilg.ilg-icons #top-bar.ilg-over-light ~ #top-settings-holder .drawer-icon,
+html.ilg.ilg-icons #top-settings-holder > .ilg-icon-over-light .drawer-icon { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7)); }
+
+/* ---------- 顶栏分组悬浮岛：整条长栏变透明，三块玻璃各自托住一组图标 ---------- */
+html.ilg.ilg-islands body #top-bar {
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+}
+html.ilg.ilg-islands body .ilg-island {
+    top: 0;
+    height: 100%;
+    border-radius: 999px;
+    background-color: var(--ilg-tint);
+    pointer-events: none;
+    transition: background-color .35s ease;
+}
+/* 图标不再平摊整条：按内容宽度排在一起，组与组之间留出空隙露出壁纸 */
+html.ilg.ilg-islands body #top-settings-holder > .drawer {
+    flex: 0 0 auto;
+    width: auto;
+}
+html.ilg.ilg-islands body #top-settings-holder > .drawer.ilg-group-start { margin-left: 22px; }
+/* 组间距要大于岛两侧的内边距（各 6px），否则岛会贴在一起 */
+@media screen and (max-width: 480px) {
+    html.ilg.ilg-islands.ilg-icons body #top-settings-holder .drawer-icon { width: 36px; }
+    html.ilg.ilg-islands body #top-settings-holder > .drawer.ilg-group-start { margin-left: 18px; }
+}
+@media screen and (max-width: 380px) {
+    html.ilg.ilg-islands.ilg-icons body #top-settings-holder .drawer-icon { width: 33px; }
+    html.ilg.ilg-islands body #top-settings-holder > .drawer.ilg-group-start { margin-left: 20px; }
+}
+@media screen and (max-width: 340px) {
+    html.ilg.ilg-islands.ilg-icons body #top-settings-holder .drawer-icon { width: 28px; }
+    html.ilg.ilg-islands body #top-settings-holder > .drawer.ilg-group-start { margin-left: 18px; }
+}
+/* 输入框获得焦点：边缘亮成一圈 iOS 蓝 */
+html.ilg body #nonQRFormItems.ilg-glass:focus-within::before {
+    background: linear-gradient(135deg,
+        rgba(130, 195, 255, 0.95) 0%, rgba(10, 132, 255, 0.35) 35%,
+        rgba(10, 132, 255, 0.12) 60%, rgba(130, 195, 255, 0.75) 100%);
+}
+/* 打了字，发送键微微放大发光 */
+html.ilg.ilg-icons #send_but { transition: transform .3s cubic-bezier(.3, 1.6, .5, 1), filter .3s; }
+html.ilg.ilg-icons body #nonQRFormItems:has(#send_textarea:not(:placeholder-shown)) #send_but {
+    transform: scale(1.1);
+    filter: drop-shadow(0 3px 8px rgba(10, 132, 255, 0.55));
+}
+
+/* ---------- 三个点菜单 / 魔棒菜单：iOS 风格的玻璃弹出菜单 ---------- */
+/* 外层不能再有模糊，否则里面那层玻璃只能“看到”外层，看不到壁纸 */
+html.ilg body #options {
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    padding: 0;
+}
+html.ilg body :is(#options .options-content, #extensionsMenu) {
+    padding: 6px;
+    border: 0;
+    border-radius: 20px;
+    min-width: 210px;
+    background-color: rgba(22, 16, 30, 0.5);
+    animation: ilg-menu-in .24s cubic-bezier(.3, 1.3, .5, 1);
+}
+html.ilg.ilg-light body :is(#options .options-content, #extensionsMenu) { background-color: rgba(255, 255, 255, 0.62); }
+@keyframes ilg-menu-in {
+    from { opacity: 0; scale: 0.95; translate: 0 6px; }
+    to { opacity: 1; scale: 1; translate: 0 0; }
+}
+html.ilg body :is(.options-content a, #extensionsMenu > .extension_container > div, #extensionsMenu > div:not(.extension_container)) {
+    opacity: 1;
+    padding: 9px 12px;
+    border-radius: 12px;
+    column-gap: 12px;
+    align-items: center;
+    color: var(--SmartThemeBodyColor);
+    transition: background-color .15s, transform .25s cubic-bezier(.3, 1.6, .5, 1);
+}
+html.ilg:not(.ilg-light) body :is(.options-content a, #extensionsMenu > .extension_container > div, #extensionsMenu > div:not(.extension_container)) {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+html.ilg body :is(.options-content a, #extensionsMenu > .extension_container > div, #extensionsMenu > div:not(.extension_container)):hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+html.ilg.ilg-light body :is(.options-content a, #extensionsMenu > .extension_container > div, #extensionsMenu > div:not(.extension_container)):hover {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+html.ilg body :is(.options-content a, #extensionsMenu > .extension_container > div, #extensionsMenu > div:not(.extension_container)):active {
+    transform: scale(0.97);
+}
+html.ilg body .options-content a i { opacity: 0.88; }
+html.ilg body .options-content hr { margin: 5px 10px; border-top-color: rgba(255, 255, 255, 0.12); }
+html.ilg.ilg-light body .options-content hr { border-top-color: rgba(0, 0, 0, 0.08); }
+/* 删除是危险操作，标红 */
+html.ilg body #options .options-content a#option_delete_mes { color: #ff6b62; }
+html.ilg.ilg-light body #options .options-content a#option_delete_mes { color: #d70015; }
+
+/* ---------- 提示弹窗（toast）：iOS 通知样式。中性玻璃底，类型只靠彩色图标区分（图标在 icons.css） ---------- */
+html.ilg body > #toast-container { margin-top: calc(var(--topBarBlockSize) + 14px); }
+html.ilg body #toast-container > div {
+    width: min(340px, calc(100vw - 24px));
+    padding: 12px 16px 12px 52px;
+    margin: 0 auto 8px;
+    border: 0;
+    border-radius: 22px;
+    color: var(--SmartThemeBodyColor);
+    background-color: rgba(28, 20, 34, 0.55);
+    -webkit-backdrop-filter: blur(14px) saturate(1.8);
+    backdrop-filter: blur(14px) saturate(1.8);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    animation: ilg-toast-in .38s cubic-bezier(.3, 1.35, .5, 1);
+}
+html.ilg body #toast-container > div.ilg-glass { --ilg-lift-y: 10px; --ilg-lift-b: 28px; }
+html.ilg.ilg-light body #toast-container > div {
+    background-color: rgba(255, 255, 255, 0.68);
+    text-shadow: none;
+}
+html.ilg body #toast-container .toast-title {
+    font-weight: 650;
+    font-size: calc(var(--mainFontSize) * 0.98);
+    margin-bottom: 2px;
+}
+html.ilg body #toast-container .toast-message {
+    font-size: calc(var(--mainFontSize) * 0.9);
+    line-height: 1.45;
+    opacity: 0.78;
+}
+html.ilg body #toast-container .toast-message a { color: #64b5ff; }
+@keyframes ilg-toast-in {
+    from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+    to { opacity: 1; transform: none; }
+}
+html.ilg body.reduced-motion #toast-container > div { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg body #toast-container > div { animation: none; }
+}
+
+/* ---------- 新消息：轻轻浮上来 ---------- */
+@keyframes ilg-rise {
+    from { transform: translateY(14px) scale(0.98); }
+    to { transform: none; }
+}
+html.ilg body #chat .mes.ilg-rise { animation: ilg-rise .45s cubic-bezier(.3, 1.3, .5, 1) both; }
+
+/* 减少动画：关掉上面这些新加的动画 */
+html.ilg body.reduced-motion :is(#chat .mes.ilg-rise, #options .options-content, #extensionsMenu) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg body :is(#chat .mes.ilg-rise, #options .options-content, #extensionsMenu) { animation: none; }
+}
+
+/* ---------- 新版物理引擎（.ilg-phys）：高光、厚度阴影都在 SVG 滤镜里画了，CSS 只留底色、表面光泽和三层悬浮投影 ---------- */
+/* 这两个由 JS 写在 html 的行内样式上（设置面板滑块控制），这里只是默认值，所以也挂在 html 上，不能挂 body */
+html.ilg {
+    --ilg-shadow-k: 0.85;  /* 悬浮投影强度 */
+    --ilg-sheen-k: 0.45;   /* 表面光泽强度 */
+}
+html.ilg body { --ilg-sh-light: 1; }
+/* 浅色壁纸上影子变淡 */
+html.ilg.ilg-light body { --ilg-sh-light: 0.6; }
+/* 玻璃越大越“厚”，影子越深；消息卡片挨得近，影子收一点 */
+html.ilg body #chat .mes.ilg-phys { --ilg-sh-mul: 0.6; }
+html.ilg body :is(.drawer-content, #character_popup, #world_popup, .popup, #options .options-content, #extensionsMenu).ilg-phys { --ilg-sh-mul: 1.7; }
+html.ilg body :is(#nvwa-panel .nvp-tabbar, #nvwa-memory .m-tabbar).ilg-phys { --ilg-sh-mul: 0.5; }
+/* 贴地的一圈细影 + 中距离 + 远处的柔影，三层叠起来才有“浮起来”的厚度 */
+html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-glass).ilg-phys {
+    --ilg-sh: calc(var(--ilg-shadow-k) * var(--ilg-sh-mul, 1) * var(--ilg-sh-light));
+    box-shadow:
+        0 1px 1.5px rgba(var(--ilg-drop-rgb), calc(0.2 * var(--ilg-sh))),
+        0 calc(5px * var(--ilg-sh-mul, 1)) calc(14px * var(--ilg-sh-mul, 1)) rgba(var(--ilg-drop-rgb), calc(0.18 * var(--ilg-sh))),
+        0 calc(16px * var(--ilg-sh-mul, 1)) calc(36px * var(--ilg-sh-mul, 1)) rgba(var(--ilg-drop-rgb), calc(0.14 * var(--ilg-sh)));
+}
+/* 旧版的渐变亮边让开（输入框获得焦点时的蓝圈也不要：和滤镜里的高光叠在一起像描了两层边） */
+html.ilg body .ilg-glass.ilg-phys::before { opacity: 0; }
+/* 表面光泽：上方微亮往下淡出，让玻璃看起来是鼓起来的 */
+html.ilg body .ilg-sheen.ilg-phys::after {
+    inset: 0;
+    height: auto;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(255, 255, 255, calc(0.14 * var(--ilg-sheen-k))), rgba(255, 255, 255, 0) 50%);
+}
+
+/* 尊重酒馆“减少动画 / 关闭阴影”设置 */
+html.ilg body.noShadows :is(#top-bar, #nonQRFormItems, .ilg-glass),
+html.ilg body.noShadows :is(#top-bar, #nonQRFormItems, .ilg-glass).ilg-phys {
+    box-shadow: none;
+}
+
+/* ---------- 消息卡片（新版引擎）：暗色底只铺在中间托住文字，靠近边缘渐渐变透明，
+   让边缘那圈被放大、弯过去的壁纸露出来——这才是看得出是玻璃的地方 ---------- */
+html.ilg body.bubblechat #chat .mes.ilg-phys { background-color: transparent; }
+html.ilg body.bubblechat #chat .mes.ilg-phys::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    padding: 0;
+    opacity: 1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: var(--SmartThemeBotMesBlurTintColor);
+    -webkit-mask:
+        linear-gradient(90deg, rgba(0, 0, 0, .15), #000 22px, #000 calc(100% - 22px), rgba(0, 0, 0, .15)),
+        linear-gradient(180deg, rgba(0, 0, 0, .15), #000 22px, #000 calc(100% - 22px), rgba(0, 0, 0, .15));
+    -webkit-mask-composite: source-in;
+    mask:
+        linear-gradient(90deg, rgba(0, 0, 0, .15), #000 22px, #000 calc(100% - 22px), rgba(0, 0, 0, .15)),
+        linear-gradient(180deg, rgba(0, 0, 0, .15), #000 22px, #000 calc(100% - 22px), rgba(0, 0, 0, .15));
+    mask-composite: intersect;
+}
+html.ilg body.bubblechat #chat .mes.ilg-phys[is_user="true"]::before { background: var(--SmartThemeUserMesBlurTintColor); }
+
+/* ---------- 输入区细节：左边灰色圆形“+”（原三个点菜单），右边发送键空着时变淡 ---------- */
+html.ilg body {
+    --ilg-svg-menu: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 7h16M4 12h16M4 17h16'/%3E%3C/svg%3E");
+    --ilg-svg-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+    --ilg-svg-plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+    --ilg-chip: rgba(255, 255, 255, 0.12);
+    --ilg-chip-hover: rgba(255, 255, 255, 0.2);
+}
+html.ilg.ilg-light body {
+    --ilg-chip: rgba(0, 0, 0, 0.06);
+    --ilg-chip-hover: rgba(0, 0, 0, 0.1);
+}
+/* 左右按钮排成一行，不换行（酒馆默认 wrap，窄屏上 + 和魔棒会叠成两层） */
+html.ilg body #nonQRFormItems :is(#leftSendForm, #rightSendForm) {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 2px;
+    padding: 0;
+    flex-shrink: 0;
+}
+html.ilg body #nonQRFormItems :is(#leftSendForm, #rightSendForm) > div { flex-shrink: 0; }
+/* 窄屏让输入框让位，按钮保持正圆 */
+html.ilg body #nonQRFormItems #send_textarea { resize: none; min-width: 0; }
+html.ilg.ilg-icons body #nonQRFormItems #leftSendForm > div,
+html.ilg.ilg-icons body #nonQRFormItems #rightSendForm > div:not(.mes_stop):not(#send_but) {
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    color: var(--SmartThemeBodyColor);
+    background-color: transparent;
+    box-shadow: none;
+}
+html.ilg.ilg-icons body #nonQRFormItems #leftSendForm > #options_button { background-color: var(--ilg-chip); }
+html.ilg.ilg-icons body #nonQRFormItems #leftSendForm > div:hover,
+html.ilg.ilg-icons body #nonQRFormItems #rightSendForm > div:not(.mes_stop):not(#send_but):hover { background-color: var(--ilg-chip-hover); }
+html.ilg.ilg-icons body #nonQRFormItems #options_button { --ilg-icon: var(--ilg-svg-plus); }
+html.ilg.ilg-icons body #nonQRFormItems #options_button::before { width: 22px; height: 22px; }
+html.ilg.ilg-icons body #nonQRFormItems #send_but { width: 40px; height: 40px; opacity: 0.45; }
+html.ilg.ilg-icons body #nonQRFormItems:has(#send_textarea:not(:placeholder-shown)) #send_but { opacity: 1; }
+html.ilg body #nonQRFormItems #send_textarea {
+    align-self: center;
+    min-height: 40px;
+    padding: 9px 4px;
+    font-size: calc(var(--mainFontSize) * 1.02);
+    line-height: 22px;
+}
+html.ilg body #nonQRFormItems #send_textarea::placeholder { color: var(--SmartThemeBodyColor); opacity: 0.5; }
+
+/* 快捷回复：一排浮在输入胶囊上方的小玻璃胶囊，放不下就横向滑动 */
+html.ilg body #form_sheld #qr--bar {
+    opacity: 1;
+    padding: 0 2px;
+    scrollbar-width: none;
+}
+html.ilg body #form_sheld #qr--bar::-webkit-scrollbar { display: none; }
+html.ilg body #form_sheld #qr--bar > .qr--buttons {
+    flex-wrap: nowrap;
+    justify-content: safe center;
+    gap: 6px;
+}
+html.ilg body #form_sheld #send_form .qr--button {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    font-size: calc(var(--mainFontSize) * 0.88);
+    white-space: nowrap;
+    color: var(--SmartThemeBodyColor);
+    border: 0;
+    background-color: rgba(18, 14, 26, 0.5);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(10px) saturate(1.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+html.ilg body #form_sheld #send_form .qr--button:hover { background-color: rgba(30, 24, 40, 0.62); }
+html.ilg.ilg-light body #form_sheld #send_form .qr--button {
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 2px 8px rgba(30, 40, 70, 0.1);
+}
+html.ilg.ilg-light body #form_sheld #send_form .qr--button:hover { background-color: rgba(255, 255, 255, 0.85); }
+
+/* ---------- 滚动边缘渐隐：顶栏和输入区后面一层由浓到淡的模糊 + 暗色 ---------- */
+.ilg-scrim { display: none; }
+/* 只压暗、不模糊：玻璃要折射清楚的内容才看得出弧度，先模糊一遍再折射就只剩一块暗色胶囊。
+   浓度由设置里的滑块控制（--ilg-scrim-a，挂在 html 上） */
+html.ilg.ilg-float body .ilg-scrim {
+    --ilg-scrim-rgb: 8, 6, 14;
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 35;
+    pointer-events: none;
+}
+html.ilg.ilg-float.ilg-light body .ilg-scrim { --ilg-scrim-rgb: 255, 255, 255; }
+html.ilg.ilg-float body .ilg-scrim-top {
+    top: 0;
+    height: calc(var(--topBarBlockSize) + var(--ilg-gap) * 2 + 24px);
+    background: linear-gradient(180deg, rgba(var(--ilg-scrim-rgb), var(--ilg-scrim-a, 0.35)), rgba(var(--ilg-scrim-rgb), calc(var(--ilg-scrim-a, 0.35) * 0.4)) 55%, transparent);
+}
+html.ilg.ilg-float body .ilg-scrim-bottom {
+    bottom: 0;
+    height: calc(var(--ilg-form-h) + var(--ilg-gap) * 2 + 28px);
+    background: linear-gradient(0deg, rgba(var(--ilg-scrim-rgb), var(--ilg-scrim-a, 0.35)), rgba(var(--ilg-scrim-rgb), calc(var(--ilg-scrim-a, 0.35) * 0.4)) 55%, transparent);
+}
+
+/* ---------- 顶栏折叠：左边菜单键一座岛，右边角色卡 + 人设一座岛，其余图标收进菜单 ---------- */
+html.ilg.ilg-fold body #top-settings-holder {
+    justify-content: flex-start;
+    padding: 0 calc(var(--ilg-gap) + 6px);
+}
+html.ilg.ilg-fold body #top-settings-holder > .drawer.ilg-folded > .drawer-toggle { display: none; }
+html.ilg.ilg-fold body #top-settings-holder > .drawer.ilg-folded { flex: 0 0 0; width: 0; min-width: 0; }
+html.ilg.ilg-fold body #top-settings-holder > .drawer.ilg-fold-keep { flex: 0 0 auto; width: auto; }
+html.ilg.ilg-fold body #top-settings-holder > .drawer.ilg-fold-keep.ilg-group-start,
+html.ilg.ilg-fold.ilg-islands body #top-settings-holder > .drawer.ilg-fold-keep.ilg-group-start { margin-left: auto; }
+/* 留在右边的第一个图标（切换键、人设或角色卡，看哪个开着）把整组推到右边 */
+html.ilg.ilg-fold body #top-settings-holder > .ilg-fold-keep:not(.ilg-fold-keep ~ .ilg-fold-keep) { margin-left: auto; }
+
+/* ---------- 白 / 黑壁纸切换键：当前是瓷白显示太阳，墨黑显示月亮 ---------- */
+html.ilg body {
+    --ilg-svg-sun: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4'/%3E%3C/svg%3E");
+    --ilg-svg-moon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z'/%3E%3C/svg%3E");
+}
+#ilg-tone-button { display: none; }
+html.ilg body #top-settings-holder > #ilg-tone-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+html.ilg body #ilg-tone-button .ilg-tone-icon {
+    position: relative;
+    width: 44px;
+    height: 30px;
+    padding: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--SmartThemeBodyColor);
+    opacity: 0.9;
+    transition: background-color .25s, transform .3s cubic-bezier(.3, 1.6, .5, 1);
+}
+html.ilg body #ilg-tone-button .ilg-tone-icon::before {
+    content: "";
+    width: 21px;
+    height: 21px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-svg-moon) center / contain no-repeat;
+    mask: var(--ilg-svg-moon) center / contain no-repeat;
+    transition: transform .45s cubic-bezier(.3, 1.4, .5, 1);
+}
+html.ilg body #ilg-tone-button.ilg-is-light .ilg-tone-icon::before {
+    -webkit-mask-image: var(--ilg-svg-sun);
+    mask-image: var(--ilg-svg-sun);
+    transform: rotate(90deg);
+}
+html.ilg body #ilg-tone-button .ilg-tone-icon:hover { background-color: rgba(127, 127, 127, .12); }
+html.ilg body #ilg-tone-button .ilg-tone-icon:active { transform: scale(.9); }
+html.ilg body #ilg-tone-button .ilg-tone-icon:focus-visible { outline: 2px solid #0a84ff; outline-offset: 1px; }
+html.ilg body.reduced-motion #ilg-tone-button .ilg-tone-icon::before { transition: none; }
+#ilg-fold-button { display: none; }
+html.ilg.ilg-fold body #ilg-fold-button {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+html.ilg.ilg-fold body #ilg-fold-button .ilg-fold-icon {
+    position: relative;
+    width: 44px;
+    height: 30px;
+    padding: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--SmartThemeBodyColor);
+    opacity: 0.9;
+    transition: background-color .25s, color .25s, transform .3s cubic-bezier(.3, 1.6, .5, 1);
+}
+html.ilg.ilg-fold body #ilg-fold-button .ilg-fold-icon::before {
+    content: "";
+    width: 22px;
+    height: 22px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-svg-menu) center / contain no-repeat;
+    mask: var(--ilg-svg-menu) center / contain no-repeat;
+}
+html.ilg.ilg-fold body #ilg-fold-button .ilg-fold-icon:hover { background-color: rgba(127, 127, 127, .12); }
+html.ilg.ilg-fold body #ilg-fold-button .ilg-fold-icon:active { transform: scale(.9); }
+html.ilg.ilg-fold body #ilg-fold-button .ilg-fold-icon:focus-visible { outline: 2px solid #0a84ff; outline-offset: 1px; }
+html.ilg.ilg-fold body #ilg-fold-button.ilg-open .ilg-fold-icon {
+    opacity: 1;
+    color: #0a84ff;
+    background-color: rgba(10, 132, 255, .16);
+}
+html.ilg.ilg-fold body #ilg-fold-button.ilg-open .ilg-fold-icon::before {
+    -webkit-mask-image: var(--ilg-svg-close);
+    mask-image: var(--ilg-svg-close);
+}
+/* 没连上 API：菜单键和菜单里的“API 连接”右上角一个橙点 */
+html.ilg.ilg-fold body :is(#ilg-fold-button.ilg-alert .ilg-fold-icon, .ilg-fold-tile.ilg-alert .ilg-fold-glyph)::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    right: 9px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff9f0a;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, .7);
+}
+
+/* 弹出的玻璃菜单：四列图标 + 文字 */
+/* position 写在隐藏状态上也要生效：挂玻璃时会读 position，读到 static 就会被改成 relative */
+#ilg-fold-menu { display: none; position: fixed; z-index: 3010; }
+html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) {
+    display: grid;
+    grid-template-columns: repeat(4, 76px);
+    gap: 4px;
+    padding: 10px;
+    border-radius: 24px;
+    max-width: calc(100vw - 16px);
+    color: var(--SmartThemeBodyColor);
+    font-family: var(--ilg-ui-font);
+    background-color: rgba(22, 16, 30, 0.55);
+    animation: ilg-menu-in .24s cubic-bezier(.3, 1.3, .5, 1);
+    transform-origin: top left;
+}
+html.ilg.ilg-fold.ilg-light body #ilg-fold-menu:not([hidden]) { background-color: rgba(255, 255, 255, 0.68); }
+@media screen and (max-width: 360px) {
+    html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) { grid-template-columns: repeat(4, 1fr); width: calc(100vw - 16px); }
+}
+html.ilg body #ilg-fold-menu .ilg-fold-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 2px 8px;
+    border: 0;
+    border-radius: 16px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: calc(var(--mainFontSize) * 0.78);
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background-color .15s, transform .25s cubic-bezier(.3, 1.6, .5, 1);
+}
+html.ilg:not(.ilg-light) body #ilg-fold-menu .ilg-fold-tile { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+html.ilg body #ilg-fold-menu .ilg-fold-tile:hover { background-color: rgba(255, 255, 255, 0.12); }
+html.ilg.ilg-light body #ilg-fold-menu .ilg-fold-tile:hover { background-color: rgba(0, 0, 0, 0.06); }
+html.ilg body #ilg-fold-menu .ilg-fold-tile:active { transform: scale(0.94); }
+html.ilg body #ilg-fold-menu .ilg-fold-tile:focus-visible { outline: 2px solid #0a84ff; outline-offset: -2px; }
+html.ilg body #ilg-fold-menu .ilg-fold-glyph {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--ilg-chip);
+    font-size: 20px;
+}
+html.ilg body #ilg-fold-menu .ilg-fold-glyph:not(.ilg-fa)::before {
+    content: "";
+    width: 24px;
+    height: 24px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-icon) center / contain no-repeat;
+    mask: var(--ilg-icon) center / contain no-repeat;
+}
+html.ilg body #ilg-fold-menu .ilg-fold-tile.ilg-on .ilg-fold-glyph { color: #0a84ff; background-color: rgba(10, 132, 255, .16); }
+html.ilg body #ilg-fold-menu .ilg-fold-tile.ilg-alert .ilg-fold-glyph::after { top: 4px; right: 4px; }
+html.ilg body.reduced-motion #ilg-fold-menu { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg body #ilg-fold-menu { animation: none; }
+}
+
+/* ---------- 快捷回复折叠：输入框左边一个四宫格按钮，点开后快捷回复浮在胶囊上方的一块玻璃里 ---------- */
+html.ilg body {
+    --ilg-svg-grid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8'%3E%3Crect x='4' y='4' width='6.5' height='6.5' rx='2'/%3E%3Crect x='13.5' y='4' width='6.5' height='6.5' rx='2'/%3E%3Crect x='4' y='13.5' width='6.5' height='6.5' rx='2'/%3E%3Crect x='13.5' y='13.5' width='6.5' height='6.5' rx='2'/%3E%3C/svg%3E");
+}
+#ilg-qr-toggle { display: none; }
+html.ilg.ilg-qrfold body #ilg-qr-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    order: 99;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 1;
+    color: var(--SmartThemeBodyColor);
+    transition: background-color .2s, color .2s, transform .3s cubic-bezier(.3, 1.6, .5, 1);
+}
+/* 没有任何快捷回复时不显示这个按钮 */
+html.ilg.ilg-qrfold body:not(:has(#qr--bar .qr--button)) #ilg-qr-toggle { display: none; }
+html.ilg.ilg-qrfold body #ilg-qr-toggle::before {
+    content: "";
+    width: 20px;
+    height: 20px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-svg-grid) center / contain no-repeat;
+    mask: var(--ilg-svg-grid) center / contain no-repeat;
+}
+html.ilg.ilg-qrfold.ilg-qr-open body #nonQRFormItems #leftSendForm > #ilg-qr-toggle {
+    color: #0a84ff;
+    background-color: rgba(10, 132, 255, .16);
+}
+html.ilg body #ilg-qr-toggle:focus-visible { outline: 2px solid #0a84ff; outline-offset: 1px; }
+
+html.ilg.ilg-qrfold body #form_sheld #send_form { position: relative; }
+html.ilg.ilg-qrfold body #form_sheld #qr--bar { display: none; }
+html.ilg.ilg-qrfold.ilg-qr-open body #form_sheld #qr--bar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(100%, 460px);
+    padding: 10px;
+    border-radius: 22px;
+    overflow: visible;
+    z-index: 2;
+    background-color: rgba(22, 16, 30, 0.55);
+    transform-origin: bottom center;
+    animation: ilg-menu-in .24s cubic-bezier(.3, 1.3, .5, 1);
+}
+html.ilg.ilg-qrfold.ilg-qr-open.ilg-light body #form_sheld #qr--bar { background-color: rgba(255, 255, 255, 0.68); }
+html.ilg.ilg-qrfold body #form_sheld #qr--bar > .qr--buttons { flex-wrap: wrap; justify-content: center; }
+/* 外面那块已经是折射玻璃了，按钮自己不再模糊（嵌套的模糊只能“看到”外层），改成浅色小胶囊 */
+html.ilg.ilg-qrfold body #form_sheld #send_form .qr--button {
+    padding: 8px 14px;
+    background-color: var(--ilg-chip);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+}
+html.ilg.ilg-qrfold body #form_sheld #send_form .qr--button:hover { background-color: var(--ilg-chip-hover); }
+html.ilg body.reduced-motion #form_sheld #qr--bar { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg body #form_sheld #qr--bar { animation: none; }
+}
+
+/* ---------- 首页：水墨 logo + 一句按手机时间变化的问候 + “聊天记录”按钮 ---------- */
+html.ilg body {
+    --ilg-svg-history: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5'/%3E%3Cpath d='M3.5 3.5v5h5'/%3E%3Cpath d='M12 7.5V12l3 2'/%3E%3C/svg%3E");
+    --ilg-svg-chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5l7 7-7 7'/%3E%3C/svg%3E");
+    --ilg-svg-back: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 5l-7 7 7 7'/%3E%3C/svg%3E");
+}
+#ilg-home { display: none; }
+html.ilg.ilg-home body #chat > .ilg-home-hide { display: none; }
+html.ilg.ilg-home body #ilg-home {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 24px 6vh;
+    pointer-events: none;
+    text-align: center;
+    color: var(--SmartThemeBodyColor);
+    font-family: var(--ilg-ui-font);
+}
+html.ilg body #ilg-home { transition: opacity .25s ease, transform .35s cubic-bezier(.2, .8, .2, 1); }
+/* 聊天记录打开时问候让开，免得和卡片叠在一起（淡出写在外层：里面几行有入场动画，动画会盖住 opacity） */
+html.ilg.ilg-recent-open body #ilg-home { opacity: 0; transform: scale(.97); }
+html.ilg.ilg-recent-open body #ilg-home .ilg-home-recent { pointer-events: none; }
+/* logo：透明底的银河图，原样显示（它本来就是为深色背景画的）；浅色壁纸上整体反相，变成白纸上的墨色银河 */
+html.ilg body #ilg-home .ilg-home-logo {
+    width: clamp(128px, 36vw, 196px);
+    aspect-ratio: 1;
+    margin-bottom: 2px;
+    background: var(--ilg-logo) center / contain no-repeat;
+    animation: ilg-logo-in 1s cubic-bezier(.2, .8, .2, 1) both;
+}
+html.ilg.ilg-light body #ilg-home .ilg-home-logo { filter: invert(1); }
+@keyframes ilg-logo-in {
+    from { opacity: 0; transform: scale(.94); }
+}
+html.ilg body #ilg-home .ilg-home-title {
+    margin: 0;
+    font-family: inherit;
+    font-size: clamp(24px, 1.4vw + 16px, 34px);
+    font-weight: 300;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    color: inherit;
+    animation: ilg-home-in .7s .1s cubic-bezier(.2, .8, .2, 1) both;
+}
+html.ilg body #ilg-home .ilg-home-sub {
+    margin: 0;
+    font-size: clamp(14px, 0.4vw + 12px, 17px);
+    line-height: 1.6;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, currentColor 75%, transparent);
+    animation: ilg-home-in .7s .2s cubic-bezier(.2, .8, .2, 1) both;
+}
+html.ilg:not(.ilg-light) body #ilg-home :is(.ilg-home-title, .ilg-home-sub) {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 18px rgba(0, 0, 0, 0.35);
+}
+/* 醒目的“聊天记录”按钮：iOS 蓝的实心胶囊，首页唯一一个能点的东西 */
+html.ilg body #ilg-home .ilg-home-recent {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    margin-top: 22px;
+    padding: 0 26px 0 22px;
+    border: 0;
+    border-radius: 999px;
+    color: #fff;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    background-color: rgba(10, 132, 255, 0.88);
+    box-shadow: 0 10px 28px rgba(10, 132, 255, 0.32), 0 2px 6px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    animation: ilg-home-in .7s .3s cubic-bezier(.2, .8, .2, 1) both;
+}
+html.ilg body #ilg-home .ilg-home-recent:hover { background-color: rgba(30, 144, 255, 0.96); }
+html.ilg body #ilg-home .ilg-home-recent:active { transform: scale(.96); }
+html.ilg body #ilg-home .ilg-home-recent:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+html.ilg body #ilg-home .ilg-home-recent-icon {
+    width: 20px;
+    height: 20px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-svg-history) center / contain no-repeat;
+    mask: var(--ilg-svg-history) center / contain no-repeat;
+}
+@keyframes ilg-home-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+}
+/* 横屏手机：高度不够，logo 缩小、间距收紧 */
+@media screen and (max-height: 560px) {
+    html.ilg body #ilg-home .ilg-home-logo { width: 84px; margin-bottom: 0; }
+    html.ilg body #ilg-home .ilg-home-recent { margin-top: 10px; }
+}
+html.ilg body.reduced-motion #ilg-home :is(.ilg-home-logo, .ilg-home-title, .ilg-home-sub, .ilg-home-recent) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg body #ilg-home :is(.ilg-home-logo, .ilg-home-title, .ilg-home-sub, .ilg-home-recent) { animation: none; }
+}
+
+/* ---------- 聊天记录卡片：酒馆欢迎面板里的最近聊天列表，浮在屏幕正中的一块玻璃 ---------- */
+html.ilg.ilg-home.ilg-recent-open body #chat > .welcomePanel.ilg-recent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: fixed;
+    left: 50%;
+    /* 用 dvh 不用 %：手机样式下酒馆把 body 设成 fixed，百分比会按 0 高度算 */
+    top: calc(50dvh + (var(--topBarBlockSize) - var(--ilg-form-h)) / 2);
+    transform: translate(-50%, -50%);
+    z-index: 3000;
+    width: min(600px, calc(100dvw - var(--ilg-gap) * 2));
+    max-height: calc(100dvh - var(--topBarBlockSize) - var(--ilg-form-h) - var(--ilg-gap) * 6);
+    margin: 0;
+    padding: 6px 8px 10px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 0;
+    border-radius: 26px;
+    color: var(--SmartThemeBodyColor);
+    font-family: var(--ilg-ui-font);
+    background-color: rgba(22, 16, 30, 0.58);
+    animation: ilg-menu-in .26s cubic-bezier(.3, 1.3, .5, 1);
+}
+html.ilg.ilg-light.ilg-recent-open body #chat > .welcomePanel.ilg-recent { background-color: rgba(255, 255, 255, 0.7); }
+html.ilg body .welcomePanel.ilg-recent .ilg-recent-head {
+    position: sticky;
+    top: -6px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: -6px -8px 2px;
+    padding: 14px 12px 8px 18px;
+}
+html.ilg body .welcomePanel.ilg-recent .ilg-recent-title {
+    margin: 0;
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    color: inherit;
+}
+html.ilg body :is(.ilg-recent-close, .ilg-sheet-close) {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    background-color: var(--ilg-chip);
+    cursor: pointer;
+}
+html.ilg body :is(.ilg-recent-close, .ilg-sheet-close)::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    opacity: 0.8;
+    -webkit-mask: var(--ilg-svg-close) center / contain no-repeat;
+    mask: var(--ilg-svg-close) center / contain no-repeat;
+}
+html.ilg body :is(.ilg-recent-close, .ilg-sheet-close):hover { background-color: var(--ilg-chip-hover); }
+html.ilg body :is(.ilg-recent-close, .ilg-sheet-close, .ilg-sheet-back):focus-visible { outline: 2px solid #0a84ff; outline-offset: 1px; }
+/* 酒馆自己的标题行（小 logo、版本号、显示 / 隐藏按钮）和文档 / GitHub / Discord 链接都不要，只留“临时聊天” */
+html.ilg body .welcomePanel.ilg-recent :is(.welcomeHeaderTitle, .recentChatsTitle, .welcomeShortcuts > a, .welcomeShortcutsSeparator) { display: none; }
+html.ilg body .welcomePanel.ilg-recent .welcomeHeader { order: 3; justify-content: center; padding-top: 6px; }
+html.ilg body .welcomePanel.ilg-recent .welcomeShortcuts .openTemporaryChat {
+    margin: 0;
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 999px;
+    background-color: var(--ilg-chip);
+}
+/* 用户之前点过“隐藏最近聊天”也照样显示：这里就是专门看聊天记录的地方 */
+html.ilg body .welcomePanel.ilg-recent .welcomeRecent { display: block; order: 2; }
+html.ilg body .welcomePanel.ilg-recent .recentChatList { gap: 2px; }
+html.ilg body .welcomePanel.ilg-recent .recentChat {
+    gap: 12px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 16px;
+    transition: background-color .15s;
+}
+html.ilg body .welcomePanel.ilg-recent .recentChat:hover { background-color: var(--ilg-chip); }
+html.ilg body .welcomePanel.ilg-recent .recentChat + .recentChat::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 68px;
+    right: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+html.ilg.ilg-light body .welcomePanel.ilg-recent .recentChat + .recentChat::before { border-top-color: rgba(0, 0, 0, 0.07); }
+html.ilg body .welcomePanel.ilg-recent .recentChat :is(.avatar, .avatar img) { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%; }
+html.ilg body .welcomePanel.ilg-recent .recentChat .avatar img { object-fit: cover; }
+html.ilg body .welcomePanel.ilg-recent .chatNameContainer { font-size: 15px; line-height: 1.4; }
+html.ilg body .welcomePanel.ilg-recent .chatName .characterName { font-weight: 650; }
+html.ilg body .welcomePanel.ilg-recent .chatDate { opacity: 0.55; font-variant-numeric: tabular-nums; white-space: nowrap; }
+html.ilg body .welcomePanel.ilg-recent .chatMessageContainer { font-size: 13.5px; line-height: 1.5; opacity: 0.72; }
+html.ilg body .welcomePanel.ilg-recent .chatActions button { padding: 5px; border: 0; border-radius: 8px; background-color: var(--ilg-chip); }
+html.ilg body .welcomePanel.ilg-recent .showMoreChats { align-self: center; margin: 6px auto 0; border: 0; border-radius: 999px; background-color: var(--ilg-chip); }
+html.ilg body .welcomePanel.ilg-recent .noRecentChat { padding: 28px 10px; opacity: 0.7; }
+html.ilg body.reduced-motion .welcomePanel.ilg-recent { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg body .welcomePanel.ilg-recent { animation: none; }
+}
+
+/* ---------- 菜单第一行“聊天记录” + 小标题 ---------- */
+html.ilg body #ilg-fold-menu :is(.ilg-fold-row, .ilg-fold-cap) { grid-column: 1 / -1; }
+html.ilg body #ilg-fold-menu .ilg-fold-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px 10px 10px;
+    border: 0;
+    border-radius: 16px;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    background-color: var(--ilg-chip);
+    cursor: pointer;
+    transition: background-color .15s, transform .25s cubic-bezier(.3, 1.6, .5, 1);
+}
+html.ilg body #ilg-fold-menu .ilg-fold-row:hover { background-color: var(--ilg-chip-hover); }
+html.ilg body #ilg-fold-menu .ilg-fold-row:active { transform: scale(0.98); }
+html.ilg body #ilg-fold-menu .ilg-fold-row:focus-visible { outline: 2px solid #0a84ff; outline-offset: -2px; }
+html.ilg body #ilg-fold-menu .ilg-fold-row-icon {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background-color: #0a84ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+html.ilg body #ilg-fold-menu .ilg-fold-row-icon::before {
+    content: "";
+    width: 22px;
+    height: 22px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-svg-history) center / contain no-repeat;
+    mask: var(--ilg-svg-history) center / contain no-repeat;
+}
+html.ilg body #ilg-fold-menu .ilg-fold-row-text { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+html.ilg body #ilg-fold-menu .ilg-fold-row-text b { font-size: 15px; font-weight: 650; }
+html.ilg body #ilg-fold-menu .ilg-fold-row-text small { font-size: 12.5px; opacity: 0.65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.ilg body #ilg-fold-menu .ilg-fold-row-chev {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    background-color: currentColor;
+    opacity: 0.45;
+    -webkit-mask: var(--ilg-svg-chev) center / contain no-repeat;
+    mask: var(--ilg-svg-chev) center / contain no-repeat;
+}
+html.ilg body #ilg-fold-menu .ilg-fold-cap {
+    padding: 10px 8px 2px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    opacity: 0.55;
+}
+html.ilg:not(.ilg-light) body #ilg-fold-menu .ilg-fold-tile { text-shadow: none; }
+html.ilg body #ilg-fold-menu .ilg-fold-label { font-size: 12.5px; letter-spacing: 0.02em; white-space: nowrap; }
+/* 电脑上菜单宽一点，图标格子大一点 */
+@media screen and (min-width: 1001px) {
+    html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) { grid-template-columns: repeat(4, 86px); gap: 6px; padding: 12px; }
+    html.ilg body #ilg-fold-menu .ilg-fold-label { font-size: 13px; }
+}
+
+/* ---------- 二级页面（从菜单打开的抽屉）：浮起来的圆角玻璃页，四周留出和顶栏一样的空隙，底部让出输入框 ---------- */
+html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-content {
+    border-radius: 24px;
+    border: 0;
+}
+@media screen and (min-width: 1001px) {
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-content:not(.fillLeft):not(.fillRight) {
+        --ilg-sheet-top: calc(var(--topBarBlockSize) + var(--ilg-gap));
+        top: var(--ilg-sheet-top);
+        width: calc(var(--sheldWidth) - var(--ilg-gap) * 2);
+        max-height: calc(100dvh - var(--ilg-sheet-top) - var(--ilg-form-h) - var(--ilg-gap) * 4);
+        padding: 0 16px 14px;
+    }
+}
+/* 电脑上左右两侧的长面板（AI 回复设置、角色卡）也离开屏幕边缘 */
+@media screen and (min-width: 1001px) {
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > :is(.fillLeft, .fillRight) {
+        top: var(--ilg-gap);
+        width: calc((100dvw - var(--sheldWidth)) / 2 - var(--ilg-gap) * 2);
+        max-height: calc(100dvh - var(--ilg-gap) * 2);
+    }
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .fillLeft { left: var(--ilg-gap); }
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .fillRight { right: var(--ilg-gap); left: auto; }
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > :is(.fillLeft, .fillRight).openDrawer { height: calc(100dvh - var(--ilg-gap) * 2); }
+}
+/* 手机：所有抽屉都是同一张页，夹在顶栏和输入框中间 */
+@media screen and (max-width: 1000px) {
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-content {
+        --ilg-sheet-top: calc(var(--topBarBlockSize) + var(--ilg-gap) * 2);
+        position: fixed;
+        top: var(--ilg-sheet-top) !important;
+        left: var(--ilg-gap) !important;
+        right: auto;
+        width: calc(100dvw - var(--ilg-gap) * 2) !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        max-height: calc(100dvh - var(--ilg-sheet-top) - var(--ilg-form-h) - var(--ilg-gap) * 3);
+        padding: 0 12px 12px;
+    }
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > :is(.fillLeft, .fillRight) { padding: 0; }
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > :is(.fillLeft, .fillRight).openDrawer {
+        height: calc(100dvh - var(--ilg-sheet-top) - var(--ilg-form-h) - var(--ilg-gap) * 3);
+    }
+}
+
+/* 吸顶标题栏：‹ 菜单 | 名字 | ×。下面滚过的内容在标题栏后面模糊掉（外层玻璃是“背景根”，这里只模糊抽屉自己的内容） */
+html.ilg body .ilg-sheet-head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    margin: 0 -16px 10px;
+    padding: 10px 10px 8px;
+    color: var(--SmartThemeBodyColor);
+    background-color: rgba(18, 14, 26, 0.42);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+html.ilg.ilg-light body .ilg-sheet-head { background-color: rgba(255, 255, 255, 0.5); border-bottom-color: rgba(0, 0, 0, 0.06); }
+@media screen and (max-width: 1000px) {
+    html.ilg body .ilg-sheet-head { margin: 0 -12px 8px; }
+}
+/* 左右长面板自己不滚动（里面另有滚动区），标题栏就是一个普通的顶行 */
+html.ilg body :is(.fillLeft, .fillRight) > .ilg-sheet-head { position: relative; flex: 0 0 auto; margin: 0 0 4px; border-radius: 24px 24px 0 0; }
+html.ilg body .ilg-sheet-title {
+    grid-column: 2;
+    margin: 0;
+    font-family: var(--ilg-ui-font);
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    color: inherit;
+    white-space: nowrap;
+}
+html.ilg body .ilg-sheet-back {
+    grid-column: 1;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 32px;
+    padding: 0 10px 0 4px;
+    border: 0;
+    border-radius: 999px;
+    color: #4aa3ff;
+    font: inherit;
+    font-size: 15px;
+    background: transparent;
+    cursor: pointer;
+}
+html.ilg.ilg-light body .ilg-sheet-back { color: #0a74e0; }
+html.ilg body .ilg-sheet-back:hover { background-color: var(--ilg-chip); }
+html.ilg body .ilg-sheet-back > span {
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-svg-back) center / contain no-repeat;
+    mask: var(--ilg-svg-back) center / contain no-repeat;
+}
+html.ilg body .ilg-sheet-close { grid-column: 3; justify-self: end; }
+/* AI 回复设置面板：“单击滑块以手动输入值”本来绝对定位压在最上面，改成标题栏下面的一行小字；右上角的问号挪进标题栏、× 的左边 */
+html.ilg body #left-nav-panel:has(> .ilg-sheet-head) > .editable-slider-notification {
+    position: static;
+    width: auto;
+    margin: 0 12px 6px;
+    font-size: 12.5px;
+    opacity: 0.6;
+}
+html.ilg body #left-nav-panel:has(> .ilg-sheet-head) > .topRightInset { top: 17px; right: 56px; z-index: 6; }
+
+/* ---------- 二级页面里的排版：标题、分组折叠条、输入框统一成 iOS 设置页的样子 ---------- */
+html.ilg body #top-settings-holder .drawer-content { line-height: 1.5; }
+html.ilg body #top-settings-holder .drawer-content :is(h3, h4) { letter-spacing: 0.01em; }
+html.ilg body #top-settings-holder .drawer-content h3 { font-size: calc(var(--mainFontSize) * 1.12); font-weight: 650; margin: 6px 0; }
+/* 酒馆的“标题条”是一道带金边的渐变，换成一行素净的分组条；展开的内容是下面一块微微凹进去的底 */
+html.ilg body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-header, #extensions_settings2 .inline-drawer-toggle.inline-drawer-header, #user-settings-block h4, .standoutHeader) {
+    background-image: none;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 0;
+    border-radius: 14px;
+    padding: 9px 12px;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+html.ilg.ilg-light body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-header, #extensions_settings2 .inline-drawer-toggle.inline-drawer-header, #user-settings-block h4, .standoutHeader) {
+    background-image: none;
+    background-color: rgba(255, 255, 255, 0.55);
+}
+html.ilg body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-header, #extensions_settings2 .inline-drawer-toggle.inline-drawer-header, .standoutHeader.inline-drawer-header):hover {
+    filter: none;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+html.ilg.ilg-light body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-header, #extensions_settings2 .inline-drawer-toggle.inline-drawer-header, .standoutHeader.inline-drawer-header):hover { background-color: rgba(255, 255, 255, 0.75); }
+html.ilg body .standoutHeader ~ .inline-drawer-content {
+    border: 0;
+    border-radius: 14px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.16);
+}
+html.ilg.ilg-light body .standoutHeader ~ .inline-drawer-content { background-color: rgba(255, 255, 255, 0.3); }
+/* 折叠条右边的大圆圈箭头换成一个细箭头 */
+html.ilg body .inline-drawer-icon:is(.fa-circle-chevron-down, .fa-circle-chevron-up) {
+    font-size: 13px;
+    width: 24px;
+    text-align: center;
+    filter: none;
+    opacity: 0.55;
+}
+html.ilg body .inline-drawer-icon.fa-circle-chevron-down::before { content: "\f078"; }
+html.ilg body .inline-drawer-icon.fa-circle-chevron-up::before { content: "\f077"; }
+html.ilg body #top-settings-holder .drawer-content :is(.text_pole, select, textarea) { border-radius: 10px; }
+html.ilg body #top-settings-holder .drawer-content .menu_button { border-radius: 10px; }
+
+/* ---------- 设置面板 ---------- */
+.ilg-settings .ilg-row { margin: 6px 0; }
+.ilg-settings .ilg-row label { display: flex; justify-content: space-between; gap: 8px; }
+.ilg-settings .ilg-row input[type=range] { width: 100%; }
+.ilg-settings .ilg-status { font-size: 0.9em; opacity: 0.85; margin: 4px 0 8px; line-height: 1.5; }
+.ilg-settings .ilg-hint { font-size: 0.82em; opacity: 0.6; }
+.ilg-settings [hidden] { display: none !important; }
+.ilg-settings .ilg-hours { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.ilg-settings .ilg-hours input { width: 5ch; min-width: 0; text-align: center; margin: 0; }
+.ilg-settings .ilg-row[data-tone] { display: flex; align-items: center; justify-content: space-between; }
+.ilg-settings .ilg-sub { font-size: 0.9em; opacity: 0.8; margin: 4px 0; }
+.ilg-settings .ilg-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 8px; }
+.ilg-settings .ilg-presets .menu_button { margin: 0; width: auto; justify-content: center; }
+.ilg-settings .ilg-presets [data-preset="natural"] { grid-column: 1 / -1; }
+.ilg-settings .ilg-presets .menu_button[aria-pressed="true"] { border-color: #0a84ff; background-color: rgba(10, 132, 255, 0.35); }
+
+/* ---------- 控件统一（深浅两套）：输入框、按钮、滑块、勾选框 ----------
+   思路照 iOS 设置页：页面是一层玻璃，输入框 / 按钮 / 分组条是上面更亮的“卡片”，靠这点明暗差分出层次；
+   滑块是细轨道 + 白圆点，左边走过的部分填系统蓝（--ilg-fill 由 JS 按当前值写进去）；勾选框勾上是蓝底白勾 */
+html.ilg body {
+    --ilg-accent: #0a84ff;
+    --ilg-field: rgba(255, 255, 255, 0.08);
+    --ilg-field-line: rgba(255, 255, 255, 0.14);
+    --ilg-btn: rgba(255, 255, 255, 0.1);
+    --ilg-btn-hover: rgba(255, 255, 255, 0.18);
+    --ilg-btn-line: rgba(255, 255, 255, 0.1);
+    --ilg-track: rgba(255, 255, 255, 0.2);
+    --ilg-box: rgba(255, 255, 255, 0.06);
+    --ilg-box-line: rgba(255, 255, 255, 0.4);
+    --ilg-placeholder: rgba(235, 235, 245, 0.4);
+    --SmartThemeCheckboxTickColor: #fff;
+}
+html.ilg.ilg-light body {
+    --SmartThemeBlurTintColor: rgba(244, 244, 248, 0.68);
+    --SmartThemeBodyColor: rgba(29, 29, 31, 1);
+    --SmartThemeEmColor: rgba(60, 60, 67, 0.62);
+    --ilg-accent: #007aff;
+    --ilg-field: rgba(255, 255, 255, 0.72);
+    --ilg-field-line: rgba(60, 60, 67, 0.16);
+    --ilg-btn: rgba(255, 255, 255, 0.78);
+    --ilg-btn-hover: #fff;
+    --ilg-btn-line: rgba(60, 60, 67, 0.12);
+    --ilg-track: rgba(60, 60, 67, 0.18);
+    --ilg-box: #fff;
+    --ilg-box-line: rgba(60, 60, 67, 0.3);
+    --ilg-placeholder: rgba(60, 60, 67, 0.45);
+}
+/* 浅色壁纸压暗一点点：整屏的白光是“刺眼”的主要来源；玻璃折射的是压暗后的画面，弧度不受影响 */
+html.ilg.ilg-light body :is(#bg1, #bg_custom) { filter: brightness(0.94) saturate(0.95); }
+
+/* 输入框、下拉框、多行文本。原来是 30% 黑盖在玻璃上：浅色下一片脏灰，深色下发闷 */
+html.ilg body :is(.text_pole, select, textarea:not(#send_textarea), .range-block-counter input, .neo-range-input) {
+    background-color: var(--ilg-field);
+    border-color: var(--ilg-field-line);
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg body :is(.text_pole, select, textarea:not(#send_textarea), .range-block-counter input, .neo-range-input):focus {
+    border-color: var(--ilg-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ilg-accent) 22%, transparent);
+    outline: none;
+}
+html.ilg body :is(.text_pole, textarea:not(#send_textarea))::placeholder { color: var(--ilg-placeholder); }
+/* 滑块旁边的数字框：至少放得下 7 位数（上下文长度 2000000 在电脑侧栏里被切成“200000(”） */
+html.ilg body .range-block-counter { flex: 0 0 auto; }
+html.ilg body .range-block-counter input { min-width: 9ch; padding: 2px 6px; font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+/* 电脑上数字框里自带的上下小箭头会占掉一位数字的宽度（2000000 显示成 200000），旁边有滑块，箭头用不上 */
+html.ilg body .range-block-counter input::-webkit-inner-spin-button,
+html.ilg body .range-block-counter input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* 按钮：比页面亮一档的小卡片，去掉酒馆默认的半灰滤镜（它把彩色图标都洗灰了）。
+   底色走变量，带红色警告、预设选中这些自己写了底色的按钮不受影响 */
+html.ilg body .menu_button {
+    --SmartThemeBlurTintColor: var(--ilg-btn);
+    border-color: var(--ilg-btn-line);
+    filter: none;
+}
+html.ilg.ilg-light body .menu_button { box-shadow: 0 1px 2px rgba(30, 40, 70, 0.08); }
+html.ilg body .menu_button:not(.disabled):not([disabled]):not(.redWarningBG):is(:hover, .active) {
+    background-color: var(--ilg-btn-hover);
+}
+
+/* 滑块：细轨道 + 白圆点；左边是填色，右边是灰轨道 */
+html.ilg body input[type="range"],
+html.ilg body .neo-range-slider {
+    background: linear-gradient(var(--ilg-accent), var(--ilg-accent)) 0 0 / var(--ilg-fill, 0%) 100% no-repeat, var(--ilg-track) !important;
+    box-shadow: none !important;
+    filter: none !important;
+    height: 4px;
+}
+html.ilg body .neo-range-slider { border-radius: 4px !important; }
+html.ilg body input[type="range"]:hover { filter: none; }
+html.ilg body input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 0.5px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.14);
+}
+html.ilg body input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 0.5px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.14);
+}
+
+/* 勾选框：没勾是空心方框，勾上是蓝底白勾。原来浅色下不管勾没勾都是一个黑方块 */
+html.ilg body input[type="checkbox"] {
+    background-color: var(--ilg-box);
+    border: 1px solid var(--ilg-box-line);
+    outline: 0;
+    border-radius: 5px;
+    box-shadow: none;
+    filter: none;
+}
+html.ilg body input[type="checkbox"]:checked {
+    background-color: var(--ilg-accent);
+    border-color: var(--ilg-accent);
+}
+html.ilg body :is(input[type="checkbox"], input[type="range"]):focus-visible {
+    outline: 2px solid var(--ilg-accent);
+    outline-offset: 2px;
+}
+
+/* 角色列表里的标签和筛选圆钮：去掉压暗滤镜 */
+html.ilg.ilg-light body .tag { border-color: rgba(60, 60, 67, 0.12); }
+html.ilg.ilg-light body .tag:not([style*="background"]) { background-color: rgba(60, 60, 67, 0.08); }
+html.ilg body .rm_tag_filter .tag { filter: none; opacity: 0.75; }
+html.ilg body .rm_tag_filter .tag:hover { opacity: 1; }
+
+/* 分组条、展开内容（浅色）：比页面更白一点，形成“卡片”层次 */
+html.ilg.ilg-light body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-header, #extensions_settings2 .inline-drawer-toggle.inline-drawer-header, #user-settings-block h4, .standoutHeader) {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+html.ilg.ilg-light body .standoutHeader ~ .inline-drawer-content { background-color: rgba(255, 255, 255, 0.4); }
+
+/* ---------- 零碎修整 ---------- */
+/* 问号帮助图标：原来跟着“引号颜色”是土黄色，和整套灰 / 蓝不搭 */
+html.ilg body .note-link-span { color: var(--SmartThemeEmColor); opacity: 0.85; }
+html.ilg body .note-link-span:hover { color: var(--ilg-accent); opacity: 1; }
+/* AI 回复设置的“锁定”小锁（只有电脑上有）：电脑上面板只有 300px 宽，放进标题栏会压住标题，所以挪到下面那行“单击滑块以手动输入值”小字的最右边 */
+html.ilg body #left-nav-panel:has(> .ilg-sheet-head) > #lm_button_panel_pin_div {
+    position: absolute;
+    top: 62px;
+    right: 18px;
+    z-index: 6;
+    font-size: 13px;
+    line-height: 1;
+    opacity: 0.6;
+}
+html.ilg body #left-nav-panel:has(> .ilg-sheet-head) > #lm_button_panel_pin_div:hover { opacity: 1; }
+/* 角色面板左上角的“角色列表”图标：手机上被放大到顶栏图标那么大，贴着圆角被切掉一块 */
+html.ilg body #rm_button_characters { font-size: 20px; padding: 6px 8px; opacity: 0.75; }
+html.ilg body #rm_button_characters:hover { opacity: 1; }
+
+/* ---------- 首页“聊天记录”按钮：从饱和的蓝胶囊改成一颗安静的玻璃胶囊，和锁屏一样的气质 ---------- */
+html.ilg body #ilg-home .ilg-home-recent {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+html.ilg body #ilg-home .ilg-home-recent:hover { background-color: rgba(255, 255, 255, 0.24); }
+html.ilg.ilg-light body #ilg-home .ilg-home-recent {
+    color: var(--ilg-accent);
+    background-color: rgba(255, 255, 255, 0.62);
+    box-shadow: 0 8px 24px rgba(30, 40, 70, 0.12);
+    text-shadow: none;
+}
+html.ilg.ilg-light body #ilg-home .ilg-home-recent:hover { background-color: rgba(255, 255, 255, 0.85); }
+html.ilg.ilg-light body #ilg-home .ilg-home-recent:focus-visible { outline-color: var(--ilg-accent); }
+/* 手机上二级页盖住首页时，首页问候先淡出，不然会透过玻璃页糊成一团 */
+@media screen and (max-width: 1000px) {
+    html.ilg body:has(#top-settings-holder > .drawer > .drawer-content.openDrawer) #ilg-home { opacity: 0; }
+}
+
+/* ---------- 聊天正文：叙述退后一步，台词往前一步 ----------
+   台词（引号里的话）用暖色 + 字底下一道很淡的荧光笔，一眼能扫出谁说了什么；
+   叙述比纯白 / 纯黑稍软一点；心里话（斜体）再淡一档。角色卡自己的前端（iframe）不受影响 */
+html.ilg body {
+    --SmartThemeQuoteColor: rgba(255, 196, 140, 1);
+    --ilg-say: #ffc48c;
+    --ilg-say-bg: rgba(255, 170, 100, 0.14);
+    --ilg-narr: rgba(242, 242, 247, 0.9);
+    --ilg-think: rgba(235, 235, 245, 0.62);
+}
+html.ilg.ilg-light body {
+    --SmartThemeQuoteColor: rgba(184, 74, 28, 1);
+    --ilg-say: #b84a1c;
+    --ilg-say-bg: rgba(255, 140, 70, 0.14);
+    --ilg-narr: rgba(29, 29, 31, 0.86);
+    --ilg-think: rgba(60, 60, 67, 0.62);
+}
+html.ilg body #chat .mes_text { color: var(--ilg-narr); }
+html.ilg body #chat .mes_text q {
+    color: var(--ilg-say);
+    background: linear-gradient(transparent 62%, var(--ilg-say-bg) 62%, var(--ilg-say-bg) 92%, transparent 92%);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding: 0 1px;
+}
+html.ilg body #chat .mes_text :is(em, i):not(q *) { color: var(--ilg-think); }
+html.ilg body #chat .mes_text :is(strong, b) { color: var(--SmartThemeBodyColor); font-weight: 650; }
+html.ilg body #chat .mes_text blockquote {
+    margin: 8px 0;
+    padding: 8px 12px;
+    border: 0;
+    border-left: 3px solid color-mix(in srgb, var(--ilg-say) 70%, transparent);
+    border-radius: 4px 12px 12px 4px;
+    background-color: var(--ilg-chip);
+}
+html.ilg body #chat .mes_text hr {
+    height: 1px;
+    margin: 14px 8%;
+    border: 0;
+    background: linear-gradient(90deg, transparent, currentColor, transparent);
+    opacity: 0.25;
+}
+html.ilg body #chat .mes_text code:not(pre code) {
+    padding: 1px 6px;
+    border-radius: 6px;
+    background-color: var(--ilg-chip);
+    font-size: 0.9em;
+}
+/* 名字一行：名字粗，时间小而淡 */
+html.ilg body #chat .mes .timestamp { font-size: 11.5px; letter-spacing: 0.02em; margin-left: 6px; }
+
+/* ---------- 气泡形状：自己说的话靠右，像发消息一样（头像也挪到右边），宽度跟着字数走 ---------- */
+html.ilg body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] {
+    flex-direction: row-reverse;
+    width: fit-content;
+    max-width: min(86%, 680px);
+    min-width: 168px;
+    margin-left: auto;
+}
+html.ilg body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .mes_block { padding-left: 0; padding-right: 10px; }
+/* 正在编辑时撑满整行，输入框不能窄 */
+html.ilg body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"]:has(.edit_textarea) { width: 100%; max-width: none; }
+
+/* ---------- 白天时段的两个小数字框：自带的上下箭头占掉一位，19 显示成 1… ---------- */
+html.ilg body .ilg-settings .ilg-hours input { width: 3.4em; padding: 2px 4px; -moz-appearance: textfield; appearance: textfield; }
+html.ilg body .ilg-settings .ilg-hours input::-webkit-inner-spin-button,
+html.ilg body .ilg-settings .ilg-hours input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ---------- 消息头像：iOS 图标那种超椭圆，外面一圈细光环，中间留一道透明缝 ----------
+   角色是暖色晚霞环（和对白的琥珀色一家），自己是冷蓝环；角色正在回复时光环慢慢转，像在“说话” */
+@property --ilg-ring-a { syntax: '<angle>'; inherits: false; initial-value: 210deg; }
+html.ilg body {
+    --ilg-squircle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0C88 0 100 12 100 50S88 100 50 100 0 88 0 50 12 0 50 0Z'/%3E%3C/svg%3E");
+    --ilg-ring-bot: #ffb47a, #ff7fa6, #b894ff, #ffb47a;
+    --ilg-ring-user: #64d2ff, #0a84ff, #8e8cff, #64d2ff;
+}
+html.ilg body #chat .mes:not(.smallSysMes) .avatar {
+    position: relative;
+    box-sizing: border-box;
+    padding: 3.5px;
+    border-radius: 0;
+    background: none;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.22));
+    transition: transform 0.25s ease;
+}
+html.ilg.ilg-light body #chat .mes:not(.smallSysMes) .avatar { filter: drop-shadow(0 2px 6px rgba(60, 40, 30, 0.14)); }
+html.ilg body #chat .mes:not(.smallSysMes) .avatar:hover { transform: scale(1.06); }
+html.ilg body #chat .mes:not(.smallSysMes) .avatar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: conic-gradient(from var(--ilg-ring-a), var(--ilg-ring-bot));
+    /* 外轮廓减去内轮廓，只留 1.5px 的环 */
+    -webkit-mask: var(--ilg-squircle) 0 0 / 100% 100% no-repeat, var(--ilg-squircle) center / calc(100% - 3px) calc(100% - 3px) no-repeat;
+    -webkit-mask-composite: xor;
+    mask: var(--ilg-squircle) 0 0 / 100% 100% no-repeat, var(--ilg-squircle) center / calc(100% - 3px) calc(100% - 3px) no-repeat;
+    mask-composite: exclude;
+}
+html.ilg body #chat .mes[is_user="true"] .avatar::before { background: conic-gradient(from var(--ilg-ring-a), var(--ilg-ring-user)); }
+html.ilg body #chat .mes:not(.smallSysMes) .avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-mask: var(--ilg-squircle) center / 100% 100% no-repeat;
+    mask: var(--ilg-squircle) center / 100% 100% no-repeat;
+}
+@keyframes ilg-ring-spin { to { --ilg-ring-a: 570deg; } }
+html.ilg body[data-generating] #chat .mes.last_mes:not([is_user="true"]) .avatar::before { animation: ilg-ring-spin 2.6s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg body[data-generating] #chat .mes.last_mes .avatar::before { animation: none; }
+}
+
+/* ---------- 名片式排版（设置“头像”选“名片式”时）：头像缩小放进名字那一行，正文从左边开始占满整个气泡 ----------
+   原来头像在左边单独占一列，长消息下面一大片空白，手机上正文还被挤窄 50px */
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) { --ilg-av: 40px; padding: 12px 14px 10px; }
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) .mesAvatarWrapper {
+    position: absolute;
+    top: 12px;
+    bottom: 10px;
+    left: 14px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0;
+    pointer-events: none;
+}
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) .avatar {
+    flex: none;
+    width: var(--ilg-av);
+    height: var(--ilg-av);
+    pointer-events: auto;
+}
+/* 生成用时这些小字（有才显示）挪到气泡左下角，和右下角的“1/1”对称 */
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) .mesAvatarWrapper > :not(.avatar) {
+    margin-top: auto;
+    font-size: 11px;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 0.5;
+    pointer-events: auto;
+}
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) .mesAvatarWrapper > .mes_timer:empty { display: none; }
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes):has(.mes_timer:not(:empty)) .mes_block { padding-bottom: 14px; }
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) .mes_block { padding-left: 0; padding-right: 0; }
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) .ch_name {
+    min-height: var(--ilg-av);
+    align-items: center;
+    padding-left: calc(var(--ilg-av) + 10px);
+    margin-bottom: 4px;
+}
+/* 自己的气泡：头像在右上角，名字和时间贴着头像 */
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .mesAvatarWrapper { left: auto; right: 14px; align-items: flex-end; }
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .mesAvatarWrapper > :not(.avatar) { display: none; }
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .ch_name {
+    flex-direction: row-reverse;
+    padding-left: 0;
+    padding-right: calc(var(--ilg-av) + 10px);
+}
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .ch_name > .flex1 { justify-content: flex-end; }
+@media screen and (max-width: 1000px) {
+    html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) { --ilg-av: 36px; padding: 10px 12px 8px; }
+    html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes) .mesAvatarWrapper { top: 10px; bottom: 8px; left: 12px; }
+    html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .mesAvatarWrapper { left: auto; right: 12px; }
+}
+
+/* ===== 思考小球：模型在想的时候，一颗转动的点阵球 + 等宽字的“思考中 · 3s”（画法在 orb.js，挂载在 index.js 的 syncThink） ===== */
+html.ilg {
+    --ilg-think-bg: rgba(18, 16, 24, 0.58);
+    --ilg-think-fg: rgba(245, 240, 235, 0.92);
+    --ilg-think-dim: rgba(235, 235, 245, 0.45);
+    --ilg-think-line: rgba(255, 255, 255, 0.08);
+    --ilg-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Noto Sans Mono CJK SC", monospace;
+}
+html.ilg.ilg-light {
+    --ilg-think-bg: rgba(255, 255, 255, 0.72);
+    --ilg-think-fg: rgba(28, 28, 30, 0.88);
+    --ilg-think-dim: rgba(60, 60, 67, 0.5);
+    --ilg-think-line: rgba(0, 0, 0, 0.06);
+}
+html.ilg .ilg-orb { display: block; flex: none; width: 18px; height: 18px; color: var(--ilg-think-fg); }
+html.ilg .ilg-think {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    padding: 7px 14px 7px 10px;
+    border-radius: 999px;
+    background: var(--ilg-think-bg);
+    box-shadow: inset 0 0 0 0.5px var(--ilg-think-line), 0 4px 18px rgba(0, 0, 0, 0.14);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    font: 500 13px/1 var(--ilg-mono);
+    letter-spacing: 0.04em;
+    color: var(--ilg-think-fg);
+    white-space: nowrap;
+    animation: ilg-think-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+/* “思考中”上面扫过一道淡淡的光，球转字也在动 */
+html.ilg .ilg-think-label {
+    background: linear-gradient(90deg, var(--ilg-think-dim) 0 35%, var(--ilg-think-fg) 50%, var(--ilg-think-dim) 65% 100%) 0 0 / 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: ilg-think-sweep 2.4s linear infinite;
+}
+html.ilg .ilg-think-label::after { content: "…"; }
+html.ilg .ilg-think-t { color: var(--ilg-think-dim); font-variant-numeric: tabular-nums; }
+html.ilg .ilg-think-t:empty { display: none; }
+html.ilg .ilg-think-t::before { content: "· "; }
+@keyframes ilg-think-in { from { opacity: 0; transform: translateY(4px) scale(0.96); } }
+@keyframes ilg-think-sweep { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+/* 流式回复的占位消息：藏掉酒馆那串“...”，只留胶囊 */
+html.ilg body #chat .mes.ilg-await .mes_text { display: none; }
+html.ilg body #chat .mes.ilg-await > .mes_block > .ilg-think,
+html.ilg body #chat .mes.ilg-await .mes_block .ilg-think { margin: 2px 0 4px; }
+
+/* 推理模型的思维链标题：思考中那一刻换成同款胶囊，想完了恢复原样（“思考了 12 秒”） */
+html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    padding: 7px calc(0.7em + 18px) 7px 10px;
+    border-radius: 999px;
+    background: var(--ilg-think-bg);
+    box-shadow: inset 0 0 0 0.5px var(--ilg-think-line);
+    font-family: var(--ilg-mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--ilg-think-fg);
+}
+html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header_title {
+    background: linear-gradient(90deg, var(--ilg-think-dim) 0 35%, var(--ilg-think-fg) 50%, var(--ilg-think-dim) 65% 100%) 0 0 / 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: ilg-think-sweep 2.4s linear infinite;
+}
+
+/* 思维链流着的时候正文只有“...”，藏掉 */
+html.ilg body #chat .mes.ilg-dots .mes_text { display: none; }
+/* 预设（NVWA）自带的思考标题装饰（脑子图标、转圈描边、扫光）在思考中这段让给小球，想完了照常显示；关掉小球开关就完全是预设原样 */
+html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header::before,
+html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header::after,
+html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header_title::before,
+html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header_title::after { content: none !important; display: none !important; }
+html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header { border: 0 !important; animation: none !important; }
+
+/* 浮动胶囊：浮在输入框正上方 */
+html.ilg body #form_sheld:has(> #ilg-think-float) { position: relative; }
+html.ilg.ilg-float body #form_sheld:has(> #ilg-think-float) { position: absolute; }
+html.ilg #ilg-think-float {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    translate: -50% 0;
+    z-index: 5;
+    pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    html.ilg .ilg-think, html.ilg .ilg-think-label,
+    html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header_title { animation: none; }
+    html.ilg .ilg-think-label, html.ilg.ilg-orb-on body #chat .mes[data-reasoning-state="thinking"] .mes_reasoning_header_title { color: var(--ilg-think-fg); background: none; }
+}
+body.reduced-motion .ilg-think, body.reduced-motion .ilg-think-label { animation: none !important; }

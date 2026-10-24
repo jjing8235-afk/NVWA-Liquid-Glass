@@ -1,0 +1,22 @@
+{
+  "type": "script",
+  "enabled": false,
+  "name": "NVWA 液态玻璃 · 一键安装",
+  "id": "nvwa-liquid-glass-installer",
+  "content": "// NVWA 液态玻璃 · 酒馆助手安装脚本\n// 打开这个脚本后：没装美化扩展就问一句要不要装，装好自动刷新；装过了就什么都不做。脚本按钮“检查更新”可以手动更新\n// 构建：node install/build.mjs 会把这个文件包成酒馆助手能导入的 JSON\nconst REPO = 'https://github.com/jjing8235-afk/NVWA-Liquid-Glass';\nconst ID = 'NVWA-Liquid-Glass';\nconst TITLE = 'NVWA 液态玻璃';\n\nconst reload = () => setTimeout(() => window.parent.location.reload(), 2000);\n// 酒馆助手脚本比扩展先跑，等扩展有机会加载完再看\nconst running = () => !!window.parent.__ilgLoaded;\n\nasync function install() {\n    const { callGenericPopup, POPUP_TYPE } = SillyTavern.getContext();\n    const ok = await callGenericPopup(\n        `<h3>${TITLE}</h3><p>要安装美化扩展吗？会从 GitHub 下载到你的酒馆里（只给当前用户装，不需要管理员）。</p><p>装好后页面会自动刷新一次。</p>`,\n        POPUP_TYPE.CONFIRM, '', { okButton: '安装', cancelButton: '以后再说' });\n    if (!ok) return;\n    toastr.info('正在下载，稍等十几秒……', TITLE);\n    const res = await installExtension(REPO, 'local');\n    if (res.ok) { toastr.success('装好了，马上刷新页面', TITLE); reload(); }\n    else toastr.error(`安装失败（${res.status}）：${await res.text()}`, TITLE, { timeOut: 15000 });\n}\n\nasync function update() {\n    if (!isInstalledExtension(ID)) {\n        if (running()) toastr.info('你这份美化不是从 GitHub 装的，没法在这里更新。', TITLE);\n        else install();\n        return;\n    }\n    toastr.info('正在检查更新……', TITLE);\n    const res = await updateExtension(ID);\n    if (!res.ok) { toastr.error(`更新失败（${res.status}）：${await res.text()}`, TITLE, { timeOut: 15000 }); return; }\n    const info = await res.json();\n    if (info.isUpToDate) toastr.success(`已经是最新版（${info.shortCommitHash}）`, TITLE);\n    else { toastr.success(`已更新到 ${info.shortCommitHash}，马上刷新页面`, TITLE); reload(); }\n}\n\neventOn(getButtonEvent('检查更新'), update);\n\nsetTimeout(() => {\n    if (running()) return;\n    if (isInstalledExtension(ID)) {\n        toastr.warning('美化扩展已经装了，但没在运行：去“扩展 → 管理扩展”里把“NVWA 液态玻璃”打开。', TITLE, { timeOut: 12000 });\n        return;\n    }\n    install();\n}, 4000);\n",
+  "info": "打开后会检查你有没有装 NVWA 液态玻璃美化扩展，没装就问你要不要从 GitHub 装，装好自动刷新。\n脚本按钮“检查更新”可以随时更新到最新版。\n项目地址：https://github.com/jjing8235-afk/NVWA-Liquid-Glass",
+  "button": {
+    "enabled": true,
+    "buttons": [
+      {
+        "name": "检查更新",
+        "visible": true
+      }
+    ]
+  },
+  "data": {},
+  "export_with": {
+    "data": true,
+    "button": true
+  }
+}
