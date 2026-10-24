@@ -999,7 +999,7 @@ function buildPanel() {
     wrap.innerHTML = `
 <div class="inline-drawer">
   <div class="inline-drawer-toggle inline-drawer-header">
-    <b>iOS 液态玻璃</b>
+    <b>NVWA 液态玻璃</b>
     <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
   </div>
   <div class="inline-drawer-content">
