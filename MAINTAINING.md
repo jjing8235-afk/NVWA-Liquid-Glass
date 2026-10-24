@@ -73,10 +73,11 @@ node server.js --configPath D:/SillyTavern/config.yaml --dataRoot D:/SillyTavern
 
 1. 改 `manifest.json` 的 `version`，在 `CHANGELOG.md` 最上面写一段。
 2. 提交、推到 `main`（https://github.com/jjing8235-afk/NVWA-Liquid-Glass）。
-3. 这台电脑上 git 全局配置里 github.com 的代理是过期的 7890，系统代理是 7892，所以推送要带上：
+3. 这台电脑上 git 全局配置里写着 `http.https://github.com.proxy=http://127.0.0.1:7890`，但那个端口经常没开（7892 也一样）。直连 github 是通的，所以推送时把这个键清空即可，不需要等代理：
    ```
-   git -c http.https://github.com.proxy=http://127.0.0.1:7892 -c credential.helper= -c "credential.helper=!gh auth git-credential" push
+   git -c "http.https://github.com.proxy=" -c credential.helper= -c "credential.helper=!gh auth git-credential" push
    ```
+   注意是 `http.https://github.com.proxy=`（空值覆盖），只写 `-c http.proxy=` 覆盖不掉，git 还会去连 127.0.0.1。
    Windows 自带的凭据管理器会弹窗卡住，所以用 gh 当凭据助手。
 4. 用户更新的方式：酒馆助手脚本的“检查更新”按钮，或者 扩展 → 管理扩展 → 更新。
 
