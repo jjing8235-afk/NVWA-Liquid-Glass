@@ -2079,6 +2079,11 @@ html.ilg body #chat .mes:has(.nvt-bar) .mes_block {
     html.ilg body #chat .mes .mes_text { font-size: 16px; }
     html.ilg body #chat .mes .name_text { font-size: 16px; }
 }
+/* 只缩进普通正文的直接段落；不向容器继承，避开有样式或交互内容的段落。 */
+html.ilg.ilg-indent body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > p:not([class]):not([style]):not(:has(img, iframe, video, audio, svg, canvas, button, input, select, textarea, table, details, div, [role="button"])) {
+    text-indent: 2em;
+}
+
 /* ---------- 角色目录：安静的工具栏、竖幅封面与清晰的信息层级 ---------- */
 html.ilg body #rm_characters_block {
     --ilg-catalog-text: #f2f2f7;
@@ -2847,6 +2852,18 @@ html.ilg body :is(#form_create, #character_popup) #delete_button.red_button {
 }
 html.ilg:not(.ilg-light) body :is(#form_create, #character_popup) #delete_button.red_button { color: #ff6b61 !important; }
 html.ilg body :is(#form_create, #character_popup) #delete_button.red_button:hover {
+    background-color: rgba(255, 59, 48, 0.24) !important;
+}
+
+/* 人设删除：仅覆盖酒馆原生按钮的实心红底，保留危险操作的红色语义。 */
+html.ilg body #PersonaManagement #persona_delete_button.red_button {
+    background-color: rgba(255, 59, 48, 0.14) !important;
+    color: #d70015 !important;
+}
+html.ilg:not(.ilg-light) body #PersonaManagement #persona_delete_button.red_button {
+    color: #ff6b61 !important;
+}
+html.ilg body #PersonaManagement #persona_delete_button.red_button:is(:hover, :active) {
     background-color: rgba(255, 59, 48, 0.24) !important;
 }
 

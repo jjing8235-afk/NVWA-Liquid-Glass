@@ -172,16 +172,31 @@ const lightNode = (res, angle, sign) => `<feColorMatrix in="nmap" type="matrix" 
 /* 滤镜：磨砂 → 材质调色（饱和/亮度/对比）→ 折射（可选色散）→ 厚度阴影 → 高光层（迎光边、背光边、细亮边、边缘反光、内部聚光）
    滤镜区域比贴图高（消息流式输出时卡片会先变高），贴图外面垫中性色：不偏移、不发光 */
 // 把贴图铺到元素上：整张直接拉满；九宫格先铺四条边（往角里多伸 1 像素，盖住拼缝），再铺四个角
+function mapRects(m, w, h) {
+    if (m.full) return [[0, 0, w, h]];
+    const C = m.C, L = w - 2 * C + 2, H = h - 2 * C + 2;
+    return [[C - 1, 0, L, C], [C - 1, h - C, L, C], [0, C - 1, C, H], [w - C, C - 1, C, H],
+        [0, 0, C, C], [w - C, 0, C, C], [0, h - C, C, C], [w - C, h - C, C, C]];
+}
+
+export function resizePhysicalFilter(filter, m, w, h) {
+    const rects = mapRects(m, w, h);
+    filter.querySelectorAll('feImage[data-ilg-map]').forEach(image => {
+        const rect = rects[Number(image.getAttribute('data-ilg-map'))];
+        ['x', 'y', 'width', 'height'].forEach((name, i) => {
+            const value = String(rect[i]);
+            if (image.getAttribute(name) !== value) image.setAttribute(name, value);
+        });
+    });
+}
+
 function mapLayer(m, ch, w, h, neutral, res) {
-    const img = (href, x, y, iw, ih, id) => `<feImage href="${href}" x="${x}" y="${y}" width="${iw}" height="${ih}" preserveAspectRatio="none" result="${id}"/>`;
+    const img = (href, rect, id, part) => `<feImage href="${href}" x="${rect[0]}" y="${rect[1]}" width="${rect[2]}" height="${rect[3]}" data-ilg-map="${part}" preserveAspectRatio="none" result="${id}"/>`;
+    const rects = mapRects(m, w, h);
     let html = `<feFlood flood-color="${neutral}" result="${res}0"/>`;
-    if (m.full) return html + img(m.full[ch], 0, 0, w, h, `${res}i`) + `<feComposite in="${res}i" in2="${res}0" operator="over" result="${res}"/>`;
-    const C = m.C, T = m.tiles, L = w - 2 * C + 2, H = h - 2 * C + 2;
-    const parts = [
-        [T.t, C - 1, 0, L, C], [T.b, C - 1, h - C, L, C], [T.l, 0, C - 1, C, H], [T.r, w - C, C - 1, C, H],
-        [T.tl, 0, 0, C, C], [T.tr, w - C, 0, C, C], [T.bl, 0, h - C, C, C], [T.br, w - C, h - C, C, C],
-    ];
-    parts.forEach(([t, x, y, iw, ih], i) => { html += img(t[ch], x, y, iw, ih, `${res}${i + 1}`); });
+    if (m.full) return html + img(m.full[ch], rects[0], `${res}i`, 0) + `<feComposite in="${res}i" in2="${res}0" operator="over" result="${res}"/>`;
+    const T = m.tiles, parts = [T.t, T.b, T.l, T.r, T.tl, T.tr, T.bl, T.br];
+    parts.forEach((t, i) => { html += img(t[ch], rects[i], `${res}${i + 1}`, i); });
     return html + `<feMerge result="${res}"><feMergeNode in="${res}0"/>${parts.map((_, i) => `<feMergeNode in="${res}${i + 1}"/>`).join('')}</feMerge>`;
 }
 

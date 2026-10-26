@@ -1,7 +1,7 @@
 /* NVWA 液态玻璃 · 边缘折射引擎 + 悬浮布局 + 设置面板
    完整折射依赖 backdrop-filter: url(#svg)，只有 Chromium 内核生效；其他浏览器自动降级为模糊 + 高光
    折射引擎有两套：新版物理折射（glass2.js，实验台 v2 移植）和旧版（本文件里的 makeMap / buildFilter） */
-import { getMaps, clearMaps, physicalFilter, lightRow } from './glass2.js';
+import { getMaps, clearMaps, physicalFilter, resizePhysicalFilter, lightRow } from './glass2.js';
 import { makeOrb } from './orb.js';
 
 // 同一个酒馆里装了两份（比如手动拷的一份 + 从 GitHub 装的一份）时只跑先加载的那份，不然顶栏、面板会出两套
@@ -29,6 +29,7 @@ const PRESETS = {
 };
 
 const DEFAULTS = {
+    firstLineIndent: false,
     enabled: true, float: true, islands: true, fold: true, qrFold: true, home: true, toneBtn: true, homeName: 'NVWA 用户', icons: true, refract: true, refractMes: true, font: true, tone: 'time', dayStart: 7, dayEnd: 19, avatar: 'line', orb: true,
     engine: 'physical', follow: true, pLight: 135,
     // 自然弧度没写的参数（厚度、折射率等，只给物理折射截面用）沿用清透立体的
@@ -80,6 +81,7 @@ const TOGGLES = [
     ['refract', '边缘折射（只在 Chrome / Edge 生效）'],
     ['refractMes', '消息卡片也折射（长聊天卡顿时关掉）'],
     ['font', '统一字体：思源黑体（苹果设备用苹方）'],
+    ['firstLineIndent', '普通正文首行缩进两个汉字（不影响列表、代码和自带样式面板）'],
     ['islands', '顶栏拆成三个分组的悬浮岛'],
     ['fold', '顶栏折叠：设置类图标收进左上角菜单'],
     ['qrFold', '快捷回复收进输入框左边的按钮'],
@@ -251,13 +253,28 @@ function buildPhysical(it, el, w, h, r) {
         saturate: S.pSaturate, brightness: S.pBrightness, contrast: S.pContrast,
         specular: S.pSpecular, sharp: S.pSharp, edgeShade: S.pEdgeShade, fresnel: S.pFresnel, caustic: S.pCaustic,
     };
-    it.angle = lightAngle(el);
-    const f = filterOf(it, w, h);
-    f.innerHTML = physicalFilter(getMaps(w, h, r, o), o, w, h, it.angle);
-    it.lights = f.querySelectorAll('[data-light]');
+    const maps = getMaps(w, h, r, o), key = JSON.stringify(o), angle = lightAngle(el);
+    const previous = it.physical;
+    // Nine-slice maps already share their pixels. Keep the filter nodes too when only its bounds change.
+    if (previous?.maps === maps && previous.key === key && it.filter) {
+        if (previous.w !== w || previous.h !== h) {
+            filterOf(it, w, h);
+            resizePhysicalFilter(it.filter, maps, w, h);
+            previous.w = w; previous.h = h;
+        }
+        it.lights ||= it.filter.querySelectorAll('[data-light]');
+        if (it.angle !== angle) it.lights.forEach(n => n.setAttribute('values', lightRow(angle, Number(n.dataset.light))));
+    } else {
+        const f = filterOf(it, w, h);
+        f.innerHTML = physicalFilter(maps, o, w, h, angle);
+        it.lights = f.querySelectorAll('[data-light]');
+        it.physical = { maps, key, w, h };
+    }
+    it.angle = angle;
 }
 
 function buildFilter(it, w, h, r) {
+    it.physical = null;
     const sc = S.scale * KIND[it.kind].k, a = S.aberration * KIND[it.kind].k;
     const f = filterOf(it, w, h);
     let html = `<feFlood flood-color="rgb(128,128,128)" result="neutral"/>` +
@@ -302,6 +319,8 @@ function paint(el) {
     }
     const tail = `blur(${KIND[it.kind].blur()}px) saturate(${S.saturate}) brightness(${S.brightness})`;
     const w = el.offsetWidth, h = el.offsetHeight;
+    // A closed drawer has no pixels to update; retain its last valid filter for reopening.
+    if (!w || !h) return;
     const phys = refractAllowed(it) && w > 0 && h > 0 && S.engine === 'physical';
     setPhys(el, it, phys);
     if (phys) {
@@ -614,8 +633,11 @@ document.addEventListener('pointerdown', e => {
 // 抽屉开关、API 连接状态变化时同步菜单键；扩展往顶栏里加了新图标时重新分组
 new MutationObserver(muts => {
     if (!S.enabled || !S.fold) return;
-    if (muts.some(m => m.type === 'childList')) { applyFold(); requestAnimationFrame(layoutIslands); return; }
-    if (muts.some(m => !foldBtn.contains(m.target))) syncFold();
+    const structure = muts.some(m => m.type === 'childList' &&
+        (m.target === holder || (m.target.parentElement === holder && m.target.classList.contains('drawer'))));
+    if (structure) { applyFold(); requestAnimationFrame(layoutIslands); return; }
+    if (muts.some(m => m.type === 'attributes' &&
+        (m.target.parentElement?.parentElement === holder || m.target.closest('.drawer-toggle')?.parentElement?.parentElement === holder))) syncFold();
 }).observe(holder, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 window.addEventListener('resize', () => closeFoldMenu());
 
@@ -916,6 +938,7 @@ sysDark.addEventListener('change', followTone);
 
 function applyRoot() {
     root.classList.toggle('ilg', S.enabled);
+    root.classList.toggle('ilg-indent', S.enabled && !!S.firstLineIndent);
     root.classList.toggle('ilg-float', S.enabled && S.float);
     root.classList.toggle('ilg-icons', S.enabled && S.icons);
     root.classList.toggle('ilg-font', S.enabled && S.font);
@@ -1186,6 +1209,11 @@ function buildPanel() {
     }));
     TOGGLES.forEach(([k]) => document.getElementById(`ilg-opt-${k}`).addEventListener('change', e => {
         S[k] = e.target.checked;
+        if (k === 'firstLineIndent') {
+            root.classList.toggle('ilg-indent', S.enabled && !!S.firstLineIndent);
+            ctx.saveSettingsDebounced();
+            return;
+        }
         if (!S.enabled || k === 'enabled' || k === 'refract' || k === 'refractMes' || k === 'islands' || k === 'fold') clearAll();
         applyRoot(); sync(); ctx.saveSettingsDebounced();
     }));
