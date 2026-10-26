@@ -36,6 +36,8 @@ const DEFAULTS = {
     scale: 95, bevel: 30, curve: 2.2, aberration: 8,
     barBlur: 1, mesBlur: 3, panelBlur: 8, mesTint: 0.5, scrim: 0.35,
     saturate: 1.6, brightness: 1.05, tint: 0.05, highlight: 0.55, radius: 22,
+    // 旧版备份字段继续保留；新流程不再自动切主题或清空自定义 CSS。
+    cssCleaned: false, cssBackup: '', cssBackupAt: '', lookBackup: '', themeBackup: '',
 };
 // [键, 名称, 最小, 最大, 步长, 单位, 只对哪个引擎显示, 只对哪种截面显示（lens 放大镜 / snell 物理折射）]
 const SLIDERS = [
@@ -137,17 +139,34 @@ const KIND = {
     bar: { blur: () => S.barBlur, k: 1, bezelK: 1, thickK: 1 },
     mes: { blur: () => S.mesBlur, k: 0.8, bezelK: 1, thickK: 1 },
     panel: { blur: () => S.panelBlur, k: 0.7, bezelK: 1.1, thickK: 1.5 },
-    // NVWA 预设面板 / 记忆窗口所在的弹窗：和顶栏同一套清透折射，靠内部的暗色“凹槽”保证文字可读
-    clear: { blur: () => S.barBlur + 1, k: 0.9, bezelK: 1.1, thickK: 1.5 },
-    // 面板里吸顶的标签栏：内容从它下面滚过时折射
-    inner: { blur: () => S.barBlur + 1, k: 0.6, bezelK: 0.75, thickK: 0.8 },
+    // 用户明确指定的 NVWA 预设 / 记忆面板使用清透材质；其他第三方内容不接管。
+    clearPanel: { blur: () => S.barBlur + 1, k: 0.9, bezelK: 1.1, thickK: 1.5 },
+    panelTab: { blur: () => S.barBlur + 1, k: 0.6, bezelK: 0.75, thickK: 0.8 },
     // 右上角提示：文字压在玻璃上，比顶栏多一点模糊保证可读
     toast: { blur: () => Math.max(S.barBlur, 10), k: 0.6, bezelK: 0.75, thickK: 0.8 },
 };
 // 输入区的玻璃画在 #nonQRFormItems（只有输入框那一行）上，快捷回复按钮单独浮在胶囊上方
 const PILL_SEL = '#nonQRFormItems';
 const BAR_SEL = `#top-bar, ${PILL_SEL}`;
-const PANEL_SEL = '.drawer-content, #character_popup, #world_popup, .popup, #options .options-content, #extensionsMenu';
+// 只处理酒馆 Popup 注册表里的标准外壳；不扫描、标记或改造第三方浮窗。
+const NATIVE_POPUP_SEL = 'dialog.popup[data-id]:not(.transparent_dialogue_popup)';
+const PANEL_SEL = '#top-settings-holder > .drawer > .drawer-content, #character_popup, #world_popup, #options .options-content, #extensionsMenu, ' + NATIVE_POPUP_SEL;
+const HOST_UI_SEL = '#top-settings-holder, #sheld, #options, #extensionsMenu, #ilg-fold-menu';
+// 世界书编辑器在抽屉里时，不再叠第二层玻璃。
+const inDrawer = el => !!el.closest('.drawer-content');
+function isNativePopup(el) {
+    return el.matches(NATIVE_POPUP_SEL)
+        && !!ctx.Popup?.util?.popups?.some(popup => popup.dlg === el);
+}
+// 仅对原生 Popup 内固定内容根做定点适配，不通过标题、类名或相似结构猜测所有权。
+const ADAPTED_PANEL_SEL = ':scope > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory)';
+function adaptedPanel(el) {
+    return isNativePopup(el) ? el.querySelector(ADAPTED_PANEL_SEL) : null;
+}
+function trackable(el) {
+    const popup = el.closest('dialog, .popup, [role="dialog"]:not(.ilg-recent)');
+    return (!popup || isNativePopup(popup)) && !(el.id === 'world_popup' && inDrawer(el));
+}
 const MES_SEL = '.mes:not(.smallSysMes)';
 
 const root = document.documentElement;
@@ -262,18 +281,20 @@ function refractAllowed(it) {
     return true;
 }
 
-const CLEAR_HOST = '#nvwa-panel, #nvwa-memory';
-const INNER_SEL = '#nvwa-panel .nvp-tabbar, #nvwa-memory .m-tabbar';
-
 function paint(el) {
     const it = items.get(el);
     if (!it) return;
     if (!el.isConnected) { untrack(el); return; }
-    if (it.kind === 'panel' && el.matches('.popup') && el.querySelector(CLEAR_HOST)) {
-        it.kind = 'clear';
-        el.classList.add('ilg-clear', 'ilg-sheen');
+    if (!trackable(el)) { untrack(el); return; }
+    if (it.kind === 'panel' || it.kind === 'clearPanel') {
+        const panel = adaptedPanel(el);
+        it.kind = panel ? 'clearPanel' : 'panel';
+        el.classList.toggle('ilg-adapted', !!panel);
+        if (panel) {
+            const tabbar = panel.querySelector(':scope > :is(.nvp-tabbar, .m-tabbar)');
+            if (tabbar) track(tabbar, 'panelTab');
+        }
     }
-    if (it.kind === 'clear') el.querySelectorAll(INNER_SEL).forEach(t => track(t, 'inner'));
     if (document.body.classList.contains('no-blur')) {
         setPhys(el, it, false);
         el.style.backdropFilter = 'none';
@@ -337,12 +358,12 @@ const io = new IntersectionObserver(entries => entries.forEach(e => {
 }), { root: document.getElementById('chat'), rootMargin: '200px 0px' });
 
 function track(el, kind) {
-    if (items.has(el)) return;
+    if (items.has(el) || !trackable(el)) return;
     const it = { id: `ilg-f${++uid}`, kind, visible: kind !== 'mes' };
     items.set(el, it);
     el.classList.add('ilg-glass');
     // 表面光泽只给不会内部滚动的表面，抽屉这类会滚的容器里光泽会跟着内容跑
-    if (kind === 'bar' || kind === 'mes' || kind === 'inner' || kind === 'toast') el.classList.add('ilg-sheen');
+    if (kind === 'bar' || kind === 'mes' || kind === 'toast') el.classList.add('ilg-sheen');
     if (getComputedStyle(el).position === 'static') {
         el.style.position = 'relative';
         it.posFixed = true;
@@ -358,7 +379,7 @@ function untrack(el) {
     it.filter?.remove();
     ro.unobserve(el);
     io.unobserve(el);
-    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys');
+    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys', 'ilg-adapted');
     el.style.backdropFilter = '';
     el.style.webkitBackdropFilter = '';
     if (it.posFixed) el.style.position = '';
@@ -542,7 +563,7 @@ function onFoldPress(viaKeyboard) {
 }
 foldIcon.addEventListener('click', () => onFoldPress(false));
 foldIcon.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFoldPress(true); }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onFoldPress(true); }
 });
 foldMenu.addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); closeFoldMenu(true); return; }
@@ -913,6 +934,7 @@ function applyRoot() {
     applyQrFold();
     syncHome();
     queueThink();
+    requestAnimationFrame(scheduleFloor);
     if (!S.enabled) { clearAll(); removeIslands(); return; }
     scan();
     if (S.fold && !items.has(foldMenu)) track(foldMenu, 'panel');
@@ -969,8 +991,6 @@ new MutationObserver(muts => {
             if (n.nodeType !== 1) return;
             if (n.matches?.(PANEL_SEL)) track(n, 'panel');
             if (n.id === 'toast-container') watchToasts(n);
-            if (n.matches?.('dialog.popup')) addPopupClose(n);
-            tagForeign(n);
         });
         m.removedNodes.forEach(n => {
             if (n.nodeType !== 1) return;
@@ -980,40 +1000,47 @@ new MutationObserver(muts => {
     }
     if (rescan) { scan(); repaintAll(); }
 }).observe(document.body, { childList: true, attributes: true, attributeFilter: ['class'] });
-// 弹窗右上角统一一个 ×：不是每个弹窗都有“取消”，有的只有“关闭”，有的只能按 Esc。
-// 点 × 等于按 Esc（派发 dialog 的 cancel 事件，结果是“取消”），不会触发保存；
-// 酒馆标成“不许随手关”的阻塞弹窗，Esc 本来就关不掉，× 也一样（连点两下会弹酒馆自己的强制关闭确认）
-function addPopupClose(dlg) {
-    if (dlg.querySelector(':scope > .ilg-popup-x')) return;
-    const x = document.createElement('div');
-    x.className = 'ilg-popup-x interactable';
-    x.setAttribute('role', 'button');
-    x.setAttribute('tabindex', '0');
-    x.setAttribute('aria-label', '关闭');
-    x.title = '关闭';
-    const close = () => dlg.dispatchEvent(new Event('cancel', { cancelable: true }));
-    x.addEventListener('click', close);
-    x.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); close(); } });
-    dlg.append(x);
-}
-document.querySelectorAll('dialog.popup').forEach(addPopupClose);
-
-// 角色卡脚本直接挂在页面上的浮窗（比如人物册、悬浮球）：酒馆给所有元素都加了一圈字影（深色模式下更浓），
-// 这些浮窗多半是浅色纸面，字被这圈影子糊开。标上 .ilg-foreign，CSS 把字影颜色设成透明；卡片自己写的字影照常
-const OWN_BODY = '#bg1, #bg_custom, #top-bar, #top-settings-holder, #movingDivs, #sheld, #options, #secrets_datalists, '
-    + '#character_context_menu, #extensionsMenu, #expression-wrapper, #visual-novel-wrapper, #sd_dropdown, #shadow_popup, #toast-container, '
-    + '#preloader, #load-spinner, .popup, dialog, script, style, link, iframe, audio, video, svg, template, '
-    + '.ui-menu, .ui-helper-hidden-accessible, .ui-widget, .select2-container, .ctx-menu, .list-group, [id^="ilg-"], [class^="ilg-"]';
-function tagForeign(n) {
-    if (n.nodeType !== 1 || n.parentElement !== document.body) return;
-    n.classList.toggle('ilg-foreign', !n.matches(OWN_BODY));
-}
-[...document.body.children].forEach(tagForeign);
-ctx.eventSource.on(ctx.eventTypes.APP_READY, () => [...document.body.children].forEach(tagForeign));
-
+// 第三方弹窗不参与扫描：这里只监听酒馆核心弹窗和本扩展自己的宿主节点。
 function fmt(step, unit, v) {
     return (step < 1 ? Number(v).toFixed(step < 0.1 ? 2 : 1) : v) + unit;
 }
+
+/* ---------- 配套主题：先导入并选中主题，再安装扩展 ----------
+   只检查、不改写主题和自定义 CSS；旧版备份留在设置中，不迁移、不清空。 */
+const COMPANION_THEME = 'NVWA 液态玻璃';
+function companionThemeStatus() {
+    const select = document.getElementById('themes');
+    if (!select) return 'pending';
+    if (![...select.options].some(o => o.value === COMPANION_THEME)) return 'missing';
+    if (select.value !== COMPANION_THEME) return 'inactive';
+    const pu = ctx.powerUserSettings || {};
+    if (pu.chat_display !== 1 || pu.avatar_style !== 3 || pu.fast_ui_mode !== false
+        || pu.noShadows !== false || pu.waifuMode !== false || pu.font_scale !== 1
+        || pu.blur_strength !== 14 || (pu.custom_css || '').trim()) return 'modified';
+    return 'ready';
+}
+function companionThemeText(state) {
+    return {
+        pending: '正在等待酒馆载入主题。',
+        missing: '尚未导入配套主题。请先导出旧主题作备份，再到用户设置 → UI 主题导入并选中「NVWA 液态玻璃」。',
+        inactive: '配套主题已导入但未选中。请到用户设置 → UI 主题选择「NVWA 液态玻璃」。插件不会自动替换当前主题。',
+        modified: '配套主题的关键选项或自定义 CSS 已改变。可重新选择配套主题；旧版文件请按安装说明更新。',
+        ready: '配套主题已选中。插件负责折射、布局和深浅切换；请勿叠加其他整页美化扩展。',
+    }[state];
+}
+function refreshCompanionTheme() {
+    const node = document.getElementById('ilg-opt-themeStatus');
+    if (node) node.textContent = companionThemeText(companionThemeStatus());
+}
+ctx.eventSource.on(ctx.eventTypes.APP_READY, () => {
+    refreshCompanionTheme();
+    const select = document.getElementById('themes');
+    select?.addEventListener('change', () => setTimeout(refreshCompanionTheme, 0));
+    document.getElementById('customCSS')?.addEventListener('input', () => setTimeout(refreshCompanionTheme, 0));
+    if (S.enabled && companionThemeStatus() !== 'ready' && typeof toastr !== 'undefined') {
+        toastr.warning(companionThemeText(companionThemeStatus()), 'NVWA 配套主题', { timeOut: 12000 });
+    }
+});
 
 function statusText() {
     if (!S.enabled) return '美化已关闭。';
@@ -1039,6 +1066,7 @@ function buildPanel() {
   </div>
   <div class="inline-drawer-content">
     <div class="ilg-status" id="ilg-status" role="status"></div>
+    <p class="ilg-status" id="ilg-opt-themeStatus" role="status"></p>
     ${TOGGLES.map(([k, label]) => `<label class="checkbox_label" for="ilg-opt-${k}"><input type="checkbox" id="ilg-opt-${k}"><span>${label}</span></label>`).join('')}
     <div class="ilg-row"><label for="ilg-opt-homeName"><span>首页问候里的称呼</span></label>
       <input type="text" id="ilg-opt-homeName" class="text_pole" maxlength="20" placeholder="留空就只显示“晚上好”"></div>
@@ -1077,7 +1105,8 @@ function buildPanel() {
       <label class="checkbox_label" for="ilg-opt-follow"><input type="checkbox" id="ilg-opt-follow"><span>高光跟随鼠标</span></label>
     </div>
     ${SLIDERS.map(([k, label, min, max, step, , engine, prof]) => `<div class="ilg-row"${engine ? ` data-engine="${engine}"` : ''}${prof ? ` data-profile="${prof}"` : ''}><label for="ilg-opt-${k}"><span>${label}</span><output id="ilg-opt-${k}-v"></output></label><input type="range" id="ilg-opt-${k}" min="${min}" max="${max}" step="${step}"></div>`).join('')}
-    <div class="ilg-hint">参数自动保存。新旧两套引擎的参数分开存，切回旧版就是原来的样子。关掉“启用液态玻璃美化”会立即恢复酒馆原样。</div>
+    <div class="ilg-hint">参数自动保存。新旧两套引擎的参数分开存，切回旧版就是原来的样子。关掉“启用液态玻璃美化”会撤去插件效果；恢复旧主题请手动选择安装前备份的主题。</div>
+
     <div class="menu_button" id="ilg-reset" role="button" tabindex="0">恢复默认参数</div>
   </div>
 </div>`;
@@ -1110,6 +1139,7 @@ function buildPanel() {
         });
         markPresets();
         document.getElementById('ilg-status').textContent = statusText();
+        refreshCompanionTheme();
     };
     document.getElementById('ilg-opt-tone').addEventListener('change', e => {
         S.tone = e.target.value;
@@ -1164,11 +1194,19 @@ function buildPanel() {
         document.getElementById(`ilg-opt-${k}-v`).textContent = fmt(step, unit, S[k]);
         applyRoot(); markPresets(); ctx.saveSettingsDebounced();
     }));
-    const reset = () => { Object.assign(S, DEFAULTS); clearAll(); applyRoot(); sync(); ctx.saveSettingsDebounced(); };
+    const reset = () => {
+        // 只重置本扩展的外观参数，保留原主题备份和首次清理记录。
+        const retained = Object.fromEntries(['cssReset', 'cssCleaned', 'cssBackup', 'cssBackupAt', 'lookBackup', 'themeBackup']
+            .map(k => [k, S[k]]));
+        Object.assign(S, DEFAULTS, retained);
+        clearAll(); applyRoot(); sync(); ctx.saveSettingsDebounced();
+    };
     const btn = document.getElementById('ilg-reset');
     btn.addEventListener('click', reset);
     btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); reset(); } });
+
     sync();
+
 }
 
 // 顶栏/输入框自适应：采样它们下面滚过的内容，浅色内容滚上来时加深玻璃，白色图标不至于看不见（类似 iOS 26 的自适应玻璃）
@@ -1275,6 +1313,9 @@ function paintFloor() {
     const bar = document.getElementById('top-bar');
     if (!bar) return;
     if (floorChip.parentElement !== bar) bar.appendChild(floorChip);
+    // 与输入框共用 bar 材质，按各自几何尺寸生成贴图，不走通知 toast 的高模糊参数
+    if (S.enabled) track(floorChip, 'bar');
+    else untrack(floorChip);
     const id = visibleFloor();
     if (id === null) { floorChip.hidden = true; return; }
     floorChip.hidden = false;
@@ -1315,6 +1356,7 @@ document.head.appendChild(iconLink);
 
 // 滑块左边那段蓝色：CSS 读不到滑块当前值，所以把进度写进 --ilg-fill（按 20px 圆钮的中心算，蓝条正好止于圆钮下面）
 function paintRange(el) {
+    if (!el.closest(HOST_UI_SEL) || el.closest('dialog, .popup, [role="dialog"]:not(.ilg-recent)')) return;
     const min = Number(el.min || 0), max = Number(el.max || 100), v = Number(el.value);
     const p = max > min ? Math.min(1, Math.max(0, (v - min) / (max - min))) : 0;
     const fill = `calc(${p.toFixed(4)} * (100% - 20px) + 10px)`;
@@ -1458,6 +1500,59 @@ new MutationObserver(muts => {
 }).observe(chatEl, { childList: true, subtree: true, characterData: true });
 
 buildPanel();
+refreshCompanionTheme();
+/* ---------- 角色卡上的「世界书」小标 ----------
+   酒馆的角色列表不带世界书信息，但每个角色可以在 data.extensions.world 里绑一本。
+   这里按头像文件名跟 ctx.characters 对上，把世界书名补在简介下面；列表重排 / 翻页时跟着重新贴。 */
+function characterOfRow(row) {
+    const img = row.querySelector('.avatar img');
+    const src = img?.getAttribute('src') || '';
+    let file = src.split('/').pop()?.split('?')[0] || '';
+    try { file = decodeURIComponent(file); } catch { /* 文件名里有怪字符就按原样比 */ }
+    const list = ctx.characters || [];
+    if (file) {
+        const hit = list.find(c => c.avatar === file);
+        if (hit) return hit;
+    }
+    const chid = Number(row.dataset?.chid ?? row.getAttribute('chid'));
+    return Number.isFinite(chid) ? list[chid] : null;
+}
+function tagWorlds() {
+    if (!S.enabled) return;
+    document.querySelectorAll('#rm_print_characters_block .character_select').forEach(row => {
+        const world = characterOfRow(row)?.data?.extensions?.world || '';
+        const cont = row.querySelector(':scope > .character_select_container');
+        if (!cont) return;
+        const chip = cont.querySelector(':scope > .ilg-world');
+        if (!world) { chip?.remove(); return; }
+        let node = chip;
+        if (!node) {
+            node = document.createElement('div');
+            node.className = 'ilg-world';
+            node.innerHTML = '<span class="ilg-world-k">世界书</span><span class="ilg-world-v"></span>';
+            cont.appendChild(node);
+        }
+        const val = node.querySelector('.ilg-world-v');
+        if (val && val.textContent !== world) val.textContent = world;
+        const title = `绑定世界书：${world}`;
+        if (node.title !== title) node.title = title;
+    });
+}
+let worldRaf = 0;
+function queueWorlds() {
+    if (worldRaf) return;
+    worldRaf = requestAnimationFrame(() => { worldRaf = 0; tagWorlds(); });
+}
+function watchCharList() {
+    const block = document.getElementById('rm_print_characters_block');
+    if (!block || block.dataset.ilgWorlds === '1') return;
+    block.dataset.ilgWorlds = '1';
+    new MutationObserver(queueWorlds).observe(block, { childList: true, subtree: true });
+    queueWorlds();
+}
+watchCharList();
+ctx.eventSource.on(ctx.eventTypes.APP_READY, watchCharList);
+
 applyRoot();
 paintRanges();
 ctx.eventSource.on(ctx.eventTypes.APP_READY, applyRoot);

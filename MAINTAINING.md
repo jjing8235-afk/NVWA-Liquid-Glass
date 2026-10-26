@@ -1,4 +1,4 @@
-# 维护说明（给接手的人和模型）
+﻿# 维护说明（给接手的人和模型）
 
 先读这一份，再动代码。更新记录在 `CHANGELOG.md`。
 
@@ -8,7 +8,7 @@ SillyTavern（酒馆）1.18 的 UI 扩展，纯前端：`manifest.json` 只加�
 
 | 文件 | 作用 |
 |---|---|
-| `index.js` | 设置面板、玻璃跟踪（给元素挂折射滤镜）、深浅切换、顶栏折叠菜单、快捷回复折叠、首页问候、思考小球、卡片小面板识别、弹窗 ×。设置存在 `extensionSettings.iosLiquidGlass`，`S.v` 是设置版本号（现在是 9），改默认值要加一段迁移 |
+| `index.js` | 设置面板、玻璃跟踪（给元素挂折射滤镜）、深浅切换、顶栏折叠菜单、快捷回复折叠、首页问候、思考小球、卡片小面板识别、弹窗样式让行、角色卡的世界书小标、配套主题准备状态检查（只读）。设置存在 `extensionSettings.iosLiquidGlass`，`S.v` 是设置版本号（现在是 9），改默认值要加一段迁移 |
 | `glass2.js` | 新版物理折射引擎（斯涅尔折射查找表、九宫格贴图） |
 | `orb.js` | 思考时的点阵小球（canvas，所有小球共用一个 rAF 循环） |
 | `style.css` | 全部样式。按 `/* ---------- 标题 ---------- */` 分段，越往后越新；后面的段会覆盖前面的 |
@@ -36,12 +36,49 @@ SillyTavern（酒馆）1.18 的 UI 扩展，纯前端：`manifest.json` 只加�
 - **预设的时间栏会画到框外**：`NVWA 前端美化` 的「凝嘤嘤」把像素爱心画在 SVG 的 viewBox 外面（靠 `overflow: visible`），而酒馆的 `.mes_block` 是 `overflow-x: hidden`。用 `.mes:has(.nvt-bar) .mes_block { overflow: visible }` 只放开这类消息，别全局放开。
 - **`--mes-right-spacing`（30px）** 是给翻页箭头留的，但箭头在气泡最底下一行。手机上已经把正文右边这块去掉，最后一条消息底下单独让出 38px 给箭头。
 - 酒馆有些按钮是用样式表 `display:none` 藏的（比如 `#mes_stop`），**不要给它们设 `display`**。
-- **弹窗 ×**（`.ilg-popup-x`）派发 dialog 的 `cancel` 事件，和按 Esc 完全一样，结果是 `null`（取消）。不要改成点 `.popup-button-cancel` 或 `data-result="0"`：在“是 / 否 / 取消”三选一的弹窗里，“否”可能是有后果的选项。
+- **弹窗只处理原生外壳**：通过 ctx.Popup.util.popups 中的真实 DOM 引用确认宿主所有权；仅 data-id 或 .popup 类不够。排除 transparent_dialogue_popup。不注入关闭按钮、不隐藏原生按钮、不派发取消事件；原生关闭/取消/保存由宿主管理。
 - **卡片小面板识别**（`tagCard`）以 `<html>` 上的 `ilg-light` class 为准，不是 JS 里的 `lightBg`，因为 CSS 也是按 class 配色的。
 - `applyTone()` 在模块初始化时会先于后面的代码执行，在里面调后面才定义的 `let` / `const` 会碰到暂时性死区报错。现在用 `setTimeout(() => queueCards(true))` 推迟到下一拍。
-- **角色卡挂在 `<body>` 上的浮窗**会被标成 `.ilg-foreign`。酒馆自己挂在 body 上的东西列在 `index.js` 的 `OWN_BODY` 里。酒馆新版本多了别的 body 子节点时，要加进这个列表，不然它的字影会被去掉。
+- **第三方浮窗边界**：不扫描或标记第三方弹窗。共享控件样式限定在宿主区域及原生弹窗按钮行，避开自建 dialog / .popup / role=dialog 和 popup-content 内容区；独立 body / movingDivs 浮层不在接管范围。第三方若使用原生 Popup，通用外壳仍走玻璃，内容区不强制换肤。
 - 角色卡用 iframe 渲染的前端（酒馆助手的状态栏等）样式进不去，本扩展管不到里面。
+- **角色列表那些行自带 `.flex-container` / `.alignitemsflexstart`**：前者 `flex-wrap: wrap`，后者 `align-items: flex-start !important`。不覆盖的话头像和文字会各自换行、卡片被撑成一坨。改这一块的选择器都挂在 `#rm_print_characters_block` 上，并用 `body:not(.charListGrid)` 放过网格视图。
+- **`#world_popup` 在酒馆 1.18 里是抽屉的一部分**（`#WorldInfo` 里面），它本身也在 `PANEL_SEL` 里。两层折射叠在一起，世界书编辑区会整块发灰。`index.js` 的 `trackable()` 就是干这个的：`#world_popup` 在抽屉里时不单独当玻璃。以后酒馆要是把它挪出去成独立弹窗，这个判断会自动不管它。
+- **世界书条目的四个字段是按位置类型显隐的**：不适用的输入框是 `visibility: hidden` 而不是 `display: none`，留着会多一格空白。CSS 用 `.world_entry_form_control:has(> input[style*="visibility: hidden"])` 整格隐藏。
+- **别给 `.world_entry_thin_controls` 设 `align-items: center`**：那一行的高度由右边的标题 + 字段撑起来，居中的话折叠箭头和开关会跑到中间那条线的位置。
+- **条目展开区（`.inline-drawer-content` 里的 `.world_entry_edit`）是酒馆最杂的一张表单**：套着 `.world_entry_form_control`（标签 + 控件）、`[name=keywordsAndLogicBlock]`、`[name=perEntryOverridesBlock]`、`[name=contentAndCharFilterBlock]` 几层。正文框的 id 是 `world_entry_content_<uid>`，酒馆用行内 `rows`/高度写死，必须 `!important` 才盖得住。内容那行的四个勾选框不是正文的兄弟节点，是躲在标签行 `span.flexnowrap` 里的 `.flexFlowColumn`，所以要按那个层级改。
+- **配套主题安装合同**：用户先导出旧主题，再导入并选中 install/ 下「NVWA 液态玻璃」主题，最后安装插件。主题 custom_css 明确为空，会清空当前自定义 CSS，因此必须事先备份。只导入不等于所有设置已实际应用，必须手动在下拉框选择。
+- **插件只检查，不强制切主题**：companionThemeStatus() 读取 #themes 与关键 powerUserSettings，区分 pending / missing / inactive / modified / ready。移除了 autoCleanForeign/defaultThemeName/applyLook 等旧路径和 cssReset 控件，不回写其他主题，也不清空 CSS。
+- **旧设置兼容**：保留已存的 cssReset/cssCleaned/cssBackup/cssBackupAt/lookBackup/themeBackup，不自动恢复或清空；恢复本扩展默认参数也保留这些字段。没有手动还原按钮，新用户恢复以安装前导出的主题为准。
+- **主题只提供底座**：不放插件 CSS、远程 @import 或脚本，不接触 API/模型/角色/世界书设置。reduced_motion 故意不设置，尊重用户的减少动态效果偏好；其他未列出的非主题选项维持宿主行为。
+- **旧版同名主题**：酒馆 1.18 拒绝重复主题名。先导出旧版作备份，退出到另一主题，再由用户删除旧的同名配套主题、重新导入新版并选中；插件不自动删除或覆盖主题文件。
+- 主题切换会把 `noShadows` 一起带成主题里的值（Dark Lite 是 true），玻璃投影就交给 `body.noShadows` 那条规则让掉——这是酒馆的设置，别硬顶。
+- **楼层胶囊与输入框同材质**：paintFloor() 用 track(floorChip, 'bar')，同一套低模糊/折射倍率与 var(--ilg-tint) 染色；不复用滤镜 ID，尺寸不同必须生成各自贴图。关闭再开启时重新跟踪；保留滚动短暂显示。不要在 CSS 硬写 backdrop-filter。
+- **世界书抽屉那颗 select2 多重选择框**：`#world_info` 被 select2 换成 `.select2-selection--multiple`，空着也 63px 高。原因是它把占位内容拆成了两块：一个上下各 15px margin 的空 `ul.select2-selection__rendered`，加一个 `.select2-search--inline`（占位文字其实是这个搜索框的 `placeholder`）。没选中世界书时把空 ul 收掉、搜索框整行撑满 38px 才压得下去；`li.select2-selection__placeholder` 在酒馆 1.18 里根本不出场。
+- **select2 的下拉面板挂在 `body` 上**，宽度跟着容器走。容器给窄了（比如之前的 76px），展开的列表一项只放得下一个字。现在 `#world_popup` 里的容器 150px 起，`.select2-container--open .select2-dropdown` 有 `min-width: 240px`。改宽度时两处一起改。
+- **下拉里那个勾是酒馆自己画的**（`.select2-results__option::before`，位置由 `padding-left: 30px` 让出来）。给选项写 `padding` 时必须保留这 30px，不然勾会盖在字上。
+- **角色卡上的「世界书」小标**（`tagWorlds()`）按头像文件名匹配 `ctx.characters`，匹配不到才退回 `data-chid`。列表是分页渲染的，所以观察器挂在 `#rm_print_characters_block` 上（`watchCharList()`），别挂 body。网格视图用 CSS 隐藏。
+- **删除键 `.red_button` 带 `!important` 的实心酒红**，覆盖时必须也带 `!important`、且选择器里要有 id（`#delete_button.red_button`）。
 - `settings.json` 只能在酒馆停着的时候改，不然会被覆盖。
+
+## 2026-10-25 世界书与主题保护补充
+
+- 世界书名称灰底来自宿主 `.select2_choice_clickable_buttonstyle` 给 `.__choice__display` 加的背景，不能只清外层 `.__choice`。名称仍须可点击和键盘聚焦。
+- 顶部 `span > small` 不要嵌套设置 opacity；次要文字用 `--ilg-wi-secondary` 明确深浅色，正文 15px / 1.8。
+- “恢复默认参数”保留 `cssReset/cssCleaned/cssBackup/cssBackupAt/lookBackup/themeBackup`，不等于恢复用户主题。当前没有手动还原按钮。
+- 已取消自动清理/主题归默认；插件不关闭其他扩展，同时启用多款整页美化仍可能冲突。
+
+## NVWA 预设 / 记忆面板定点适配（2026-10-26）
+
+- 这两个面板是用户明确要求保留的兼容例外，不代表恢复通用第三方内容换肤。`adaptedPanel()` 必须先通过原生 Popup 注册表，再匹配 `:scope > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory)`；不能仅凭 id 或相似结构接管。
+- 外壳 `clearPanel` 和标签栏 `panelTab` 使用低模糊折射；CSS 以 `html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory)` 定点覆盖，浅色槽不再使用宿主黑色底。
+- 不适配其他记忆插件，不注入关闭键，不操作预设保存/恢复默认。扩展开关和关闭弹窗必须清理 `ilg-adapted` 及内外两层滤镜。
+- `node dev/verify/preset-glass-runtime.mjs` 与 `node dev/verify/memory-glass-runtime.mjs` 使用真实已安装脚本；只取消/关闭及切换页签。测试页临时模拟 settings/save 响应，避免记录测试视图和主题选项；不保存业务选项，不打开真实聊天记忆。
+
+## 弹窗让行回归
+
+- 不运行旧 mem/xclose 夹具来证明新合同；旧脚本部分会点确认按钮或模拟过时叉号，不能在真实用户数据上批跑。
+- node dev/verify/popup-boundary-regression.mjs 为隔离回归；node dev/verify/popup-native-runtime.mjs 为本地 8090 宿主验证（仅打开、取消临时弹窗，不点业务保存）。真实第三方组合仍需用户验收。
+- 配色和字体不再从 body 覆盖 SmartTheme 变量，而限定到酒馆外壳根，避免独立浮窗继承污染；嵌套在外壳里的弹窗仍可能继承父容器值，不承诺未知插件完全隔离。
 
 ## 怎么检查
 
@@ -66,6 +103,9 @@ node server.js --configPath D:/SillyTavern/config.yaml --dataRoot D:/SillyTavern
 | `xclose.mjs` | 点 × 后弹窗是否关闭、返回值是否为取消；body 浮窗是否标成 `.ilg-foreign` |
 | `memlight.mjs` | 浅色背景下的记忆窗口和确认框 |
 | `chat2.mjs` | 台词 / 心里话 / 引用 / 用户消息的样式（只改 DOM，不写进聊天） |
+| `chars.mjs` | 角色列表的卡片：手机尺寸下浅 / 深各一张截图，量头像、名字、简介、版本胶囊的位置 |
+| `grid.mjs` | 角色卡网格视图：点小方格键，浅色和加 `big-avatars` 各一张，量格子会不会被头像撑破 |
+| `cform.mjs` | 新建 / 编辑角色表单（`#form_create`）：一张截图 + 名字 / 描述 / 开场白 / Token 计数的框 |
 | `light.mjs`、`dark.mjs`、`tone.mjs` | 深浅模式的面板和控件 |
 | `think.mjs` | 思考小球的几种状态（假 DOM） |
 
@@ -89,5 +129,5 @@ node server.js --configPath D:/SillyTavern/config.yaml --dataRoot D:/SillyTavern
 - 酒馆助手一键安装脚本没有完整走过一遍（只在一个临时酒馆上验证过手动安装）。
 - 真实的“胭脂盒”人物册（《我不吃牛肉》卡）没在测试环境里跑过，只用仿造的浮窗验证过字影去掉了。
 - 思考小球没在真实流式输出的模型上看过。
-- 酒馆标成“不许随手关”的阻塞弹窗，单击 × 关不掉（和 Esc 一样），快速点两下才会弹酒馆自己的强制关闭确认。
+- 阻塞弹窗的关闭行为由宿主管理，插件不新增强制关闭入口。
 - 卡片小面板的识别只看元素自己的底色；底色写在伪元素（`::before`）或背景图片上的面板识别不到。

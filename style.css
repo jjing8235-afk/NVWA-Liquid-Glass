@@ -92,21 +92,63 @@ html.ilg body.bubblechat #chat .mes {
     margin-bottom: 10px;
 }
 
+
+/* ---------- 酒馆原生通用弹窗：只换外壳和原生控件，不覆盖内容区 ---------- */
+html.ilg body dialog.popup.ilg-glass {
+    border-color: transparent;
+    border-radius: 20px;
+    background-color: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body {
+    min-width: 0;
+    max-width: 100%;
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body > .popup-controls {
+    flex-wrap: wrap;
+    gap: 10px;
+    max-width: 100%;
+    padding-bottom: 10px;
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body > .popup-controls > .menu_button {
+    min-height: 44px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+/* 保留宿主确认按钮的红色语义，但浅色模式下也必须使用高对比白字。 */
+html.ilg body dialog.popup.ilg-glass > .popup-body > .popup-controls > .popup-button-ok {
+    color: #fff;
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body > .popup-input {
+    border-radius: 10px;
+    background-color: var(--ilg-field);
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg body dialog.popup.ilg-glass[open]::backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-color: rgba(0, 0, 0, 0.28);
+}
+html.ilg.ilg-light body dialog.popup.ilg-glass[open]::backdrop {
+    background-color: rgba(30, 40, 70, 0.14);
+}
+
 /* ---------- 抽屉、弹窗、菜单：圆角 + 去硬边框，底色沿用主题 ---------- */
-html.ilg body .drawer-content,
+html.ilg body #top-settings-holder > .drawer > .drawer-content,
 html.ilg body #character_popup,
 html.ilg body #world_popup,
-html.ilg body .popup,
 html.ilg body #options .options-content,
 html.ilg body #extensionsMenu {
     border-color: transparent;
     border-radius: 20px;
 }
-html.ilg body .fillLeft,
-html.ilg body .fillRight {
+html.ilg body .fillLeft:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)),
+html.ilg body .fillRight:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     border-radius: 0 20px 20px 0;
 }
-html.ilg body .fillRight {
+html.ilg body .fillRight:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     border-radius: 20px 0 0 20px;
 }
 
@@ -120,8 +162,8 @@ html.ilg body :where(#top-bar, #nonQRFormItems, .ilg-glass) {
     --ilg-lift-y: 14px;
     --ilg-lift-b: 34px;
 }
-html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-island) { --ilg-lift-y: 18px; --ilg-lift-b: 44px; }
-html.ilg body .ilg-clear { --ilg-lift-y: 28px; --ilg-lift-b: 70px; }
+html.ilg body :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island) { --ilg-lift-y: 18px; --ilg-lift-b: 44px; }
+html.ilg body .ilg-clear:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { --ilg-lift-y: 28px; --ilg-lift-b: 70px; }
 html.ilg body #chat .mes.ilg-glass { --ilg-lift-y: 8px; --ilg-lift-b: 22px; }
 html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-glass) {
     box-shadow:
@@ -137,7 +179,7 @@ html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-glass) {
         0 0 0 0.5px rgba(var(--ilg-drop-rgb), calc(var(--ilg-drop) * 0.6));
 }
 /* 表面光泽：上半部一层柔和的反光，左上最亮，越往下越淡 */
-html.ilg body .ilg-sheen::after {
+html.ilg body .ilg-sheen:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::after {
     content: "";
     position: absolute;
     inset: 0 0 auto 0;
@@ -150,7 +192,7 @@ html.ilg body .ilg-sheen::after {
         radial-gradient(120% 140% at 18% -20%, rgba(255, 255, 255, calc(var(--ilg-hl) * 0.30 * var(--ilg-k))), transparent 60%),
         linear-gradient(180deg, rgba(255, 255, 255, calc(var(--ilg-hl) * 0.12 * var(--ilg-k))), transparent);
 }
-html.ilg body .ilg-glass::before {
+html.ilg body .ilg-glass:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -170,6 +212,11 @@ html.ilg body .ilg-glass::before {
 
 /* ---------- 浅色壁纸：深色文字 + 更白的玻璃（酒馆把颜色变量写在 html 上，这里在 body 层覆盖） ---------- */
 html.ilg.ilg-light body {
+    --ilg-k: 1.25;
+    --ilg-drop: 0.15;
+    --ilg-drop-rgb: 30, 40, 70;
+}
+html.ilg.ilg-light body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
     --SmartThemeBodyColor: rgba(28, 30, 38, 1);
     --SmartThemeEmColor: rgba(60, 64, 78, 0.72);
     --SmartThemeQuoteColor: rgba(176, 92, 0, 1);
@@ -179,18 +226,15 @@ html.ilg.ilg-light body {
     --SmartThemeUserMesBlurTintColor: rgba(220, 236, 255, calc(var(--ilg-mes-a, 0.5) * 0.9 + 0.15));
     --SmartThemeBorderColor: rgba(0, 0, 0, 0.08);
     --SmartThemeShadowColor: rgba(255, 255, 255, 0);
-    --ilg-k: 1.25;
-    --ilg-drop: 0.15;
-    --ilg-drop-rgb: 30, 40, 70;
     color: var(--SmartThemeBodyColor);
 }
-html.ilg.ilg-light body .ilg-sheen::after { opacity: 0.6; }
+html.ilg.ilg-light body .ilg-sheen:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::after { opacity: 0.6; }
 html.ilg.ilg-light.ilg-icons .drawer-icon.openIcon { color: #0a84ff; }
 /* 酒馆自带的“标题条”渐变写死了 70% 黑，浅色模式下换成白玻璃 */
 html.ilg.ilg-light body #extensions_settings .inline-drawer-toggle.inline-drawer-header,
 html.ilg.ilg-light body #extensions_settings2 .inline-drawer-toggle.inline-drawer-header,
 html.ilg.ilg-light body #user-settings-block h4,
-html.ilg.ilg-light body .standoutHeader {
+html.ilg.ilg-light body .standoutHeader:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     background-image: linear-gradient(348deg, rgba(255, 255, 255, 0.35) 2%, rgba(255, 255, 255, 0.55) 60%, rgba(255, 255, 255, 0.8) 100%);
     border-color: rgba(0, 0, 0, 0.06);
 }
@@ -198,6 +242,8 @@ html.ilg.ilg-light body .standoutHeader {
 /* ---------- 深色壁纸：消息卡片加一层半透明深色底，亮光带上的白字也能看清 ---------- */
 html.ilg:not(.ilg-light) body {
     /* 消息卡片底色浓度由设置里的滑块控制（--ilg-mes-a，默认 0.5） */
+}
+html.ilg:not(.ilg-light) body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
     --SmartThemeBotMesBlurTintColor: rgba(14, 16, 30, var(--ilg-mes-a, 0.5));
     --SmartThemeUserMesBlurTintColor: rgba(22, 52, 104, calc(var(--ilg-mes-a, 0.5) + 0.02));
     --SmartThemeBlurTintColor: rgba(18, 16, 28, 0.42);
@@ -208,153 +254,10 @@ html.ilg:not(.ilg-light) body #chat .mes_text {
 }
 
 /* ---------- 弹窗背后不虚化：壁纸保持清晰，只压一层淡淡的暗色 ---------- */
-html.ilg body .popup[open]::backdrop {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background-color: rgba(0, 0, 0, 0.18);
-}
 
-/* ---------- NVWA 预设面板 / 记忆窗口：只从外面套样式，预设本身一个字不改 ---------- */
-/* 外壳：和顶栏同一套清透折射玻璃（JS 把这个弹窗标成 .ilg-clear） */
-html.ilg:not(.ilg-light) body .popup.ilg-clear { background-color: rgba(255, 255, 255, 0.04); }
-html.ilg.ilg-light body .popup.ilg-clear { background-color: rgba(255, 255, 255, 0.22); }
-html.ilg body .popup.ilg-clear { border-radius: 28px; }
 
-/* 内部配色：凹进去的“槽”偏暗、托住文字；凸起的标题条偏亮 */
-html.ilg:not(.ilg-light) body #nvwa-panel,
-html.ilg:not(.ilg-light) body #nvwa-memory {
-    --nvp-surface: rgba(12, 8, 20, 0.34);
-    --nvp-bg: rgba(10, 6, 18, 0.40);
-    --nvp-line: rgba(255, 255, 255, 0.12);
-    --nvp-shadow: rgba(0, 0, 0, 0.35);
-    --m-surface: rgba(12, 8, 20, 0.34);
-    --m-bg: rgba(10, 6, 18, 0.40);
-    --m-line: rgba(255, 255, 255, 0.12);
-}
-html.ilg.ilg-light body #nvwa-panel,
-html.ilg.ilg-light body #nvwa-memory {
-    --nvp-surface: rgba(255, 255, 255, 0.45);
-    --nvp-bg: rgba(255, 255, 255, 0.38);
-    --nvp-line: rgba(0, 0, 0, 0.08);
-    --nvp-shadow: rgba(30, 40, 70, 0.15);
-    --m-surface: rgba(255, 255, 255, 0.45);
-    --m-bg: rgba(255, 255, 255, 0.38);
-    --m-line: rgba(0, 0, 0, 0.08);
-}
-/* 直接压在清透玻璃上的字（标题、底部说明）加一层阴影 */
-html.ilg:not(.ilg-light) body :is(#nvwa-panel .nvp-head, #nvwa-panel .nvp-foot, #nvwa-memory .m-head) {
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 0 10px rgba(0, 0, 0, 0.4);
-}
-/* 吸顶标签栏：透明玻璃，下面滚过的内容会被折射（折射滤镜由 JS 挂上） */
-html.ilg body #nvwa-panel .nvp-tabbar,
-html.ilg body #nvwa-memory .m-tabbar {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 18px;
-    padding: 4px;
-    margin-bottom: 8px;
-    --ilg-lift-y: 6px;
-    --ilg-lift-b: 16px;
-}
-html.ilg.ilg-light body #nvwa-panel .nvp-tabbar,
-html.ilg.ilg-light body #nvwa-memory .m-tabbar {
-    background: rgba(255, 255, 255, 0.25);
-}
-/* 标签轨道：凹槽 */
-html.ilg body #nvwa-panel .nvp-tabs,
-html.ilg body #nvwa-memory .m-tabs {
-    border-radius: 14px;
-    border-color: transparent;
-    background: var(--nvp-bg, var(--m-bg));
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.38), inset 0 -1px 0 rgba(255, 255, 255, 0.10);
-}
-/* 选中的标签：凸起的小玻璃块 */
-html.ilg body #nvwa-panel .nvp-thumb {
-    border-radius: 11px;
-    background: linear-gradient(180deg,
-        color-mix(in srgb, var(--nvp-accent) 46%, rgba(255, 255, 255, 0.10)),
-        color-mix(in srgb, var(--nvp-accent) 22%, transparent));
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.55),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.25),
-        0 4px 14px color-mix(in srgb, var(--nvp-accent) 32%, transparent);
-}
-/* 分区标题：凸起的玻璃条 */
-html.ilg body #nvwa-panel .nvp-sec-h {
-    border-radius: 16px;
-    border-color: rgba(255, 255, 255, 0.10);
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 55%, rgba(255, 255, 255, 0.02));
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.34),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.25),
-        0 6px 16px rgba(0, 0, 0, 0.22);
-}
-/* 标题条和说明框压在清透玻璃上，深色模式给一层暗底，背后的字不会透进来打架 */
-html.ilg:not(.ilg-light) body #nvwa-panel .nvp-sec-h { background-color: rgba(14, 10, 22, 0.42); }
-html.ilg:not(.ilg-light) body #nvwa-panel .nvp-note { background-color: rgba(14, 10, 22, 0.42); }
-html.ilg.ilg-light body #nvwa-panel .nvp-note { background-color: rgba(255, 255, 255, 0.5); }
-html.ilg.ilg-light body #nvwa-panel .nvp-sec-h {
-    border-color: rgba(255, 255, 255, 0.6);
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.5));
-    box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(30, 40, 70, 0.12);
-}
-/* 分区内容：凹进去的槽 */
-html.ilg body #nvwa-panel .nvp-sec-inner {
-    border-radius: 16px;
-    border-color: transparent;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.32), inset 0 -1px 0 rgba(255, 255, 255, 0.10);
-}
-html.ilg.ilg-light body #nvwa-panel .nvp-sec-inner {
-    box-shadow: inset 0 2px 5px rgba(30, 40, 70, 0.10), inset 0 -1px 0 #fff;
-}
-/* 选项按钮：小玻璃块，选中时金色发光 */
-html.ilg body #nvwa-panel .nvp-chip {
-    border-radius: 12px;
-    border-color: rgba(255, 255, 255, 0.10);
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 6px rgba(0, 0, 0, 0.18);
-    transition: transform .25s cubic-bezier(.3, 1.6, .5, 1), background-color .2s, box-shadow .2s;
-}
-html.ilg body #nvwa-panel .nvp-chip:active { transform: scale(.95); }
-html.ilg body #nvwa-panel .nvp-chip.on {
-    background-color: color-mix(in srgb, var(--nvp-accent) 28%, transparent);
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.5),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.2),
-        0 4px 16px color-mix(in srgb, var(--nvp-accent) 34%, transparent);
-}
-/* 单选行：选中时同样是凸起的金色玻璃 */
-html.ilg body #nvwa-panel .nvp-row { border-radius: 14px; }
-html.ilg body #nvwa-panel .nvp-row.on {
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.10), transparent);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 14px color-mix(in srgb, var(--nvp-accent) 20%, transparent);
-}
-html.ilg body #nvwa-panel .nvp-tag { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.12); }
-html.ilg body #send_form .qr--button {
-    border-radius: 999px;
-    border-color: rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.10);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.18);
-}
 html.ilg body #send_form .qr--button:hover {
     background: rgba(255, 255, 255, 0.18);
-}
-html.ilg body .popup .popup-controls .menu_button {
-    border-radius: 999px;
-    border-color: rgba(255, 255, 255, 0.14);
-    background: rgba(10, 6, 18, 0.38) linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), inset 0 -1px 2px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.22);
-    transition: transform .25s cubic-bezier(.3, 1.6, .5, 1);
-}
-html.ilg body .popup .popup-controls .menu_button:active { transform: scale(.94); }
-html.ilg.ilg-light body .popup .popup-controls .menu_button {
-    border-color: rgba(255, 255, 255, 0.7);
-    background: rgba(255, 255, 255, 0.55);
-    box-shadow: inset 0 1px 0 #fff, 0 3px 10px rgba(30, 40, 70, 0.12);
-}
-html.ilg body .popup .popup-controls .menu_button.popup-button-ok {
-    background: color-mix(in srgb, var(--SmartThemeQuoteColor) 32%, transparent) linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent);
-    border-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 45%, transparent);
 }
 html.ilg.ilg-icons:not(.ilg-light) #leftSendForm > div,
 html.ilg.ilg-icons:not(.ilg-light) #rightSendForm > div:not(.mes_stop):not(#send_but) {
@@ -369,16 +272,15 @@ html.ilg.ilg-icons:not(.ilg-light) #rightSendForm > div:not(.mes_stop):not(#send
 
 /* ---------- 细节 ---------- */
 /* 字体：开“统一字体”时全站用思源黑体（苹果设备优先苹方）；关掉时界面用系统字体、正文用酒馆里选的字体 */
-html.ilg body {
-    --ilg-ui-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI Variable Text", "Segoe UI",
-        "Microsoft YaHei UI", "Microsoft YaHei", var(--mainFontFamily), sans-serif;
+html.ilg body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
+    --ilg-ui-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", var(--mainFontFamily), sans-serif;
 }
-html.ilg.ilg-font body {
+html.ilg.ilg-font body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
     --mainFontFamily: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC Variable", "Microsoft YaHei", sans-serif;
     --ilg-ui-font: var(--mainFontFamily);
     font-family: var(--mainFontFamily);
 }
-html.ilg body :is(#top-bar, #top-settings-holder, .drawer-content, .popup, #nonQRFormItems, #extensionsMenu, #options) {
+html.ilg body :is(#top-bar, #top-settings-holder, .drawer-content, #nonQRFormItems, #extensionsMenu, #options) {
     font-family: var(--ilg-ui-font);
     -webkit-font-smoothing: antialiased;
 }
@@ -393,31 +295,28 @@ html.ilg body #chat .mes .avatar img {
 }
 
 /* 滚动条：细的半透明胶囊 */
-html.ilg body:not(.movingUI) ::-webkit-scrollbar-thumb:vertical {
+html.ilg body:not(.movingUI) :where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-scrollbar-thumb:vertical {
     background-color: rgba(255, 255, 255, 0.28);
     box-shadow: none;
     border: 3px solid transparent;
     border-radius: 999px;
 }
-html.ilg.ilg-light body:not(.movingUI) ::-webkit-scrollbar-thumb:vertical { background-color: rgba(0, 0, 0, 0.22); }
-html.ilg body ::-webkit-scrollbar-track:hover { background-color: transparent; }
+html.ilg.ilg-light body:not(.movingUI) :where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-scrollbar-thumb:vertical { background-color: rgba(0, 0, 0, 0.22); }
+html.ilg body :where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-scrollbar-track:hover { background-color: transparent; }
 
 /* 输入框光标和选中文字用系统蓝 */
 html.ilg body #send_textarea { caret-color: #0a84ff; }
-html.ilg body ::selection { background: rgba(10, 132, 255, 0.35); }
+html.ilg body :where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::selection { background: rgba(10, 132, 255, 0.35); }
 
 /* 弹窗出现：轻轻放大 + 回弹，像 iOS 的卡片弹出 */
 @keyframes ilg-pop-in {
     from { opacity: 0; transform: translateY(10px) scale(0.94); }
     to { opacity: 1; transform: none; }
 }
-html.ilg body .popup[opening] {
-    animation-name: ilg-pop-in;
-    animation-timing-function: cubic-bezier(0.3, 1.35, 0.5, 1);
-}
+
 
 /* ---------- 顶栏 / 输入框 / 悬浮岛：更厚的玻璃块（亮边更宽、底部聚光；底部暗边调淡，避免看着像圆柱） ---------- */
-html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-island) {
+html.ilg body :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island) {
     box-shadow:
         inset 0 2px 0 rgba(255, 255, 255, calc(var(--ilg-hl) * 1.3 * var(--ilg-k))),
         inset 0 4px 0 -2px rgba(255, 255, 255, calc(var(--ilg-hl) * 0.45 * var(--ilg-k))),
@@ -432,10 +331,10 @@ html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-island) {
         0 0 0 0.5px rgba(var(--ilg-drop-rgb), calc(var(--ilg-drop) * 0.7));
     transition: background-color .35s ease;
 }
-html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-island).ilg-glass::before { padding: 2px; }
+html.ilg body :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass::before { padding: 2px; }
 /* 浅色内容滚到下面时自动加深（深色模式）/ 深色内容时自动提亮（浅色模式） */
-html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-island).ilg-over-light { background-color: rgba(16, 10, 22, 0.52); }
-html.ilg.ilg-light body :is(#top-bar, #nonQRFormItems, .ilg-island).ilg-over-dark { background-color: rgba(255, 255, 255, 0.62); }
+html.ilg body :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-over-light { background-color: rgba(16, 10, 22, 0.52); }
+html.ilg.ilg-light body :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-over-dark { background-color: rgba(255, 255, 255, 0.62); }
 html.ilg:not(.ilg-light).ilg-icons #top-settings-holder .drawer-icon { filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45)); }
 html.ilg.ilg-icons #top-bar.ilg-over-light ~ #top-settings-holder .drawer-icon,
 html.ilg.ilg-icons #top-settings-holder > .ilg-icon-over-light .drawer-icon { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7)); }
@@ -447,7 +346,7 @@ html.ilg.ilg-islands body #top-bar {
     backdrop-filter: none;
     box-shadow: none;
 }
-html.ilg.ilg-islands body .ilg-island {
+html.ilg.ilg-islands body .ilg-island:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     top: 0;
     height: 100%;
     border-radius: 999px;
@@ -530,9 +429,9 @@ html.ilg.ilg-light body :is(.options-content a, #extensionsMenu > .extension_con
 html.ilg body :is(.options-content a, #extensionsMenu > .extension_container > div, #extensionsMenu > div:not(.extension_container)):active {
     transform: scale(0.97);
 }
-html.ilg body .options-content a i { opacity: 0.88; }
-html.ilg body .options-content hr { margin: 5px 10px; border-top-color: rgba(255, 255, 255, 0.12); }
-html.ilg.ilg-light body .options-content hr { border-top-color: rgba(0, 0, 0, 0.08); }
+html.ilg body .options-content a i:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { opacity: 0.88; }
+html.ilg body .options-content hr:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { margin: 5px 10px; border-top-color: rgba(255, 255, 255, 0.12); }
+html.ilg.ilg-light body .options-content hr:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { border-top-color: rgba(0, 0, 0, 0.08); }
 /* 删除是危险操作，标红 */
 html.ilg body #options .options-content a#option_delete_mes { color: #ff6b62; }
 html.ilg.ilg-light body #options .options-content a#option_delete_mes { color: #d70015; }
@@ -601,8 +500,7 @@ html.ilg body { --ilg-sh-light: 1; }
 html.ilg.ilg-light body { --ilg-sh-light: 0.6; }
 /* 玻璃越大越“厚”，影子越深；消息卡片挨得近，影子收一点 */
 html.ilg body #chat .mes.ilg-phys { --ilg-sh-mul: 0.6; }
-html.ilg body :is(.drawer-content, #character_popup, #world_popup, .popup, #options .options-content, #extensionsMenu).ilg-phys { --ilg-sh-mul: 1.7; }
-html.ilg body :is(#nvwa-panel .nvp-tabbar, #nvwa-memory .m-tabbar).ilg-phys { --ilg-sh-mul: 0.5; }
+html.ilg body :is(.drawer-content, #character_popup, #world_popup, #options .options-content, #extensionsMenu).ilg-phys { --ilg-sh-mul: 1.7; }
 /* 贴地的一圈细影 + 中距离 + 远处的柔影，三层叠起来才有“浮起来”的厚度 */
 html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-glass).ilg-phys {
     --ilg-sh: calc(var(--ilg-shadow-k) * var(--ilg-sh-mul, 1) * var(--ilg-sh-light));
@@ -612,9 +510,9 @@ html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-glass).ilg-phys {
         0 calc(16px * var(--ilg-sh-mul, 1)) calc(36px * var(--ilg-sh-mul, 1)) rgba(var(--ilg-drop-rgb), calc(0.14 * var(--ilg-sh)));
 }
 /* 旧版的渐变亮边让开（输入框获得焦点时的蓝圈也不要：和滤镜里的高光叠在一起像描了两层边） */
-html.ilg body .ilg-glass.ilg-phys::before { opacity: 0; }
+html.ilg body .ilg-glass.ilg-phys:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::before { opacity: 0; }
 /* 表面光泽：上方微亮往下淡出，让玻璃看起来是鼓起来的 */
-html.ilg body .ilg-sheen.ilg-phys::after {
+html.ilg body .ilg-sheen.ilg-phys:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::after {
     inset: 0;
     height: auto;
     border-radius: inherit;
@@ -734,7 +632,7 @@ html.ilg.ilg-light body #form_sheld #send_form .qr--button:hover { background-co
 .ilg-scrim { display: none; }
 /* 只压暗、不模糊：玻璃要折射清楚的内容才看得出弧度，先模糊一遍再折射就只剩一块暗色胶囊。
    浓度由设置里的滑块控制（--ilg-scrim-a，挂在 html 上） */
-html.ilg.ilg-float body .ilg-scrim {
+html.ilg.ilg-float body .ilg-scrim:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     --ilg-scrim-rgb: 8, 6, 14;
     display: block;
     position: absolute;
@@ -743,13 +641,13 @@ html.ilg.ilg-float body .ilg-scrim {
     z-index: 35;
     pointer-events: none;
 }
-html.ilg.ilg-float.ilg-light body .ilg-scrim { --ilg-scrim-rgb: 255, 255, 255; }
-html.ilg.ilg-float body .ilg-scrim-top {
+html.ilg.ilg-float.ilg-light body .ilg-scrim:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { --ilg-scrim-rgb: 255, 255, 255; }
+html.ilg.ilg-float body .ilg-scrim-top:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     top: 0;
     height: calc(var(--topBarBlockSize) + var(--ilg-gap) * 2 + 24px);
     background: linear-gradient(180deg, rgba(var(--ilg-scrim-rgb), var(--ilg-scrim-a, 0.35)), rgba(var(--ilg-scrim-rgb), calc(var(--ilg-scrim-a, 0.35) * 0.4)) 55%, transparent);
 }
-html.ilg.ilg-float body .ilg-scrim-bottom {
+html.ilg.ilg-float body .ilg-scrim-bottom:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     bottom: 0;
     height: calc(var(--ilg-form-h) + var(--ilg-gap) * 2 + 28px);
     background: linear-gradient(0deg, rgba(var(--ilg-scrim-rgb), var(--ilg-scrim-a, 0.35)), rgba(var(--ilg-scrim-rgb), calc(var(--ilg-scrim-a, 0.35) * 0.4)) 55%, transparent);
@@ -875,13 +773,24 @@ html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) {
     max-width: calc(100vw - 16px);
     color: var(--SmartThemeBodyColor);
     font-family: var(--ilg-ui-font);
-    background-color: rgba(22, 16, 30, 0.55);
+    background-color: rgba(22, 16, 30, 0.86);
     animation: ilg-menu-in .24s cubic-bezier(.3, 1.3, .5, 1);
     transform-origin: top left;
 }
-html.ilg.ilg-fold.ilg-light body #ilg-fold-menu:not([hidden]) { background-color: rgba(255, 255, 255, 0.68); }
+html.ilg.ilg-fold.ilg-light body #ilg-fold-menu:not([hidden]) { background-color: rgba(255, 255, 255, 0.88); }
 @media screen and (max-width: 360px) {
     html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) { grid-template-columns: repeat(4, 1fr); width: calc(100vw - 16px); }
+}
+/* 独立挂在 body 的自有菜单也必须自带明暗文字，不能继承主题中的白字和文字阴影。 */
+html.ilg body #ilg-fold-menu {
+    --SmartThemeBodyColor: #f5f7fb;
+    --SmartThemeShadowColor: transparent;
+    --ilg-fold-secondary: #d4dae4;
+    text-shadow: none;
+}
+html.ilg.ilg-light body #ilg-fold-menu {
+    --SmartThemeBodyColor: #1d1d1f;
+    --ilg-fold-secondary: #454854;
 }
 html.ilg body #ilg-fold-menu .ilg-fold-tile {
     display: flex;
@@ -924,10 +833,11 @@ html.ilg body #ilg-fold-menu .ilg-fold-glyph:not(.ilg-fa)::before {
     mask: var(--ilg-icon) center / contain no-repeat;
 }
 html.ilg body #ilg-fold-menu .ilg-fold-tile.ilg-on .ilg-fold-glyph { color: #0a84ff; background-color: rgba(10, 132, 255, .16); }
+html.ilg.ilg-light body #ilg-fold-menu .ilg-fold-tile.ilg-on .ilg-fold-glyph { color: #0064c8; }
 html.ilg body #ilg-fold-menu .ilg-fold-tile.ilg-alert .ilg-fold-glyph::after { top: 4px; right: 4px; }
-html.ilg body.reduced-motion #ilg-fold-menu { animation: none; }
+html.ilg.ilg-fold body.reduced-motion #ilg-fold-menu:not([hidden]) { animation: none; }
 @media (prefers-reduced-motion: reduce) {
-    html.ilg body #ilg-fold-menu { animation: none; }
+    html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) { animation: none; }
 }
 
 /* ---------- 快捷回复折叠：输入框左边一个四宫格按钮，点开后快捷回复浮在胶囊上方的一块玻璃里 ---------- */
@@ -1135,7 +1045,7 @@ html.ilg.ilg-home.ilg-recent-open body #chat > .welcomePanel.ilg-recent {
     animation: ilg-menu-in .26s cubic-bezier(.3, 1.3, .5, 1);
 }
 html.ilg.ilg-light.ilg-recent-open body #chat > .welcomePanel.ilg-recent { background-color: rgba(255, 255, 255, 0.7); }
-html.ilg body .welcomePanel.ilg-recent .ilg-recent-head {
+html.ilg body .welcomePanel.ilg-recent .ilg-recent-head:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     position: sticky;
     top: -6px;
     z-index: 2;
@@ -1146,7 +1056,7 @@ html.ilg body .welcomePanel.ilg-recent .ilg-recent-head {
     margin: -6px -8px 2px;
     padding: 14px 12px 8px 18px;
 }
-html.ilg body .welcomePanel.ilg-recent .ilg-recent-title {
+html.ilg body .welcomePanel.ilg-recent .ilg-recent-title:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     margin: 0;
     font-family: inherit;
     font-size: 20px;
@@ -1154,7 +1064,7 @@ html.ilg body .welcomePanel.ilg-recent .ilg-recent-title {
     letter-spacing: 0.02em;
     color: inherit;
 }
-html.ilg body :is(.ilg-recent-close, .ilg-sheet-close) {
+html.ilg body :is(.ilg-recent-close, .ilg-sheet-close):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     flex: 0 0 auto;
     width: 32px;
     height: 32px;
@@ -1168,7 +1078,7 @@ html.ilg body :is(.ilg-recent-close, .ilg-sheet-close) {
     background-color: var(--ilg-chip);
     cursor: pointer;
 }
-html.ilg body :is(.ilg-recent-close, .ilg-sheet-close)::before {
+html.ilg body :is(.ilg-recent-close, .ilg-sheet-close):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::before {
     content: "";
     width: 16px;
     height: 16px;
@@ -1177,12 +1087,12 @@ html.ilg body :is(.ilg-recent-close, .ilg-sheet-close)::before {
     -webkit-mask: var(--ilg-svg-close) center / contain no-repeat;
     mask: var(--ilg-svg-close) center / contain no-repeat;
 }
-html.ilg body :is(.ilg-recent-close, .ilg-sheet-close):hover { background-color: var(--ilg-chip-hover); }
-html.ilg body :is(.ilg-recent-close, .ilg-sheet-close, .ilg-sheet-back):focus-visible { outline: 2px solid #0a84ff; outline-offset: 1px; }
+html.ilg body :is(.ilg-recent-close, .ilg-sheet-close):hover:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { background-color: var(--ilg-chip-hover); }
+html.ilg body :is(.ilg-recent-close, .ilg-sheet-close, .ilg-sheet-back):focus-visible:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { outline: 2px solid #0a84ff; outline-offset: 1px; }
 /* 酒馆自己的标题行（小 logo、版本号、显示 / 隐藏按钮）和文档 / GitHub / Discord 链接都不要，只留“临时聊天” */
-html.ilg body .welcomePanel.ilg-recent :is(.welcomeHeaderTitle, .recentChatsTitle, .welcomeShortcuts > a, .welcomeShortcutsSeparator) { display: none; }
-html.ilg body .welcomePanel.ilg-recent .welcomeHeader { order: 3; justify-content: center; padding-top: 6px; }
-html.ilg body .welcomePanel.ilg-recent .welcomeShortcuts .openTemporaryChat {
+html.ilg body .welcomePanel.ilg-recent :is(.welcomeHeaderTitle, .recentChatsTitle, .welcomeShortcuts > a, .welcomeShortcutsSeparator):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { display: none; }
+html.ilg body .welcomePanel.ilg-recent .welcomeHeader:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { order: 3; justify-content: center; padding-top: 6px; }
+html.ilg body .welcomePanel.ilg-recent .welcomeShortcuts .openTemporaryChat:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     margin: 0;
     padding: 8px 16px;
     border: 0;
@@ -1190,17 +1100,17 @@ html.ilg body .welcomePanel.ilg-recent .welcomeShortcuts .openTemporaryChat {
     background-color: var(--ilg-chip);
 }
 /* 用户之前点过“隐藏最近聊天”也照样显示：这里就是专门看聊天记录的地方 */
-html.ilg body .welcomePanel.ilg-recent .welcomeRecent { display: block; order: 2; }
-html.ilg body .welcomePanel.ilg-recent .recentChatList { gap: 2px; }
-html.ilg body .welcomePanel.ilg-recent .recentChat {
+html.ilg body .welcomePanel.ilg-recent .welcomeRecent:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { display: block; order: 2; }
+html.ilg body .welcomePanel.ilg-recent .recentChatList:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { gap: 2px; }
+html.ilg body .welcomePanel.ilg-recent .recentChat:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     gap: 12px;
     padding: 10px 12px;
     border: 0;
     border-radius: 16px;
     transition: background-color .15s;
 }
-html.ilg body .welcomePanel.ilg-recent .recentChat:hover { background-color: var(--ilg-chip); }
-html.ilg body .welcomePanel.ilg-recent .recentChat + .recentChat::before {
+html.ilg body .welcomePanel.ilg-recent .recentChat:hover:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { background-color: var(--ilg-chip); }
+html.ilg body .welcomePanel.ilg-recent .recentChat + .recentChat:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::before {
     content: "";
     position: absolute;
     top: -1px;
@@ -1208,19 +1118,19 @@ html.ilg body .welcomePanel.ilg-recent .recentChat + .recentChat::before {
     right: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
-html.ilg.ilg-light body .welcomePanel.ilg-recent .recentChat + .recentChat::before { border-top-color: rgba(0, 0, 0, 0.07); }
-html.ilg body .welcomePanel.ilg-recent .recentChat :is(.avatar, .avatar img) { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%; }
-html.ilg body .welcomePanel.ilg-recent .recentChat .avatar img { object-fit: cover; }
-html.ilg body .welcomePanel.ilg-recent .chatNameContainer { font-size: 15px; line-height: 1.4; }
-html.ilg body .welcomePanel.ilg-recent .chatName .characterName { font-weight: 650; }
-html.ilg body .welcomePanel.ilg-recent .chatDate { opacity: 0.55; font-variant-numeric: tabular-nums; white-space: nowrap; }
-html.ilg body .welcomePanel.ilg-recent .chatMessageContainer { font-size: 13.5px; line-height: 1.5; opacity: 0.72; }
-html.ilg body .welcomePanel.ilg-recent .chatActions button { padding: 5px; border: 0; border-radius: 8px; background-color: var(--ilg-chip); }
-html.ilg body .welcomePanel.ilg-recent .showMoreChats { align-self: center; margin: 6px auto 0; border: 0; border-radius: 999px; background-color: var(--ilg-chip); }
-html.ilg body .welcomePanel.ilg-recent .noRecentChat { padding: 28px 10px; opacity: 0.7; }
-html.ilg body.reduced-motion .welcomePanel.ilg-recent { animation: none; }
+html.ilg.ilg-light body .welcomePanel.ilg-recent .recentChat + .recentChat:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::before { border-top-color: rgba(0, 0, 0, 0.07); }
+html.ilg body .welcomePanel.ilg-recent .recentChat :is(.avatar, .avatar img):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%; }
+html.ilg body .welcomePanel.ilg-recent .recentChat .avatar img:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { object-fit: cover; }
+html.ilg body .welcomePanel.ilg-recent .chatNameContainer:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { font-size: 15px; line-height: 1.4; }
+html.ilg body .welcomePanel.ilg-recent .chatName .characterName:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { font-weight: 650; }
+html.ilg body .welcomePanel.ilg-recent .chatDate:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { opacity: 0.55; font-variant-numeric: tabular-nums; white-space: nowrap; }
+html.ilg body .welcomePanel.ilg-recent .chatMessageContainer:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { font-size: 13.5px; line-height: 1.5; opacity: 0.72; }
+html.ilg body .welcomePanel.ilg-recent .chatActions button:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { padding: 5px; border: 0; border-radius: 8px; background-color: var(--ilg-chip); }
+html.ilg body .welcomePanel.ilg-recent .showMoreChats:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { align-self: center; margin: 6px auto 0; border: 0; border-radius: 999px; background-color: var(--ilg-chip); }
+html.ilg body .welcomePanel.ilg-recent .noRecentChat:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { padding: 28px 10px; opacity: 0.7; }
+html.ilg body.reduced-motion .welcomePanel.ilg-recent:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { animation: none; }
 @media (prefers-reduced-motion: reduce) {
-    html.ilg body .welcomePanel.ilg-recent { animation: none; }
+    html.ilg body .welcomePanel.ilg-recent:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { animation: none; }
 }
 
 /* ---------- 菜单第一行“聊天记录” + 小标题 ---------- */
@@ -1263,7 +1173,7 @@ html.ilg body #ilg-fold-menu .ilg-fold-row-icon::before {
 }
 html.ilg body #ilg-fold-menu .ilg-fold-row-text { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
 html.ilg body #ilg-fold-menu .ilg-fold-row-text b { font-size: 15px; font-weight: 650; }
-html.ilg body #ilg-fold-menu .ilg-fold-row-text small { font-size: 12.5px; opacity: 0.65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.ilg body #ilg-fold-menu .ilg-fold-row-text small { font-size: 12.5px; color: var(--ilg-fold-secondary); opacity: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 html.ilg body #ilg-fold-menu .ilg-fold-row-chev {
     flex: 0 0 auto;
     width: 14px;
@@ -1278,7 +1188,8 @@ html.ilg body #ilg-fold-menu .ilg-fold-cap {
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.08em;
-    opacity: 0.55;
+    color: var(--ilg-fold-secondary);
+    opacity: 1;
 }
 html.ilg:not(.ilg-light) body #ilg-fold-menu .ilg-fold-tile { text-shadow: none; }
 html.ilg body #ilg-fold-menu .ilg-fold-label { font-size: 12.5px; letter-spacing: 0.02em; white-space: nowrap; }
@@ -1335,7 +1246,7 @@ html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-
 }
 
 /* 吸顶标题栏：‹ 菜单 | 名字 | ×。下面滚过的内容在标题栏后面模糊掉（外层玻璃是“背景根”，这里只模糊抽屉自己的内容） */
-html.ilg body .ilg-sheet-head {
+html.ilg body .ilg-sheet-head:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     position: sticky;
     top: 0;
     z-index: 5;
@@ -1351,13 +1262,13 @@ html.ilg body .ilg-sheet-head {
     backdrop-filter: blur(14px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
-html.ilg.ilg-light body .ilg-sheet-head { background-color: rgba(255, 255, 255, 0.5); border-bottom-color: rgba(0, 0, 0, 0.06); }
+html.ilg.ilg-light body .ilg-sheet-head:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { background-color: rgba(255, 255, 255, 0.5); border-bottom-color: rgba(0, 0, 0, 0.06); }
 @media screen and (max-width: 1000px) {
-    html.ilg body .ilg-sheet-head { margin: 0 -12px 8px; }
+    html.ilg body .ilg-sheet-head:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { margin: 0 -12px 8px; }
 }
 /* 左右长面板自己不滚动（里面另有滚动区），标题栏就是一个普通的顶行 */
-html.ilg body :is(.fillLeft, .fillRight) > .ilg-sheet-head { position: relative; flex: 0 0 auto; margin: 0 0 4px; border-radius: 24px 24px 0 0; }
-html.ilg body .ilg-sheet-title {
+html.ilg body :is(.fillLeft, .fillRight) > .ilg-sheet-head:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { position: relative; flex: 0 0 auto; margin: 0 0 4px; border-radius: 24px 24px 0 0; }
+html.ilg body .ilg-sheet-title:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     grid-column: 2;
     margin: 0;
     font-family: var(--ilg-ui-font);
@@ -1367,7 +1278,7 @@ html.ilg body .ilg-sheet-title {
     color: inherit;
     white-space: nowrap;
 }
-html.ilg body .ilg-sheet-back {
+html.ilg body .ilg-sheet-back:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     grid-column: 1;
     justify-self: start;
     display: inline-flex;
@@ -1383,16 +1294,16 @@ html.ilg body .ilg-sheet-back {
     background: transparent;
     cursor: pointer;
 }
-html.ilg.ilg-light body .ilg-sheet-back { color: #0a74e0; }
-html.ilg body .ilg-sheet-back:hover { background-color: var(--ilg-chip); }
-html.ilg body .ilg-sheet-back > span {
+html.ilg.ilg-light body .ilg-sheet-back:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { color: #0a74e0; }
+html.ilg body .ilg-sheet-back:hover:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { background-color: var(--ilg-chip); }
+html.ilg body .ilg-sheet-back > span:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     width: 18px;
     height: 18px;
     background-color: currentColor;
     -webkit-mask: var(--ilg-svg-back) center / contain no-repeat;
     mask: var(--ilg-svg-back) center / contain no-repeat;
 }
-html.ilg body .ilg-sheet-close { grid-column: 3; justify-self: end; }
+html.ilg body .ilg-sheet-close:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { grid-column: 3; justify-self: end; }
 /* AI 回复设置面板：“单击滑块以手动输入值”本来绝对定位压在最上面，改成标题栏下面的一行小字；右上角的问号挪进标题栏、× 的左边 */
 html.ilg body #left-nav-panel:has(> .ilg-sheet-head) > .editable-slider-notification {
     position: static;
@@ -1426,23 +1337,23 @@ html.ilg body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-heade
     background-color: rgba(255, 255, 255, 0.1);
 }
 html.ilg.ilg-light body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-header, #extensions_settings2 .inline-drawer-toggle.inline-drawer-header, .standoutHeader.inline-drawer-header):hover { background-color: rgba(255, 255, 255, 0.75); }
-html.ilg body .standoutHeader ~ .inline-drawer-content {
+html.ilg body .standoutHeader ~ .inline-drawer-content:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     border: 0;
     border-radius: 14px;
     padding: 10px;
     background-color: rgba(0, 0, 0, 0.16);
 }
-html.ilg.ilg-light body .standoutHeader ~ .inline-drawer-content { background-color: rgba(255, 255, 255, 0.3); }
+html.ilg.ilg-light body .standoutHeader ~ .inline-drawer-content:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { background-color: rgba(255, 255, 255, 0.3); }
 /* 折叠条右边的大圆圈箭头换成一个细箭头 */
-html.ilg body .inline-drawer-icon:is(.fa-circle-chevron-down, .fa-circle-chevron-up) {
+html.ilg body .inline-drawer-icon:is(.fa-circle-chevron-down, .fa-circle-chevron-up):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     font-size: 13px;
     width: 24px;
     text-align: center;
     filter: none;
     opacity: 0.55;
 }
-html.ilg body .inline-drawer-icon.fa-circle-chevron-down::before { content: "\f078"; }
-html.ilg body .inline-drawer-icon.fa-circle-chevron-up::before { content: "\f077"; }
+html.ilg body .inline-drawer-icon.fa-circle-chevron-down:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::before { content: "\f078"; }
+html.ilg body .inline-drawer-icon.fa-circle-chevron-up:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::before { content: "\f077"; }
 html.ilg body #top-settings-holder .drawer-content :is(.text_pole, select, textarea) { border-radius: 10px; }
 html.ilg body #top-settings-holder .drawer-content .menu_button { border-radius: 10px; }
 
@@ -1476,12 +1387,11 @@ html.ilg body {
     --ilg-box: rgba(255, 255, 255, 0.06);
     --ilg-box-line: rgba(255, 255, 255, 0.4);
     --ilg-placeholder: rgba(235, 235, 245, 0.4);
+}
+html.ilg body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
     --SmartThemeCheckboxTickColor: #fff;
 }
 html.ilg.ilg-light body {
-    --SmartThemeBlurTintColor: rgba(244, 244, 248, 0.68);
-    --SmartThemeBodyColor: rgba(29, 29, 31, 1);
-    --SmartThemeEmColor: rgba(60, 60, 67, 0.62);
     --ilg-accent: #007aff;
     --ilg-field: rgba(255, 255, 255, 0.72);
     --ilg-field-line: rgba(60, 60, 67, 0.16);
@@ -1493,58 +1403,63 @@ html.ilg.ilg-light body {
     --ilg-box-line: rgba(60, 60, 67, 0.3);
     --ilg-placeholder: rgba(60, 60, 67, 0.45);
 }
+html.ilg.ilg-light body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
+    --SmartThemeBlurTintColor: rgba(244, 244, 248, 0.68);
+    --SmartThemeBodyColor: rgba(29, 29, 31, 1);
+    --SmartThemeEmColor: rgba(60, 60, 67, 0.62);
+}
 /* 浅色壁纸压暗一点点：整屏的白光是“刺眼”的主要来源；玻璃折射的是压暗后的画面，弧度不受影响 */
 html.ilg.ilg-light body :is(#bg1, #bg_custom) { filter: brightness(0.94) saturate(0.95); }
 
 /* 输入框、下拉框、多行文本。原来是 30% 黑盖在玻璃上：浅色下一片脏灰，深色下发闷 */
-html.ilg body :is(.text_pole, select, textarea:not(#send_textarea), .range-block-counter input, .neo-range-input) {
+html.ilg body :is(.text_pole, select, textarea:not(#send_textarea), .range-block-counter input, .neo-range-input):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     background-color: var(--ilg-field);
     border-color: var(--ilg-field-line);
     color: var(--SmartThemeBodyColor);
 }
-html.ilg body :is(.text_pole, select, textarea:not(#send_textarea), .range-block-counter input, .neo-range-input):focus {
+html.ilg body :is(.text_pole, select, textarea:not(#send_textarea), .range-block-counter input, .neo-range-input):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)):focus {
     border-color: var(--ilg-accent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--ilg-accent) 22%, transparent);
     outline: none;
 }
-html.ilg body :is(.text_pole, textarea:not(#send_textarea))::placeholder { color: var(--ilg-placeholder); }
+html.ilg body :is(.text_pole, textarea:not(#send_textarea)):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::placeholder { color: var(--ilg-placeholder); }
 /* 滑块旁边的数字框：至少放得下 7 位数（上下文长度 2000000 在电脑侧栏里被切成“200000(”） */
-html.ilg body .range-block-counter { flex: 0 0 auto; }
-html.ilg body .range-block-counter input { min-width: 9ch; padding: 2px 6px; font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+html.ilg body .range-block-counter:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { flex: 0 0 auto; }
+html.ilg body .range-block-counter input:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { min-width: 9ch; padding: 2px 6px; font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
 /* 电脑上数字框里自带的上下小箭头会占掉一位数字的宽度（2000000 显示成 200000），旁边有滑块，箭头用不上 */
-html.ilg body .range-block-counter input::-webkit-inner-spin-button,
-html.ilg body .range-block-counter input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+html.ilg body .range-block-counter input:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-inner-spin-button,
+html.ilg body .range-block-counter input:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
 /* 按钮：比页面亮一档的小卡片，去掉酒馆默认的半灰滤镜（它把彩色图标都洗灰了）。
    底色走变量，带红色警告、预设选中这些自己写了底色的按钮不受影响 */
-html.ilg body .menu_button {
+html.ilg body .menu_button:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     --SmartThemeBlurTintColor: var(--ilg-btn);
     border-color: var(--ilg-btn-line);
     filter: none;
 }
-html.ilg.ilg-light body .menu_button { box-shadow: 0 1px 2px rgba(30, 40, 70, 0.08); }
-html.ilg body .menu_button:not(.disabled):not([disabled]):not(.redWarningBG):is(:hover, .active) {
+html.ilg.ilg-light body .menu_button:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { box-shadow: 0 1px 2px rgba(30, 40, 70, 0.08); }
+html.ilg body .menu_button:not(.disabled):not([disabled]):not(.redWarningBG):is(:hover, .active):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     background-color: var(--ilg-btn-hover);
 }
 
 /* 滑块：细轨道 + 白圆点；左边是填色，右边是灰轨道 */
-html.ilg body input[type="range"],
-html.ilg body .neo-range-slider {
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)),
+html.ilg body .neo-range-slider:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     background: linear-gradient(var(--ilg-accent), var(--ilg-accent)) 0 0 / var(--ilg-fill, 0%) 100% no-repeat, var(--ilg-track) !important;
     box-shadow: none !important;
     filter: none !important;
     height: 4px;
 }
-html.ilg body .neo-range-slider { border-radius: 4px !important; }
-html.ilg body input[type="range"]:hover { filter: none; }
-html.ilg body input[type="range"]::-webkit-slider-thumb {
+html.ilg body .neo-range-slider:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { border-radius: 4px !important; }
+html.ilg body input[type="range"]:hover:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { filter: none; }
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-slider-thumb {
     width: 20px;
     height: 20px;
     background: #fff;
     border: 0.5px solid rgba(0, 0, 0, 0.06);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.14);
 }
-html.ilg body input[type="range"]::-moz-range-thumb {
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-moz-range-thumb {
     width: 20px;
     height: 20px;
     background: #fff;
@@ -1553,7 +1468,7 @@ html.ilg body input[type="range"]::-moz-range-thumb {
 }
 
 /* 勾选框：没勾是空心方框，勾上是蓝底白勾。原来浅色下不管勾没勾都是一个黑方块 */
-html.ilg body input[type="checkbox"] {
+html.ilg body input[type="checkbox"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     background-color: var(--ilg-box);
     border: 1px solid var(--ilg-box-line);
     outline: 0;
@@ -1561,31 +1476,31 @@ html.ilg body input[type="checkbox"] {
     box-shadow: none;
     filter: none;
 }
-html.ilg body input[type="checkbox"]:checked {
+html.ilg body input[type="checkbox"]:checked:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     background-color: var(--ilg-accent);
     border-color: var(--ilg-accent);
 }
-html.ilg body :is(input[type="checkbox"], input[type="range"]):focus-visible {
+html.ilg body :is(input[type="checkbox"], input[type="range"]):focus-visible:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     outline: 2px solid var(--ilg-accent);
     outline-offset: 2px;
 }
 
 /* 角色列表里的标签和筛选圆钮：去掉压暗滤镜 */
-html.ilg.ilg-light body .tag { border-color: rgba(60, 60, 67, 0.12); }
-html.ilg.ilg-light body .tag:not([style*="background"]) { background-color: rgba(60, 60, 67, 0.08); }
-html.ilg body .rm_tag_filter .tag { filter: none; opacity: 0.75; }
-html.ilg body .rm_tag_filter .tag:hover { opacity: 1; }
+html.ilg.ilg-light body .tag:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { border-color: rgba(60, 60, 67, 0.12); }
+html.ilg.ilg-light body .tag:not([style*="background"]):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { background-color: rgba(60, 60, 67, 0.08); }
+html.ilg body .rm_tag_filter .tag:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { filter: none; opacity: 0.75; }
+html.ilg body .rm_tag_filter .tag:hover:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { opacity: 1; }
 
 /* 分组条、展开内容（浅色）：比页面更白一点，形成“卡片”层次 */
 html.ilg.ilg-light body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-header, #extensions_settings2 .inline-drawer-toggle.inline-drawer-header, #user-settings-block h4, .standoutHeader) {
     background-color: rgba(255, 255, 255, 0.7);
 }
-html.ilg.ilg-light body .standoutHeader ~ .inline-drawer-content { background-color: rgba(255, 255, 255, 0.4); }
+html.ilg.ilg-light body .standoutHeader ~ .inline-drawer-content:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { background-color: rgba(255, 255, 255, 0.4); }
 
 /* ---------- 零碎修整 ---------- */
 /* 问号帮助图标：原来跟着“引号颜色”是土黄色，和整套灰 / 蓝不搭 */
-html.ilg body .note-link-span { color: var(--SmartThemeEmColor); opacity: 0.85; }
-html.ilg body .note-link-span:hover { color: var(--ilg-accent); opacity: 1; }
+html.ilg body .note-link-span:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { color: var(--SmartThemeEmColor); opacity: 0.85; }
+html.ilg body .note-link-span:hover:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { color: var(--ilg-accent); opacity: 1; }
 /* AI 回复设置的“锁定”小锁（只有电脑上有）：电脑上面板只有 300px 宽，放进标题栏会压住标题，所以挪到下面那行“单击滑块以手动输入值”小字的最右边 */
 html.ilg body #left-nav-panel:has(> .ilg-sheet-head) > #lm_button_panel_pin_div {
     position: absolute;
@@ -1626,18 +1541,22 @@ html.ilg.ilg-light body #ilg-home .ilg-home-recent:focus-visible { outline-color
    台词（引号里的话）用暖色 + 字底下一道很淡的荧光笔，一眼能扫出谁说了什么；
    叙述比纯白 / 纯黑稍软一点；心里话（斜体）再淡一档。角色卡自己的前端（iframe）不受影响 */
 html.ilg body {
-    --SmartThemeQuoteColor: rgba(255, 196, 140, 1);
     --ilg-say: #ffc48c;
     --ilg-say-bg: rgba(255, 170, 100, 0.14);
     --ilg-narr: rgba(242, 242, 247, 0.9);
     --ilg-think: rgba(235, 235, 245, 0.62);
 }
+html.ilg body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
+    --SmartThemeQuoteColor: rgba(255, 196, 140, 1);
+}
 html.ilg.ilg-light body {
-    --SmartThemeQuoteColor: rgba(184, 74, 28, 1);
     --ilg-say: #b84a1c;
     --ilg-say-bg: rgba(255, 140, 70, 0.14);
     --ilg-narr: rgba(29, 29, 31, 0.86);
     --ilg-think: rgba(60, 60, 67, 0.62);
+}
+html.ilg.ilg-light body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
+    --SmartThemeQuoteColor: rgba(184, 74, 28, 1);
 }
 html.ilg body #chat .mes_text { color: var(--ilg-narr); }
 html.ilg body #chat .mes_text q {
@@ -1686,9 +1605,9 @@ html.ilg body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .mes_block {
 html.ilg body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"]:has(.edit_textarea) { width: 100%; max-width: none; }
 
 /* ---------- 白天时段的两个小数字框：自带的上下箭头占掉一位，19 显示成 1… ---------- */
-html.ilg body .ilg-settings .ilg-hours input { width: 3.4em; padding: 2px 4px; -moz-appearance: textfield; appearance: textfield; }
-html.ilg body .ilg-settings .ilg-hours input::-webkit-inner-spin-button,
-html.ilg body .ilg-settings .ilg-hours input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+html.ilg body .ilg-settings .ilg-hours input:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { width: 3.4em; padding: 2px 4px; -moz-appearance: textfield; appearance: textfield; }
+html.ilg body .ilg-settings .ilg-hours input:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-inner-spin-button,
+html.ilg body .ilg-settings .ilg-hours input:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
 /* ---------- 消息头像：iOS 图标那种超椭圆，外面一圈细光环，中间留一道透明缝 ----------
    角色是暖色晚霞环（和对白的琥珀色一家），自己是冷蓝环；角色正在回复时光环慢慢转，像在“说话” */
@@ -1942,6 +1861,66 @@ html.ilg body #nonQRFormItems :is(#leftSendForm, #rightSendForm) { width: auto; 
 html.ilg body #form_sheld #send_form,
 html.ilg body #form_sheld #send_form:has(#send_textarea:focus-visible) { outline: 0; border-color: transparent; }
 
+/* ---------- NVWA 预设 / 记忆面板定点适配：只有已确认的原生 Popup 生效 ----------
+   只适配用户明确指定的两个内容根，不改变其他第三方浮窗。
+   外壳和吸顶标签栏的折射由 JS 引擎绘制，不叠加高模糊、白色亮边或实心底。 */
+html.ilg body dialog.popup.ilg-adapted {
+    border-radius: 28px;
+    background-color: rgba(12, 8, 20, 0.12);
+}
+html.ilg.ilg-light body dialog.popup.ilg-adapted {
+    background-color: rgba(255, 255, 255, 0.22);
+}
+html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) {
+    --nvp-surface: rgba(16, 14, 26, 0.42);
+    --nvp-bg: rgba(10, 8, 20, 0.38);
+    --nvp-muted: rgba(229, 234, 245, 0.85);
+    --nvp-line: rgba(235, 240, 255, 0.12);
+    --nvp-shadow: rgba(0, 0, 0, 0.24);
+    --m-surface: var(--nvp-surface);
+    --m-bg: var(--nvp-bg);
+    --m-muted: var(--nvp-muted);
+    --m-line: var(--nvp-line);
+    --m-shadow: var(--nvp-shadow);
+    --SmartThemeShadowColor: transparent;
+}
+html.ilg.ilg-light body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) {
+    --nvp-surface: rgba(255, 255, 255, 0.45);
+    --nvp-bg: rgba(255, 255, 255, 0.38);
+    --nvp-muted: rgba(42, 45, 56, 0.88);
+    --nvp-line: rgba(30, 40, 70, 0.12);
+    --nvp-shadow: rgba(30, 40, 70, 0.12);
+}
+html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) > :is(.nvp-tabbar, .m-tabbar) {
+    background: rgba(16, 14, 26, 0.12);
+    border-radius: 18px;
+    padding: 4px;
+    margin-bottom: 8px;
+}
+html.ilg.ilg-light body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) > :is(.nvp-tabbar, .m-tabbar) {
+    background: rgba(255, 255, 255, 0.18);
+}
+html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) :is(.nvp-tabs, .m-tabs) {
+    border-radius: 14px;
+    border-color: transparent;
+}
+html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) .nvp-sec-h {
+    border-color: var(--nvp-line);
+    border-radius: 16px;
+    background: var(--nvp-surface);
+    box-shadow: 0 3px 10px var(--nvp-shadow);
+}
+html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) :is(.nvp-sec-inner, .nvp-note, .m-box) {
+    border-color: var(--nvp-line);
+    border-radius: 14px;
+    background-color: var(--nvp-bg);
+}
+html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > #nvwa-memory :is(.m-num, .m-ta, .m-select) {
+    border-color: var(--m-line);
+    background-color: var(--m-bg);
+    color: var(--m-text);
+}
+
 /* ---------- 预设（提示词管理）面板 ----------
    “提示词 / 总 Token 数量”和每条前面的星号、禁用条目，酒馆写死成半透明白：浅色模式下白底白字看不见。
    列表每一行原本透明，深色模式下后面滚过的亮内容会把白字冲淡，所以给每行一层和当前深浅匹配的底 */
@@ -1977,76 +1956,6 @@ html.ilg body #completion_prompt_manager #completion_prompt_manager_list .comple
 html.ilg body #completion_prompt_manager #completion_prompt_manager_list li.completion_prompt_manager_list_head { color: var(--ilg-pm-dim); }
 html.ilg.ilg-light body #completion_prompt_manager :is(li, .completion_prompt_manager_footer, .completion_prompt_manager_list_head) { text-shadow: none; }
 
-/* ---------- 弹窗统一的右上角 × ----------
-   JS 给每个弹窗补一个 .ilg-popup-x，点它等于按 Esc（结果是“取消”，不保存）。
-   酒馆自己只在“纯展示”弹窗里露一个小圆叉，样式不统一，藏掉，统一用这个 */
-html.ilg body .popup .popup-button-close { display: none !important; }
-html.ilg body .popup > .ilg-popup-x {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 5;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    color: var(--SmartThemeBodyColor);
-    background-color: var(--ilg-chip);
-    transition: background-color .2s, transform .2s cubic-bezier(.3, 1.6, .5, 1);
-}
-html.ilg body .popup > .ilg-popup-x::before {
-    content: '';
-    position: absolute;
-    inset: 8px;
-    background-color: currentColor;
-    -webkit-mask: var(--ilg-svg-close) center / contain no-repeat;
-    mask: var(--ilg-svg-close) center / contain no-repeat;
-    opacity: 0.8;
-}
-html.ilg body .popup > .ilg-popup-x:hover { background-color: var(--ilg-chip-hover); }
-html.ilg body .popup > .ilg-popup-x:active { transform: scale(.9); }
-html.ilg body .popup > .ilg-popup-x:focus-visible { outline: 2px solid var(--ilg-accent, #0a84ff); outline-offset: 2px; }
-/* 放大看图时酒馆本来就藏关闭键，这里跟着藏 */
-html.ilg body .popup:has(.img_enlarged.zoomed).large_dialogue_popup > .ilg-popup-x { display: none; }
-/* 普通弹窗顶上让出一条给 ×；NVWA 两个面板有自己的标题行，只在标题行右边让位 */
-html.ilg body .popup:not(:has(#nvwa-panel, #nvwa-memory)) .popup-body { padding-top: 22px; }
-html.ilg body :is(#nvwa-panel .nvp-head, #nvwa-memory .m-head) { padding-right: 30px; }
-
-/* ---------- NVWA 记忆窗口：正文区垫一张卡片 ----------
-   外壳是清透玻璃，记忆窗口又没有预设面板那种一格一格的底，后面的聊天字直接透进来和说明文字打架。
-   只给标签栏下面的正文垫底，玻璃边缘那一圈照样清透（不糊、不盖住折射的弧） */
-html.ilg body #nvwa-memory .m-page.on {
-    padding: 10px 12px 12px;
-    border-radius: 16px;
-    background-color: rgba(14, 10, 22, 0.66);
-}
-html.ilg.ilg-light body #nvwa-memory .m-page.on { background-color: rgba(255, 255, 255, 0.74); }
-/* 标题行同样直接压在玻璃上：给一条和正文卡片同色的胶囊底 */
-html.ilg body #nvwa-memory .m-head {
-    padding: 6px 30px 6px 12px;
-    border-radius: 14px;
-    background-color: rgba(14, 10, 22, 0.5);
-}
-html.ilg.ilg-light body #nvwa-memory .m-head { background-color: rgba(255, 255, 255, 0.7); }
-html.ilg:not(.ilg-light) body #nvwa-memory {
-    --m-muted: rgba(235, 235, 245, 0.66);
-    --m-text: rgba(245, 245, 250, 0.94);
-}
-html.ilg.ilg-light body #nvwa-memory {
-    --m-muted: rgba(60, 60, 67, 0.72);
-    --m-text: rgb(29, 29, 31);
-}
-/* 卡片里的字不用再加影子；浅色模式整窗都不要 */
-html.ilg body #nvwa-memory .m-page { --SmartThemeShadowColor: transparent; }
-html.ilg.ilg-light body #nvwa-memory { --SmartThemeShadowColor: transparent; }
-/* 工具按钮和小标签：原本是主题底色，压在玻璃上发灰，换成和当前深浅一致的小块 */
-html.ilg body #nvwa-memory :is(.m-btn, .m-chip, .m-tag) { background-color: var(--ilg-chip); border-color: transparent; }
-html.ilg body #nvwa-memory .m-btn:hover { background-color: var(--ilg-chip-hover); }
-html.ilg body #nvwa-memory .m-btn.pri { background-color: color-mix(in srgb, var(--m-accent) 26%, transparent); border-color: color-mix(in srgb, var(--m-accent) 60%, transparent); }
-
-/* ---------- 角色卡挂在页面上的浮窗（人物册、悬浮球等）：去掉酒馆那圈字影 ---------- */
-html.ilg body > .ilg-foreign { --SmartThemeShadowColor: transparent; }
-
 /* ---------- 顶栏中间的楼层数 ----------
    JS（index.js 的 paintFloor）把屏幕最上面那一楼的 mesid 写进来，编号和 NVWA 记忆面板的「第 N 楼」一致。
    不参与 #top-settings-holder 的排版，绝对定位到中间那截空处，两边的小岛各归各的。 */
@@ -2064,14 +1973,12 @@ html.ilg body #top-bar > #ilg-floor {
     white-space: nowrap;
     cursor: pointer;
     user-select: none;
-    background-color: var(--SmartThemeBlurTintColor);
-    -webkit-backdrop-filter: blur(14px) saturate(1.5);
-    backdrop-filter: blur(14px) saturate(1.5);
-    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.16), 0 3px 12px rgba(0, 0, 0, 0.22);
+    /* 染色与输入框一致；滤镜交给 bar 材质，CSS 不覆盖 backdrop-filter。 */
+    background-color: var(--ilg-tint);
     opacity: 0;
     scale: 0.94;
     pointer-events: none;
-    transition: opacity .22s ease, scale .28s cubic-bezier(.3, 1.6, .5, 1), background-color .2s;
+    transition: opacity .22s ease, scale .22s ease-out, background-color .2s;
 }
 /* 滚动或换楼时才亮，停手 1.6 秒后淡回去：常驻会压在消息头上那行名字和日期上 */
 html.ilg body #top-bar > #ilg-floor.is-on {
@@ -2079,10 +1986,9 @@ html.ilg body #top-bar > #ilg-floor.is-on {
     scale: 1;
     pointer-events: auto;
 }
-html.ilg.ilg-light body #top-bar > #ilg-floor {
-    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.08), 0 3px 12px rgba(30, 40, 70, 0.12);
-}
-html.ilg body #top-bar > #ilg-floor:hover { background-color: var(--ilg-chip-hover); }
+
+html.ilg body #top-bar > #ilg-floor:hover { background-color: var(--ilg-tint); }
+
 html.ilg body #top-bar > #ilg-floor:active { scale: 0.94; }
 html.ilg body #top-bar > #ilg-floor[hidden] { display: none; }
 /* 特别窄的屏，中间没剩多少地方，先让出来 */
@@ -2172,4 +2078,1146 @@ html.ilg body #chat .mes:has(.nvt-bar) .mes_block {
 @media screen and (max-width: 340px) {
     html.ilg body #chat .mes .mes_text { font-size: 16px; }
     html.ilg body #chat .mes .name_text { font-size: 16px; }
+}
+/* ---------- 角色目录：安静的工具栏、竖幅封面与清晰的信息层级 ---------- */
+html.ilg body #rm_characters_block {
+    --ilg-catalog-text: #f2f2f7;
+    --ilg-catalog-secondary: #c5c5d0;
+    --ilg-catalog-surface: rgba(255, 255, 255, 0.045);
+    --ilg-catalog-hover: rgba(255, 255, 255, 0.085);
+    --SmartThemeShadowColor: transparent;
+    color: var(--ilg-catalog-text);
+}
+html.ilg.ilg-light body #rm_characters_block {
+    --ilg-catalog-text: #222228;
+    --ilg-catalog-secondary: #585863;
+    --ilg-catalog-surface: rgba(255, 255, 255, 0.48);
+    --ilg-catalog-hover: rgba(255, 255, 255, 0.75);
+}
+html.ilg body #charListFixedTop { padding: 4px 2px 8px; }
+html.ilg body #rm_button_bar { align-items: center; gap: 5px; }
+html.ilg body #rm_button_bar :is(.menu_button, #rm_button_search) {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 36px;
+    min-width: 34px;
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    box-shadow: none;
+    color: inherit;
+    font-size: 16px;
+}
+html.ilg body #rm_button_bar .menu_button:hover,
+html.ilg body #rm_button_bar #rm_button_search:hover { background: var(--ilg-catalog-hover); }
+html.ilg body #rm_button_bar #rm_buttons_container:empty { display: none; }
+html.ilg body #rm_characters_block #character_sort_order {
+    min-width: 68px;
+    height: 36px;
+    margin: 0;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 10px;
+    font-size: 13px;
+    color: inherit;
+    background: var(--ilg-catalog-surface);
+}
+html.ilg body #rm_characters_block #character_search_bar {
+    min-height: 38px;
+    margin: 6px 0 0;
+    border-radius: 12px;
+    font-size: 14px;
+}
+html.ilg body #rm_characters_block .rm_tag_controls { margin-top: 6px; }
+html.ilg body #rm_characters_block .rm_tag_filter { gap: 5px; }
+/* 只收敛宿主工具标签的彩色底，不改用户自定义标签颜色。 */
+html.ilg body #rm_characters_block .rm_tag_filter .tag.actionable {
+    position: relative;
+    min-width: 34px;
+    min-height: 34px;
+    margin: 0;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 10px;
+    background-color: var(--ilg-catalog-surface) !important;
+    color: var(--ilg-catalog-secondary);
+    opacity: 1;
+    filter: none;
+    box-shadow: none;
+    font-size: 14px;
+}
+html.ilg body #rm_characters_block .rm_tag_filter .tag.actionable.selected {
+    color: var(--ilg-accent);
+    background-color: color-mix(in srgb, var(--ilg-accent) 15%, transparent) !important;
+}
+html.ilg body #rm_characters_block .rm_tag_filter .tag.actionable.excluded {
+    color: #ff6b61;
+    background-color: rgba(255, 59, 48, 0.12) !important;
+}
+html.ilg body #rm_characters_block .rm_tag_filter .tag.actionable:focus-visible,
+html.ilg body #rm_characters_block .entity_block:focus-visible {
+    outline: 2px solid var(--ilg-accent);
+    outline-offset: 2px;
+}
+html.ilg body #rm_print_characters_pagination {
+    gap: 5px;
+    padding: 8px 2px 10px;
+    align-items: center;
+    color: var(--ilg-catalog-secondary);
+}
+html.ilg body #rm_print_characters_pagination :is(.paginationjs, .paginationjs-pages ul) { gap: 3px; }
+html.ilg body #rm_print_characters_pagination .paginationjs-nav { font-size: 11.5px; font-weight: 500; }
+html.ilg body #rm_print_characters_pagination :is(.menu_button, .paginationjs-pages li > a) {
+    min-width: 28px;
+    height: 32px;
+    margin: 0;
+    padding: 4px;
+    border: 0;
+    border-radius: 8px;
+    box-shadow: none;
+    background: transparent;
+    font-size: 14px;
+}
+html.ilg body #rm_print_characters_pagination .paginationjs-pages li.disabled { opacity: 0.4; }
+html.ilg body #rm_print_characters_pagination select {
+    height: 32px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 9px;
+    font-size: 12px;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block { padding: 0 2px 14px; }
+html.ilg body:not(.charListGrid) #rm_print_characters_block :is(.character_select, .group_select, .bogus_folder_select) {
+    position: relative;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 13px;
+    margin: 0 0 6px;
+    padding: 12px;
+    border: 0;
+    border-radius: 14px;
+    background-color: var(--ilg-catalog-surface);
+    box-shadow: none;
+    transition: background-color 0.18s ease;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block :is(.character_select, .group_select, .bogus_folder_select):hover { background-color: var(--ilg-catalog-hover); }
+html.ilg body:not(.charListGrid) #rm_print_characters_block :is(.character_select, .group_select, .bogus_folder_select) > .avatar {
+    position: relative;
+    flex: 0 0 54px;
+    width: 54px !important;
+    min-width: 54px !important;
+    max-width: 54px !important;
+    height: 72px !important;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: var(--ilg-catalog-hover);
+    box-shadow: none;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block :is(.character_select, .group_select, .bogus_folder_select) > .avatar:not(.avatar_collage) > img {
+    width: 100% !important;
+    height: 100% !important;
+    border: 0;
+    border-radius: inherit;
+    box-shadow: none;
+    object-fit: cover;
+    object-position: center 18%;
+}
+/* 群聊拼贴的每张图由宿主 collage_2 / collage_3 / collage_4 规则排布。 */
+html.ilg body:not(.charListGrid) #rm_print_characters_block :is(.character_select_container, .group_select_container) {
+    flex: 1 1 0% !important;
+    width: auto !important;
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block .character_name_block {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    min-width: 0;
+    margin: 0;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block .ch_name {
+    min-width: 0;
+    max-width: 100%;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.5;
+    color: var(--ilg-catalog-text);
+    overflow-wrap: anywhere;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block .character_version {
+    flex: 0 0 auto;
+    padding: 0;
+    font-size: 11px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    background: transparent;
+    color: var(--ilg-catalog-secondary);
+    opacity: 1;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block .ch_description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--ilg-catalog-secondary);
+    opacity: 1;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block :is(.ch_description, .tags):empty { display: none; }
+html.ilg body:not(.charListGrid) #rm_print_characters_block .tags { gap: 4px; }
+html.ilg body:not(.charListGrid) #rm_print_characters_block .tag { border: 0; border-radius: 6px; font-size: 10.5px; line-height: 1.7; }
+html.ilg body:not(.charListGrid) #rm_print_characters_block .ch_fav_icon { color: #d69b38; font-size: 11px; }
+html.ilg body #rm_print_characters_block .character_select.character_selected { background-color: color-mix(in srgb, var(--ilg-accent) 18%, var(--ilg-catalog-surface)); }
+html.ilg body .hotswap.hotswap_none:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { font-size: 11.5px; line-height: 1.5; opacity: 0.7; }
+
+/* ---------- 世界书：抽屉里的条目列表。酒馆是一张带 1px 边框的小卡，标题是输入框、四个字段各占一行、三个按钮挤在中间，
+   手机上看着像没排版。这里整理成和角色列表同一套卡片：标题一行、字段两列、按钮收进右上角。 ---------- */
+html.ilg body #world_popup_entries_list .wi-card-entry {
+    position: relative;
+    margin: 0 0 8px;
+    padding: 8px 12px 6px;
+    border: 0;
+    border-radius: 18px;
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow:
+        0 10px 22px -18px rgba(20, 16, 28, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    --SmartThemeShadowColor: transparent;
+}
+html.ilg:not(.ilg-light) body #world_popup_entries_list .wi-card-entry {
+    background-color: rgba(255, 255, 255, 0.055);
+    box-shadow:
+        0 12px 24px -18px rgba(0, 0, 0, 0.85),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+html.ilg body #world_popup_entries_list .world_entry .inline-drawer-header {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+    gap: 6px 5px;
+    align-items: center;
+    flex-wrap: wrap !important;
+}
+html.ilg body #world_popup_entries_list .world_entry .world_entry_thin_controls { flex: 1 1 100% !important; }
+/* 标题那一行：折叠箭头、开关、标题、状态点 */
+html.ilg body #world_popup_entries_list .world_entry .inline-drawer-toggle {
+    padding: 0;
+    font-size: 12px;
+    opacity: 0.5;
+}
+html.ilg body #world_popup_entries_list .world_entry .killSwitch {
+    font-size: 12px;
+    opacity: 0.85;
+}
+html.ilg body #world_popup_entries_list .world_entry textarea[name="comment"] {
+    width: 100%;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--ilg-ui-font);
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    line-height: 26px;
+    resize: none;
+    overflow: hidden;
+}
+html.ilg body #world_popup_entries_list .world_entry textarea[name="comment"]::placeholder { opacity: 0.4; font-weight: 500; }
+/* 状态（永久 / 关键词 / 向量化）收成一颗小胶囊 */
+html.ilg body #world_popup_entries_list .world_entry select[name="entryStateSelector"] {
+    height: 24px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgba(120, 120, 128, 0.14);
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+}
+/* 三个条目操作：卡片右下角一排小圆钮，平时半透明，指上去才亮（不跟标题抢横向空间） */
+html.ilg body #world_popup_entries_list .world_entry .inline-drawer-header > :is(.move_entry_button, .duplicate_entry_button, .delete_entry_button) {
+    width: 26px;
+    height: 26px;
+    margin: 2px 0 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    background-color: rgba(120, 120, 128, 0.1);
+    opacity: 0.55;
+    transition: opacity 0.18s ease, background-color 0.18s ease;
+}
+html.ilg body #world_popup_entries_list .world_entry .inline-drawer-header > .move_entry_button { margin-left: auto; }
+html.ilg body #world_popup_entries_list .world_entry .inline-drawer-header > :is(.move_entry_button, .duplicate_entry_button, .delete_entry_button):hover {
+    opacity: 1;
+    background-color: rgba(120, 120, 128, 0.2);
+}
+html.ilg body #world_popup_entries_list .world_entry .inline-drawer-header > .delete_entry_button:hover { background-color: rgba(255, 59, 48, 0.28); }
+/* 字段：位置独占一行，深度 / 顺序 / 触发 % 三列；标签缩成 10.5px 小字 */
+html.ilg body #world_popup_entries_list .WIEnteryHeaderControls {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    width: 100%;
+    margin-top: 6px;
+}
+html.ilg body #world_popup_entries_list .WIEnteryHeaderControls > .world_entry_form_control { flex: 1 1 72px; }
+html.ilg body #world_popup_entries_list .WIEnteryHeaderControls > .world_entry_form_control:first-child { flex: 1 1 100%; }
+/* 酒馆按位置类型把不适用的字段设成 visibility:hidden（深度 / 顺序之类），留着会多出一格空白 */
+html.ilg body #world_popup_entries_list .world_entry_form_control:has(> input[style*="visibility: hidden"]) { display: none; }
+html.ilg body #world_popup_entries_list .world_entry_form_control { min-width: 0; gap: 1px; }
+html.ilg body #world_popup_entries_list .world_entry_form_control > label,
+html.ilg body #world_popup_entries_list .WIEntryHeaderTitleMobile {
+    display: block;
+    font-size: 13px;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    color: var(--ilg-wi-secondary);
+    opacity: 1;
+    margin: 0;
+}
+html.ilg body #world_popup_entries_list .world_entry_form_control :is(.text_pole, select) {
+    width: 100% !important;
+    height: 28px;
+    margin: 0;
+    padding: 0 8px;
+    border-radius: 9px;
+    font-size: 12.5px;
+}
+html.ilg body #world_popup_entries_list .world_entry_form_control input[type="number"] { text-align: center; }
+/* 展开后的内容（正文、关键词、备忘录）垫一块淡底，和标题分开 */
+html.ilg body #world_popup_entries_list .world_entry .inline-drawer-content {
+    margin: 6px -4px 0;
+    padding: 8px;
+    border: 0;
+    border-radius: 14px;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+html.ilg.ilg-light body #world_popup_entries_list .world_entry .inline-drawer-content { background-color: rgba(255, 255, 255, 0.35); }
+
+/* 抽屉上方：创建 / 选择 / 导入导出的那一堆按钮，统一成一排胶囊 */
+html.ilg body #world_popup > .flex-container { gap: 6px; margin-bottom: 6px; align-items: center; }
+html.ilg body #world_popup > hr { display: none; }
+html.ilg body #world_popup .menu_button {
+    flex: 0 0 auto;
+    min-width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.55);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+html.ilg:not(.ilg-light) body #world_popup .menu_button { background-color: rgba(255, 255, 255, 0.1); }
+html.ilg body #world_popup .menu_button:hover { background-color: rgba(255, 255, 255, 0.8); }
+html.ilg:not(.ilg-light) body #world_popup .menu_button:hover { background-color: rgba(255, 255, 255, 0.16); }
+html.ilg body #world_popup .menu_button.fa-solid { font-size: 13px; }
+html.ilg body #world_popup :is(#world_info_search, #world_info_sort_order, #world_editor_select) {
+    flex: 1 1 90px;
+    height: 32px;
+    margin: 0;
+    border-radius: 999px;
+    font-size: 12.5px;
+}
+html.ilg body #world_popup .select2-container .select2-selection--single { height: 32px; border-radius: 999px; display: flex; align-items: center; }
+
+/* 条目卡片里的行内布局：酒馆把折叠箭头、开关、标题、四个字段塞进同一个 flex 容器（默认 wrap），
+   箭头和开关会被 vertical-center 到整块中间、标题被挤窄。这里改成「标题一行 + 一格元信息条」。 */
+html.ilg body #world_popup_entries_list .world_entry .world_entry_thin_controls {
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+    gap: 6px;
+}
+html.ilg body #world_popup_entries_list .world_entry .world_entry_thin_controls > :is(.inline-drawer-toggle, .killSwitch) { margin-top: 7px; }
+html.ilg body #world_popup_entries_list .world_entry .world_entry_thin_controls > .flex-container {
+    flex-wrap: wrap !important;
+    min-width: 0;
+    flex: 1 1 auto;
+    width: auto;
+    gap: 0;
+    align-items: flex-start;
+}
+html.ilg body #world_popup_entries_list .WIEntryTitleAndStatus {
+    flex: 0 0 100% !important;
+    width: 100%;
+    padding-right: 2px;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+}
+html.ilg body #world_popup_entries_list .WIEntryTitleAndStatus > .flex-container {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+html.ilg body #world_popup_entries_list .world_entry textarea[name="comment"] { text-align: left !important; width: 100% !important; }
+
+/* ---------- 创建 / 编辑角色（#form_create）：酒馆把名字、头像、标签、几大段文本框一路平铺下来，
+   没有分组也没有节奏。这里按 iOS「新建联系人」的样子排：名字是一张卡，头像和标签一排，下面每段一个区块。 ---------- */
+html.ilg body #form_create { gap: 0; }
+/* 名字：当标题用，不再是普通输入框 */
+html.ilg body #form_create #name_div { position: relative; margin: 0 0 10px; }
+html.ilg body #form_create #character_name_pole {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 16px;
+    background-color: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 10px 22px -18px rgba(20, 16, 28, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    font-family: var(--ilg-ui-font);
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+}
+html.ilg:not(.ilg-light) body #form_create #character_name_pole { background-color: rgba(255, 255, 255, 0.07); }
+html.ilg body #form_create #name_div .extension_token_counter {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+    opacity: 0.45;
+    pointer-events: none;
+}
+/* 头像 + 操作 + 更多 + 标签：一块整卡 */
+html.ilg body #form_create #avatar-and-name-block > .flex-container {
+    gap: 10px;
+    padding: 10px;
+    border-radius: 18px;
+    background-color: rgba(255, 255, 255, 0.62);
+    box-shadow: 0 10px 22px -18px rgba(20, 16, 28, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+html.ilg:not(.ilg-light) body #form_create #avatar-and-name-block > .flex-container { background-color: rgba(255, 255, 255, 0.055); }
+html.ilg body #form_create .avatar_div { gap: 10px; align-items: center; }
+html.ilg body #form_create :is(.add_avatar, #avatar_load_preview) {
+    width: 68px;
+    height: 92px;
+    border: 0;
+    border-radius: 15px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.5);
+}
+html.ilg body #form_create #avatar_load_preview { display: block; }
+/* 头像右边那串黑色圆钮：留白撑大一点，别挤成一排实心黑点 */
+html.ilg body #form_create #avatar_controls { gap: 6px; align-items: center; }
+html.ilg body #form_create .form_create_bottom_buttons_block { gap: 6px; }
+html.ilg body #form_create #avatar_controls .menu_button {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    background-color: rgba(120, 120, 128, 0.16);
+    box-shadow: none;
+}
+html.ilg body #form_create #avatar_controls .menu_button[style*="display: none"] { display: none !important; }
+html.ilg body #form_create #rm_button_back { background-color: rgba(120, 120, 128, 0.1); }
+html.ilg body #form_create #create_button_label { background-color: rgba(10, 132, 255, 0.9); color: #fff; }
+html.ilg body #form_create #delete_button { background-color: rgba(255, 59, 48, 0.16); color: #d70015; }
+html.ilg:not(.ilg-light) body #form_create #delete_button { color: #ff6b61; }
+/* 「更多…」下拉和标签输入收成胶囊 */
+html.ilg body #form_create #char-management-dropdown,
+html.ilg body #form_create #tagInput {
+    height: 34px;
+    margin: 0;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgba(120, 120, 128, 0.12);
+    font-size: 12.5px;
+}
+html.ilg body #form_create #char-management-dropdown { padding: 0 12px; }
+html.ilg body #form_create #tagInput { padding: 0 14px; }
+html.ilg body #form_create .tag_controls { gap: 8px; align-items: center; }
+html.ilg body #form_create .tags_view {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    margin: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    background-color: rgba(120, 120, 128, 0.14);
+}
+/* 区块标题：角色描述 / 开场白 / 创作者的注释 */
+html.ilg body #form_create :is(#description_div, #first_message_div) {
+    align-items: center;
+    margin: 16px 2px 6px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    opacity: 0.75;
+}
+html.ilg body #form_create :is(#description_div, #first_message_div) > .flex-container { align-items: center; gap: 6px; }
+html.ilg body #form_create :is(#description_div, #first_message_div) :is(.editor_maximize, .notes-link, .note-link-span) {
+    font-size: 11px;
+    opacity: 0.4;
+    filter: none;
+}
+html.ilg body #form_create .open_alternate_greetings {
+    height: 26px;
+    margin: 0;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    font-size: 11.5px;
+    background-color: rgba(120, 120, 128, 0.14);
+}
+/* 正文框：圆角、留白、行高都松一档，写长卡才不闷 */
+html.ilg body #form_create :is(#description_textarea, #firstmessage_textarea) {
+    width: 100%;
+    min-height: 190px;
+    padding: 12px 14px;
+    border: 0;
+    border-radius: 16px;
+    background-color: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 10px 22px -18px rgba(20, 16, 28, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    font-family: var(--mainFontFamily);
+    font-size: 14.5px;
+    line-height: 1.7;
+    resize: none;
+}
+html.ilg:not(.ilg-light) body #form_create :is(#description_textarea, #firstmessage_textarea) { background-color: rgba(255, 255, 255, 0.06); }
+html.ilg body #form_create :is(#description_textarea, #firstmessage_textarea)::placeholder { opacity: 0.4; }
+/* Token 计数：右对齐的一行小字，别浮在框里 */
+html.ilg body #form_create #descriptionWrapper > .extension_token_counter,
+html.ilg body #form_create #firstMessageWrapper > .extension_token_counter {
+    margin: 4px 10px 0 4px;
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+    opacity: 0.45;
+    text-align: right;
+}
+/* 创作者的注释：折叠条就是一行的分组卡 */
+html.ilg body #form_create #spoiler_free_desc .standoutHeader {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 14px;
+    background-color: rgba(255, 255, 255, 0.55);
+    font-size: 13px;
+    font-weight: 600;
+}
+html.ilg:not(.ilg-light) body #form_create #spoiler_free_desc .standoutHeader { background-color: rgba(255, 255, 255, 0.07); }
+html.ilg body #form_create #spoiler_free_desc .standoutHeader .menu_button {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    background-color: rgba(120, 120, 128, 0.14);
+}
+
+/* 设置面板里「其他美化」那一块：两个按钮一排，还原键没东西可还原时灰掉 */
+.ilg-settings .ilg-foreign-btns { grid-template-columns: repeat(2, 1fr); }
+.ilg-settings .ilg-foreign-btns .menu_button { width: auto; }
+.ilg-settings .ilg-foreign-btns .menu_button:disabled { opacity: 0.4; }
+
+/* 网格视图（body.charListGrid，顶上那个小方格键）：酒馆把每条压成 100px 的小格子，
+   开着大头像时头像会比格子还宽、直接压到隔壁。这里让头像按格子宽度走，名字单行省略。 */
+html.ilg body.charListGrid #rm_print_characters_block {
+    gap: 8px;
+    padding: 4px 0 12px;
+}
+html.ilg body.charListGrid #rm_print_characters_block :is(.character_select, .group_select, .bogus_folder_select) {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 6px !important;
+    border: 0;
+    border-radius: 16px;
+    background-color: rgba(255, 255, 255, 0.6);
+    box-shadow: none;
+}
+html.ilg:not(.ilg-light) body.charListGrid #rm_print_characters_block :is(.character_select, .group_select, .bogus_folder_select) {
+    background-color: rgba(255, 255, 255, 0.055);
+    box-shadow: none;
+}
+html.ilg body.charListGrid #rm_print_characters_block :is(.character_select, .group_select, .bogus_folder_select) > .avatar {
+    flex: 0 0 auto;
+    width: 100% !important;
+    height: auto !important;
+    max-width: none;
+    aspect-ratio: 3 / 4;
+    border: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: rgba(120, 120, 128, 0.16);
+    box-shadow: none;
+}
+html.ilg body.charListGrid #rm_print_characters_block :is(.character_select, .group_select, .bogus_folder_select) > .avatar:not(.avatar_collage) > img {
+    width: 100% !important;
+    height: 100% !important;
+    border: 0;
+    border-radius: inherit;
+    box-shadow: none;
+    object-fit: cover;
+}
+html.ilg body.charListGrid #rm_print_characters_block .character_select_container {
+    width: 100% !important;
+    min-width: 0;
+}
+html.ilg body.charListGrid #rm_print_characters_block .ch_name {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+html.ilg body.charListGrid #rm_print_characters_block :is(.ch_description, .tags, .character_version, .ch_fav_icon) { display: none; }
+
+
+/* 设置面板底部那颗「恢复默认参数」：酒馆的 .menu_button 会给 fit-content，被挤成一列字 */
+.ilg-settings #ilg-reset {
+    width: 100%;
+    margin-top: 10px;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* ---------- 世界书抽屉顶部：酒馆是「标题 + 灰底选择框 + 一排按钮」，
+   选择框还是 select2 的默认皮肤（灰底、细边），和下面那排胶囊按钮不搭。这里统一成同一种胶囊。 ---------- */
+html.ilg body #WorldInfo {
+    --ilg-wi-secondary: #c7c7d1;
+    --SmartThemeShadowColor: transparent;
+}
+html.ilg.ilg-light body #WorldInfo { --ilg-wi-secondary: #51515b; }
+html.ilg body #WorldInfo .range-block-title :is(small, span) {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    color: var(--ilg-wi-secondary);
+    opacity: 1;
+}
+html.ilg body #WorldInfo .select2-container .select2-selection--multiple,
+html.ilg body #WorldInfo .select2-container .select2-selection--single {
+    min-height: 34px;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.55);
+}
+html.ilg:not(.ilg-light) body #WorldInfo .select2-container .select2-selection--multiple,
+html.ilg:not(.ilg-light) body #WorldInfo .select2-container .select2-selection--single {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+html.ilg body #WorldInfo .select2-container .select2-selection__rendered { line-height: 32px; padding-left: 12px; }
+html.ilg body #WorldInfo .select2-container .select2-selection--multiple .select2-selection__rendered { padding: 2px 8px; }
+html.ilg body #WorldInfo .select2-container .select2-selection__arrow { height: 32px; right: 8px; }
+html.ilg body #WorldInfo .select2-selection__choice {
+    margin: 3px 4px 3px 0;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgba(120, 120, 128, 0.18);
+    font-size: 11.5px;
+}
+html.ilg body #WorldInfo .standoutHeader { font-size: 13px; }
+html.ilg body #WorldInfo .standoutHeader b { font-weight: 600; }
+
+/* select2 的「已启用的世界书」里那个内联搜索框会把整颗胶囊撑高，占位文字掉到底下；
+   给它定高、让容器用 flex 垂直居中 */
+html.ilg body #WorldInfo .select2-selection--multiple .select2-selection__rendered {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 4px 10px;
+}
+
+html.ilg body #WorldInfo .select2-selection--multiple .select2-selection__placeholder { line-height: 30px; }
+/* 「创建 或 [选一个]」那行：下拉给足宽度，不然开出来的列表会被挤成一列字 */
+html.ilg body #world_popup label:has(#world_editor_select) { flex: 1 1 150px; min-width: 130px; }
+html.ilg body #world_popup #world_editor_select { flex: 1 1 auto; height: 32px; border-radius: 999px; font-size: 12.5px; }
+/* 删除键别用酒馆那块实心酒红 */
+html.ilg body #world_popup #world_popup_delete { background-color: rgba(255, 59, 48, 0.14) !important; color: #d70015 !important; }
+html.ilg:not(.ilg-light) body #world_popup #world_popup_delete { color: #ff6b61 !important; }
+
+/* 空的「已启用世界书」胶囊：酒馆的 select2 多重选择带一层 5px 内边距和 clearfix，空着也有 63px 高。
+   没选中任何世界书时按一行胶囊高；选了以后交回自动高度，让 chips 正常换行 */
+/* 「创建 或 [选一个]」的下拉也换成胶囊 */
+html.ilg body #world_popup .select2-container { flex: 1 1 150px; min-width: 130px; }
+html.ilg body #world_popup .select2-container .select2-selection--single {
+    height: 32px;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+}
+html.ilg:not(.ilg-light) body #world_popup .select2-container .select2-selection--single { background-color: rgba(255, 255, 255, 0.1); }
+html.ilg body #world_popup .select2-container .select2-selection__rendered { padding-left: 12px; line-height: 30px; }
+
+/* 占位文字右对齐 + 被裁：酒馆给 select2 的 placeholder 加了 auto margin，这里拉回左边 */
+html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-selection__placeholder {
+    margin: 0 !important;
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* 工具条挤成一到两行时，删掉的那颗别单独掉到第三行 */
+html.ilg body #world_popup .menu_button { height: 30px; min-width: 30px; padding: 0 8px; font-size: 12px; }
+
+
+/* 工具条换行时，让删除键靠右单独一行，看着像有意为之，而不是被挤掉 */
+html.ilg body #world_popup #world_popup_delete { margin-left: auto !important; }
+
+/* 那个占位文字其实是 select2 内联搜索框的 placeholder（不是 __placeholder 那个 li），
+   它带着酒馆给的右对齐和窄宽度，所以看着像被裁了一半 */
+html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search--inline {
+    flex: 1 1 100%;
+    width: 100%;
+}
+html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search__field {
+    width: 100% !important;
+    text-align: left !important;
+    font-size: 13px;
+}
+html.ilg body #WorldInfo .select2-search__field::placeholder { opacity: 0.55; }
+
+/* ---------- 世界书下拉列表：select2 把面板挂在 body 上，宽度跟着那个 130px 的容器走，
+   结果每一项都被挤成一列字。这里给它一个下限，顺便换成和别的弹层一样的玻璃面板 ---------- */
+html.ilg body .select2-container--open .select2-dropdown:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
+    min-width: 240px;
+    border: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background-color: rgba(250, 249, 252, 0.94);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+    box-shadow: 0 22px 44px -22px rgba(20, 16, 28, 0.6), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+html.ilg:not(.ilg-light) body .select2-container--open .select2-dropdown:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
+    background-color: rgba(26, 23, 34, 0.94);
+    box-shadow: 0 22px 44px -20px rgba(0, 0, 0, 0.85), 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+html.ilg body .select2-results__option:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
+    padding: 8px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+html.ilg body .select2-results__option--highlighted[aria-selected]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { background-color: rgba(10, 132, 255, 0.85); color: #fff; }
+
+/* ---------- 角色编辑页的删除键：酒馆的 .red_button 是实心酒红，配玻璃底太扎眼，换成淡红底 + 红图标 ---------- */
+html.ilg body :is(#form_create, #character_popup) #delete_button.red_button {
+    background-color: rgba(255, 59, 48, 0.14) !important;
+    color: #d70015 !important;
+}
+html.ilg:not(.ilg-light) body :is(#form_create, #character_popup) #delete_button.red_button { color: #ff6b61 !important; }
+html.ilg body :is(#form_create, #character_popup) #delete_button.red_button:hover {
+    background-color: rgba(255, 59, 48, 0.24) !important;
+}
+
+/* 空着的「已启用世界书」：select2 把占位内容拆成「一个空 ul（上下各 15px margin）+ 一个搜索框」两块，
+   所以胶囊空着也 63px 高、字掉到底下。没选中任何世界书时把 ul 收掉、让搜索框整行撑满胶囊 */
+html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) {
+    height: 38px;
+    min-height: 38px;
+    padding: 0;
+}
+html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-selection__rendered {
+    display: none;
+}
+html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search--inline {
+    display: block;
+    width: 100%;
+}
+html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search__field {
+    width: 100% !important;
+    height: 36px;
+    margin: 0 !important;
+    padding: 0 14px;
+    border: 0;
+    background: transparent;
+    box-sizing: border-box;
+    font-size: 13px;
+    text-align: left !important;
+}
+html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search__field::placeholder { opacity: 0.5; }
+
+/* 选项左边那格勾选框是酒馆自己画的（padding-left: 30px + ::before），别把整行的左内边距压掉，不然勾会压在字上 */
+html.ilg body .select2-results__option:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { padding: 6px 12px 6px 30px; }
+html.ilg body .select2-results__option:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::before { border-radius: 4px; }
+/* 下拉里的搜索框：原来的灰色大块换成透明细线 */
+html.ilg body .select2-search--dropdown:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { padding: 8px; }
+html.ilg body .select2-search--dropdown .select2-search__field:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
+    height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    background-color: rgba(120, 120, 128, 0.14);
+    color: inherit;
+    font-size: 12.5px;
+}
+
+/* ---------- 角色卡上的「世界书」小标：简介下面一行，小胶囊标签 + 书名，超出省略 ---------- */
+html.ilg body:not(.charListGrid) #rm_print_characters_block .ilg-world {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    opacity: 0.55;
+    white-space: nowrap;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block .ilg-world-k {
+    flex: 0 0 auto;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background-color: rgba(120, 120, 128, 0.16);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+html.ilg body:not(.charListGrid) #rm_print_characters_block .ilg-world-v {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+html.ilg body.charListGrid #rm_print_characters_block .ilg-world { display: none; }
+
+/* 选中世界书以后那颗胶囊又回到 63px、chips 挤成一小坨：同样的道理，把 ul 的 15px margin 归零、
+   整条改成 flex 横排，chip 和搜索框一起在 38px 里排 */
+html.ilg body #WorldInfo .select2-selection--multiple {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 38px;
+    height: auto;
+    padding: 4px 10px;
+}
+html.ilg body #WorldInfo .select2-selection--multiple .select2-selection__rendered {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin: 0 !important;
+    padding: 0;
+    width: auto;
+    min-width: 0;
+}
+html.ilg body #WorldInfo .select2-search--inline { flex: 1 1 40px; min-width: 40px; }
+html.ilg body #WorldInfo .select2-search--inline .select2-search__field {
+    height: 24px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent !important;
+    box-shadow: none;
+    color: inherit;
+    opacity: 1;
+    font-size: 14px;
+}
+/* 选中的世界书：不再套一层灰底框，就是一行字 + 一个小叉（外面那颗白胶囊已经是框了） */
+html.ilg body #WorldInfo .select2-selection__choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 24px;
+    height: auto;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 2px 0 4px;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent !important;
+    color: inherit !important;
+    font-size: 13px;
+    line-height: 1;
+}
+html.ilg body #WorldInfo .select2-selection__choice__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    color: inherit;
+    opacity: 0.55;
+    font-size: 12px;
+    line-height: 1;
+}
+html.ilg body #WorldInfo .select2-selection__choice__remove:hover { opacity: 1; }
+/* 酒馆的 clickable_buttonstyle 给名称本身加了黑底，清外层 chip 不会清掉它。 */
+html.ilg body #WorldInfo .select2-selection__choice__display {
+    min-width: 0;
+    padding: 2px 4px;
+    border-radius: 5px;
+    background: transparent !important;
+    color: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+html.ilg body #WorldInfo .select2-selection__choice__display:hover { background: var(--ilg-chip-hover) !important; }
+html.ilg body #WorldInfo :is(.select2-selection__choice__display, .select2-search__field):focus-visible {
+    outline: 2px solid var(--ilg-accent);
+    outline-offset: 2px;
+}
+/* 右上角那个「清空全部」的 × */
+html.ilg body #WorldInfo .select2-selection__clear {
+    right: 10px;
+    top: 50%;
+    margin: 0;
+    transform: translateY(-50%);
+    font-size: 13px;
+    opacity: 0.45;
+}
+
+/* 选中项的 × 保持透明，不给世界书名称再套一层底色。 */
+
+html.ilg body #WorldInfo .select2-selection__choice__remove {
+    width: 12px !important;
+    height: 12px !important;
+    min-width: 12px;
+    margin: 0 1px 0 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    color: inherit !important;
+    opacity: 0.5;
+    font-size: 11px;
+    line-height: 12px;
+}
+html.ilg body #WorldInfo .select2-selection__choice__remove:hover { opacity: 1; background: rgba(255, 255, 255, 0.28) !important; }
+
+/* ---------- 世界书条目展开后的编辑器：一块凹进去的卡片，字段排成网格，内容框给足高度 ----------
+   酒馆这套表单是 1em 行内标签 + 各种 width:fit-content 拼的，展开后像一张没排版的表。 */
+html.ilg body #world_popup_entries_list .world_entry .inline-drawer-content {
+    max-width: 100%;
+    margin: 8px 0 2px;
+    padding: 12px;
+    border: 1px solid rgba(120, 120, 128, 0.14);
+    border-radius: 14px;
+    background-color: rgba(255, 255, 255, 0.42);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+html.ilg:not(.ilg-light) body #world_popup_entries_list .world_entry .inline-drawer-content {
+    border-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 字段：标签在上（左对齐小字），控件在下 */
+html.ilg body #world_popup_entries_list .world_entry_edit .world_entry_form_control {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+html.ilg body #world_popup_entries_list .world_entry_edit .world_entry_form_control > small,
+html.ilg body #world_popup_entries_list .world_entry_edit :is(.range-block-title, .justifySpaceBetween) > small {
+    display: block;
+    margin: 0;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    color: var(--ilg-wi-secondary);
+    opacity: 1;
+}
+html.ilg body #world_popup_entries_list .world_entry_edit :is(input, textarea)::placeholder {
+    color: var(--ilg-wi-secondary);
+    opacity: 1;
+}
+html.ilg body #world_popup_entries_list .world_entry_edit :is(input.text_pole, select.text_pole, textarea.text_pole) { color: inherit; }
+/* 控件统一：32px 胶囊 */
+html.ilg body #world_popup_entries_list .world_entry_edit :is(input.text_pole, select.text_pole, textarea.text_pole) {
+    width: 100%;
+    height: 32px;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 9px;
+    background-color: rgba(255, 255, 255, 0.72);
+    font-size: 14px;
+}
+html.ilg:not(.ilg-light) body #world_popup_entries_list .world_entry_edit :is(input.text_pole, select.text_pole, textarea.text_pole) {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+html.ilg body #world_popup_entries_list .world_entry_edit textarea.text_pole {
+    height: auto;
+    min-height: 34px;
+    padding: 7px 10px;
+    line-height: 1.55;
+    resize: vertical;
+}
+/* 正文就是 NPC 那些描写，给 240px 起，别再挤成一行 */
+html.ilg body #world_popup_entries_list .world_entry_edit textarea.text_pole[id^="world_entry_content_"] {
+    height: 260px !important;
+    min-height: 260px !important;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-family: var(--mainFontFamily);
+    font-size: 15px;
+    line-height: 1.8;
+}
+html.ilg body #world_popup_entries_list .world_entry_edit .keyprimarytextpole,
+html.ilg body #world_popup_entries_list .world_entry_edit .keysecondarytextpole { min-height: 34px; }
+
+/* 关键字 / 逻辑 / 可选过滤器：横着一行，关键字两格宽 */
+html.ilg body #world_popup_entries_list .world_entry_edit [name="keywordsAndLogicBlock"] {
+    display: grid;
+    grid-template-columns: 2fr 0.7fr 2fr;
+    gap: 10px;
+    align-items: end;
+}
+/* 每条自己的覆盖项：桌面 6 格，手机 2 格 */
+html.ilg body #world_popup_entries_list .world_entry_edit [name="perEntryOverridesBlock"] {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+    align-items: end;
+}
+/* 正文一行占满，勾选项挪到正文下面横着排（正文是这一页的主角，不能给勾选框让宽度） */
+html.ilg body #world_popup_entries_list .world_entry_edit [name="contentAndCharFilterBlock"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+}
+html.ilg body #world_popup_entries_list .world_entry_edit [name="contentAndCharFilterBlock"] > .flex-container {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+}
+html.ilg body #world_popup_entries_list .world_entry_edit [name="contentAndCharFilterBlock"] .checkbox,
+html.ilg body #world_popup_entries_list .world_entry_edit [name="contentAndCharFilterBlock"] :is(label, small) {
+    font-size: 13px;
+    color: var(--ilg-wi-secondary);
+    opacity: 1;
+}
+/* 组权重 / 粘性 / 冷却 / 延迟这一排：等宽，允许换行 */
+html.ilg body #world_popup_entries_list .world_entry_edit :is(.range-block, .flex2.flex-container.flexFlowColumn) {
+    flex: 1 1 120px;
+    min-width: 0;
+}
+@media screen and (max-width: 1000px) {
+    html.ilg body #world_popup_entries_list .world_entry_edit [name="perEntryOverridesBlock"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media screen and (max-width: 620px) {
+    html.ilg body #world_popup_entries_list .world_entry_edit [name="keywordsAndLogicBlock"] { grid-template-columns: minmax(0, 1fr); }
+    html.ilg body #world_popup_entries_list .world_entry_edit [name="perEntryOverridesBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    html.ilg body #world_popup_entries_list .world_entry_edit textarea.text_pole[id^="world_entry_content_"] { height: 200px; min-height: 200px; }
+}
+
+/* 手机上的展开区：内容那行的勾选換到标题下面横排；组 / 绑定这几排一列两个 */
+@media screen and (max-width: 620px) {
+    html.ilg body #world_popup_entries_list .world_entry_edit [name="contentAndCharFilterBlock"] .world_entry_form_control > span.flexnowrap {
+        flex-wrap: wrap !important;
+        gap: 6px;
+    }
+    html.ilg body #world_popup_entries_list .world_entry_edit [name="contentAndCharFilterBlock"] .flexFlowColumn {
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        width: 100%;
+    }
+    html.ilg body #world_popup_entries_list .world_entry_edit [name="contentAndCharFilterBlock"] .checkbox { font-size: 13px; }
+    html.ilg body #world_popup_entries_list .world_entry_edit :is(.range-block, .flex2.flex-container.flexFlowColumn) {
+        flex: 1 1 45% !important;
+        min-width: 0;
+    }
+    html.ilg body #world_popup_entries_list .world_entry_edit .world_entry_thin_controls .flex-container { flex-wrap: wrap !important; }
+}
+
+/* 控件加一圈极细的内描边：浅色底上才看得出哪里能点（深色模式本来就分得开） */
+html.ilg body #world_popup_entries_list .world_entry_edit :is(input.text_pole, select.text_pole, textarea.text_pole),
+html.ilg body #world_popup_entries_list .WIEnteryHeaderControls :is(input.text_pole, select.text_pole) {
+    box-shadow: inset 0 0 0 1px rgba(120, 120, 128, 0.16);
+}
+html.ilg:not(.ilg-light) body #world_popup_entries_list .world_entry_edit :is(input.text_pole, select.text_pole, textarea.text_pole),
+html.ilg:not(.ilg-light) body #world_popup_entries_list .WIEnteryHeaderControls :is(input.text_pole, select.text_pole) {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* 手机条目头部的元信息：两个数字框平分一行、输入框加到 34px，别挤成两条小板 */
+@media screen and (max-width: 620px) {
+    html.ilg body #world_popup_entries_list .WIEnteryHeaderControls { gap: 8px 10px; }
+    html.ilg body #world_popup_entries_list .WIEnteryHeaderControls > .world_entry_form_control { flex: 1 1 calc(50% - 5px) !important; }
+    html.ilg body #world_popup_entries_list .WIEnteryHeaderControls > .world_entry_form_control:first-child { flex: 1 1 100% !important; }
+    html.ilg body #world_popup_entries_list .WIEnteryHeaderControls :is(.text_pole, select) { height: 34px; font-size: 13px; }
+    html.ilg body #world_popup_entries_list .world_entry .world_entry_form_control > label,
+    html.ilg body #world_popup_entries_list .world_entry .WIEntryHeaderTitleMobile { font-size: 13px; opacity: 1; }
+    /* 正文再高一点，长设定在手机上也够回看 */
+    html.ilg body #world_popup_entries_list .world_entry_edit textarea.text_pole[id^="world_entry_content_"] { height: 240px !important; min-height: 240px !important; }
+    html.ilg body #world_popup_entries_list .world_entry_edit :is(input.text_pole, select.text_pole, textarea.text_pole) { font-size: 14px; }
+    html.ilg body #world_popup_entries_list .world_entry_edit textarea.text_pole[id^="world_entry_content_"] { font-size: 15px; }
+}
+
+/* 原生世界书下拉列表独立挂在 body：按宿主控件 ID 限定，不接管第三方下拉框。 */
+html.ilg body > .select2-container:has(#select2-world_info-results, #select2-world_editor_select-results) {
+    --SmartThemeBodyColor: #f5f7fb;
+    --SmartThemeBlurTintColor: rgba(22, 26, 38, 0.95);
+    --SmartThemeShadowColor: transparent;
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg.ilg-light body > .select2-container:has(#select2-world_info-results, #select2-world_editor_select-results) {
+    --SmartThemeBodyColor: #1d1d1f;
+    --SmartThemeBlurTintColor: rgba(248, 249, 252, 0.96);
+}
+html.ilg body > .select2-container:has(#select2-world_info-results, #select2-world_editor_select-results) .select2-dropdown {
+    background-color: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyColor);
+    text-shadow: none;
+}
+html.ilg body > .select2-container:has(#select2-world_info-results, #select2-world_editor_select-results) .select2-search__field {
+    background-color: transparent;
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg body > .select2-container:has(#select2-world_info-results, #select2-world_editor_select-results) .select2-results__option--highlighted[aria-selected] {
+    background-color: rgba(10, 132, 255, 0.18);
+    color: var(--SmartThemeBodyColor);
 }

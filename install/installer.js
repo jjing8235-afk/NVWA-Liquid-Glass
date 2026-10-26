@@ -10,9 +10,13 @@ const reload = () => setTimeout(() => window.parent.location.reload(), 2000);
 const running = () => !!window.parent.__ilgLoaded;
 
 async function install() {
-    const { callGenericPopup, POPUP_TYPE } = SillyTavern.getContext();
+    const { callGenericPopup, POPUP_TYPE, powerUserSettings } = SillyTavern.getContext();
+    if (powerUserSettings?.theme !== TITLE) {
+        toastr.warning('请先导出旧主题作备份，再导入并选中「NVWA 液态玻璃」配套主题，最后打开本安装脚本。', TITLE, { timeOut: 15000 });
+        return;
+    }
     const ok = await callGenericPopup(
-        `<h3>${TITLE}</h3><p>要安装美化扩展吗？会从 GitHub 下载到你的酒馆里（只给当前用户装，不需要管理员）。</p><p>装好后页面会自动刷新一次。</p>`,
+        `<h3>${TITLE}</h3><p>要安装美化扩展吗？会从 GitHub 下载到你的酒馆里（只给当前用户装，不需要管理员）。</p><p>请确认已经选中配套主题，且没有同时开启其他整页美化扩展。装好后页面会自动刷新一次。</p>`,
         POPUP_TYPE.CONFIRM, '', { okButton: '安装', cancelButton: '以后再说' });
     if (!ok) return;
     toastr.info('正在下载，稍等十几秒……', TITLE);
