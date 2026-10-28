@@ -1,8 +1,9 @@
 /* NVWA 液态玻璃 · 边缘折射引擎 + 悬浮布局 + 设置面板
-   完整折射依赖 backdrop-filter: url(#svg)，只有 Chromium 内核生效；其他浏览器自动降级为模糊 + 高光
+   完整折射依赖 backdrop-filter: url(#svg)；安卓 WebView 按能力自动选择兼容路径，iOS 实验独立保留，其他环境降级
    折射引擎有两套：新版物理折射（glass2.js，实验台 v2 移植）和旧版（本文件里的 makeMap / buildFilter） */
 import { getMaps, clearMaps, physicalFilter, resizePhysicalFilter, lightRow } from './glass2.js';
 import { makeOrb } from './orb.js';
+import { createCardTextClarity } from './card-clarity.js';
 
 // 同一个酒馆里装了两份（比如手动拷的一份 + 从 GitHub 装的一份）时只跑先加载的那份，不然顶栏、面板会出两套
 if (window.__ilgLoaded) throw new Error('[NVWA 液态玻璃] 已经有一份在运行，这份跳过');
@@ -29,7 +30,7 @@ const PRESETS = {
 };
 
 const DEFAULTS = {
-    firstLineIndent: false,
+    firstLineIndent: false, compatibilityMode: 'auto', androidWebViewRefract: false, iosSvgTrial: false,
     enabled: true, float: true, islands: true, fold: true, qrFold: true, home: true, toneBtn: true, homeName: 'NVWA 用户', icons: true, refract: true, refractMes: true, font: true, tone: 'time', dayStart: 7, dayEnd: 19, avatar: 'line', orb: true,
     engine: 'physical', follow: true, pLight: 135,
     // 自然弧度没写的参数（厚度、折射率等，只给物理折射截面用）沿用清透立体的
@@ -78,7 +79,8 @@ const TOGGLES = [
     ['enabled', '启用液态玻璃美化'],
     ['float', '顶栏和输入框悬浮在聊天内容上方'],
     ['icons', 'iOS 风格图标'],
-    ['refract', '边缘折射（只在 Chrome / Edge 生效）'],
+    ['refract', '边缘折射（取决于当前渲染环境）'],
+    ['iosSvgTrial', 'iOS WebKit SVG 折射实验（可能无效；关闭可回退）'],
     ['refractMes', '消息卡片也折射（长聊天卡顿时关掉）'],
     ['font', '统一字体：思源黑体（苹果设备用苹方）'],
     ['firstLineIndent', '普通正文首行缩进两个汉字（不影响列表、代码和自带样式面板）'],
@@ -134,7 +136,25 @@ if (S.v < 9) {
 
 const ua = navigator.userAgent;
 const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const canFull = !isIOS && !!window.chrome && !/Firefox\//.test(ua) && CSS.supports('backdrop-filter', 'blur(1px)');
+const supportsFilter = value => { try { return CSS.supports('backdrop-filter', value); } catch { return false; } };
+const canFull = !isIOS && !!window.chrome && !/Firefox\//.test(ua) && supportsFilter('blur(1px)');
+const androidWebView = !isIOS && /Android/i.test(ua) && /\bwv\b/.test(ua) && /Chrome\//.test(ua) && !/Firefox\//.test(ua);
+const androidWebViewEligible = androidWebView && supportsFilter('blur(1px)') && supportsFilter('url(#ilg-capability-probe)');
+const supportsPrefixedFilter = value => { try { return CSS.supports('-webkit-backdrop-filter', value); } catch { return false; } };
+const iosSvgEligible = isIOS
+    && (supportsFilter('blur(1px)') || supportsPrefixedFilter('blur(1px)'))
+    && (supportsFilter('url(#ilg-capability-probe)') || supportsPrefixedFilter('url(#ilg-capability-probe)'));
+function iosTrialRequested() { return iosSvgEligible && S.iosSvgTrial === true; }
+// Auto selects a capability path; CSS syntax acceptance is not a rendering result.
+function canRefract() {
+    if (S.compatibilityMode === 'blur') return false;
+    return canFull || androidWebViewEligible || iosTrialRequested();
+}
+function compatibilityHint() {
+    const environment = isIOS ? 'iOS / iPadOS WebKit' : androidWebView ? '安卓 Chromium WebView（包括部分 TT 客户端）' : canFull ? 'Chromium 浏览器' : '其他浏览器';
+    const route = S.compatibilityMode === 'blur' ? '已手动选择仅模糊' : isIOS ? '自动使用兼容模糊；SVG 折射需在高级项单独试开' : androidWebViewEligible ? '自动选择安卓 WebView 折射路径' : canFull ? '自动选择浏览器折射路径' : '未通过折射门槛，自动保留模糊';
+    return '检测到：' + environment + '。' + route + '。识别内核不等于确认客户端名称或实际折射成功；显示异常可选“仅模糊”。';
+}
 
 // 每类表面的模糊来源和折射强度倍率；bezelK / thickK 是新版引擎在全局弧面宽度、厚度上乘的倍数（大块玻璃更厚，小块更薄）
 const KIND = {
@@ -174,7 +194,10 @@ const MES_SEL = '.mes:not(.smallSysMes)';
 const root = document.documentElement;
 const svg = document.createElementNS(NS, 'svg');
 svg.setAttribute('aria-hidden', 'true');
-svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
+// Nonzero SVG resource bounds are an iOS compatibility experiment.
+svg.style.cssText = isIOS
+    ? 'position:absolute;left:-10000px;top:0;width:1px;height:1px;overflow:visible;pointer-events:none'
+    : 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
 svg.innerHTML = '<defs></defs>';
 document.body.appendChild(svg);
 const defs = svg.firstChild;
@@ -293,7 +316,7 @@ function buildFilter(it, w, h, r) {
 }
 
 function refractAllowed(it) {
-    if (!S.refract || !canFull || document.body.classList.contains('no-blur')) return false;
+    if (!S.enabled || !S.refract || !canRefract() || document.body.classList.contains('no-blur')) return false;
     if (it.kind === 'mes') return S.refractMes && it.visible;
     return true;
 }
@@ -315,6 +338,14 @@ function paint(el) {
     if (document.body.classList.contains('no-blur')) {
         setPhys(el, it, false);
         el.style.backdropFilter = 'none';
+        el.style.webkitBackdropFilter = 'none';
+        return;
+    }
+    // Fixed overlays need viewport coordinates; self-rendered panels/frames must not pass through message SVG compositing.
+    if (it.kind === 'mes' && (el.classList.contains('ilg-content-overlay') || el.classList.contains('ilg-card-renderer'))) {
+        setPhys(el, it, false);
+        el.style.backdropFilter = 'none';
+        el.style.webkitBackdropFilter = 'none';
         return;
     }
     const tail = `blur(${KIND[it.kind].blur()}px) saturate(${S.saturate}) brightness(${S.brightness})`;
@@ -323,15 +354,18 @@ function paint(el) {
     if (!w || !h) return;
     const phys = refractAllowed(it) && w > 0 && h > 0 && S.engine === 'physical';
     setPhys(el, it, phys);
+    if (canRefract() && !isIOS) el.style.webkitBackdropFilter = '';
     if (phys) {
         buildPhysical(it, el, w, h, radiusOf(el, w, h));
         el.style.backdropFilter = `url(#${it.id})`;
+        if (isIOS) el.style.webkitBackdropFilter = `url(#${it.id})`;
     } else if (refractAllowed(it) && w > 0 && h > 0) {
         buildFilter(it, w, h, radiusOf(el, w, h));
         el.style.backdropFilter = `url(#${it.id}) ${tail}`;
+        if (isIOS) el.style.webkitBackdropFilter = `url(#${it.id}) ${tail}`;
     } else {
         el.style.backdropFilter = tail;
-        if (!canFull) el.style.webkitBackdropFilter = tail;
+        if (isIOS || !canRefract()) el.style.webkitBackdropFilter = tail;
     }
 }
 // .ilg-phys：高光已经在滤镜里画了，CSS 那套亮边/内阴影要让开（见 style.css 的新版引擎部分）
@@ -938,10 +972,12 @@ sysDark.addEventListener('change', followTone);
 
 function applyRoot() {
     root.classList.toggle('ilg', S.enabled);
+    root.classList.toggle('ilg-ios-experiment', S.enabled && isIOS);
     root.classList.toggle('ilg-indent', S.enabled && !!S.firstLineIndent);
     root.classList.toggle('ilg-float', S.enabled && S.float);
     root.classList.toggle('ilg-icons', S.enabled && S.icons);
     root.classList.toggle('ilg-font', S.enabled && S.font);
+    cardClarity.setEnabled(S.enabled);
     root.classList.toggle('ilg-islands', S.enabled && S.islands);
     root.classList.toggle('ilg-avline', S.enabled && S.avatar === 'line');
     root.classList.toggle('ilg-orb-on', S.enabled && S.orb);
@@ -978,6 +1014,7 @@ function applyRoot() {
 // 输入框高度变化（多行、快捷回复栏）时同步聊天区底部留白，并保持贴底
 const form = document.getElementById('form_sheld');
 const chatEl = document.getElementById('chat');
+const cardClarity = createCardTextClarity(chatEl);
 new ResizeObserver(() => {
     const atBottom = chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < 40;
     root.style.setProperty('--ilg-form-h', `${form.offsetHeight}px`);
@@ -1068,12 +1105,43 @@ ctx.eventSource.on(ctx.eventTypes.APP_READY, () => {
 function statusText() {
     if (!S.enabled) return '美化已关闭。';
     if (document.body.classList.contains('no-blur')) return '你开了酒馆的“关闭模糊”，所以玻璃和折射都暂停了。';
-    if (!canFull) return '当前浏览器不支持边缘折射（只有 Chrome / Edge 支持），现在显示的是模糊 + 高光版本。';
+    if (!S.refract) return '边缘折射已关闭，现在只有模糊。';
+    if (S.compatibilityMode === 'blur') return '已选择仅模糊；切回自动适配可恢复当前环境的折射路径。';
+    if (isIOS && iosTrialRequested()) return 'iOS SVG 折射实验已请求；不代表背景位移已显示，请对比画面确认。关闭实验开关即可恢复模糊。';
+    if (!canRefract()) {
+        if (isIOS && S.iosSvgTrial === true) return 'iOS 模糊或 SVG URL 语法门槛未通过，保留模糊回退。';
+        if (isIOS) return 'iOS 清透降级样式；可手动开启独立的 SVG 折射实验，实际效果待设备确认。';
+        if (androidWebView) return '当前 WebView 的模糊或 SVG URL 语法检测未通过，保留模糊回退。';
+        return '当前环境未通过自动折射门槛，保留模糊回退；不凭浏览器名称保证渲染能力。';
+    }
     const how = { time: '，按时间自动', system: '，跟随系统' }[S.tone] || '';
-    const tone = `${S.engine === 'physical' ? '新版物理折射' : '旧版折射'} · ${lightBg ? '浅色' : '深色'}模式${how}`;
-    if (!S.refract) return `边缘折射已关闭，现在只有模糊（${lightBg ? '浅色' : '深色'}模式）。`;
-    if (!document.body.classList.contains('bubblechat')) return `折射已开启（${tone}）。消息卡片玻璃只在“气泡”聊天样式下生效。`;
-    return `完整折射已开启（${tone}）。`;
+    const tone = `${S.engine === 'physical' ? '物理折射' : '旧版折射'} · ${lightBg ? '浅色' : '深色'}模式${how}`;
+    const route = !canFull ? '安卓 WebView 兼容路径' : '自动路径';
+    return `已请求折射（${route}，${tone}），实际画面以当前设备为准。${document.body.classList.contains('bubblechat') ? '' : '消息卡片玻璃只在“气泡”样式下生效。'}`;
+}
+
+function iosTrialReport() {
+    const rows = [
+        'NVWA ST / TT 兼容信息 1.4.2',
+        'UA: ' + navigator.userAgent,
+        '平台 / 触摸点: ' + navigator.platform + ' / ' + navigator.maxTouchPoints,
+        '视口 / DPR: ' + innerWidth + ' × ' + innerHeight + ' / ' + devicePixelRatio,
+        '环境适配: ' + (S.compatibilityMode === 'blur' ? '仅模糊' : '自动'),
+        'iOS 识别: ' + isIOS,
+        '标准 / WebKit SVG URL 语法: ' + CSS.supports('backdrop-filter', 'url(#ilg-ios-probe)') + ' / ' + CSS.supports('-webkit-backdrop-filter', 'url(#ilg-ios-probe)'),
+        '美化 / 折射 / iOS 实验: ' + !!S.enabled + ' / ' + !!S.refract + ' / ' + !!S.iosSvgTrial,
+        '关闭模糊 / 气泡 / 浅色: ' + document.body.classList.contains('no-blur') + ' / ' + document.body.classList.contains('bubblechat') + ' / ' + root.classList.contains('ilg-light'),
+        '引擎: ' + S.engine,
+        '状态: ' + statusText(),
+    ];
+    for (const id of ['nonQRFormItems', 'ilg-floor']) {
+        const el = document.getElementById(id);
+        rows.push(id + ': ' + (el ? el.offsetWidth + ' × ' + el.offsetHeight
+            + '; 标准=' + getComputedStyle(el).getPropertyValue('backdrop-filter')
+            + '; WebKit=' + getComputedStyle(el).getPropertyValue('-webkit-backdrop-filter') : '未找到'));
+    }
+    rows.push('真实背景折射: 待人工确认；请补充 iOS 版本、TT 版本、浅深色画面及开关前后对比。');
+    return rows.join('\n');
 }
 
 function buildPanel() {
@@ -1090,7 +1158,17 @@ function buildPanel() {
   <div class="inline-drawer-content">
     <div class="ilg-status" id="ilg-status" role="status"></div>
     <p class="ilg-status" id="ilg-opt-themeStatus" role="status"></p>
-    ${TOGGLES.map(([k, label]) => `<label class="checkbox_label" for="ilg-opt-${k}"><input type="checkbox" id="ilg-opt-${k}"><span>${label}</span></label>`).join('')}
+    <p class="ilg-hint" id="ilg-compat-hint"></p>
+    <div id="ilg-opt-iosReportWrap" hidden>
+      <button type="button" class="menu_button" id="ilg-opt-iosReportCopy">复制 iOS 测试记录</button>
+      <textarea id="ilg-opt-iosReport" readonly hidden aria-label="iOS 测试记录"></textarea>
+    </div>
+    <div class="ilg-row"><label for="ilg-opt-compatibilityMode"><span>环境适配</span></label>
+      <select id="ilg-opt-compatibilityMode" class="text_pole" aria-describedby="ilg-compat-hint">
+        <option value="auto">自动适配 ST / TT（推荐）</option>
+        <option value="blur">仅模糊（折射异常时选择）</option>
+      </select></div>
+    ${TOGGLES.filter(([k]) => k !== 'iosSvgTrial').map(([k, label]) => `<label class="checkbox_label" for="ilg-opt-${k}"><input type="checkbox" id="ilg-opt-${k}"><span>${label}</span></label>`).join('')}
     <div class="ilg-row"><label for="ilg-opt-homeName"><span>首页问候里的称呼</span></label>
       <input type="text" id="ilg-opt-homeName" class="text_pole" maxlength="20" placeholder="留空就只显示“晚上好”"></div>
     <div class="ilg-row"><label for="ilg-opt-tone"><span>明暗</span></label>
@@ -1114,7 +1192,9 @@ function buildPanel() {
         <option value="physical">新版：物理折射 + 动态高光（实验）</option>
         <option value="legacy">旧版：之前一直用的这套</option>
       </select></div>
-    <hr>
+    <details class="ilg-fine-tuning" id="ilg-fine-tuning">
+      <summary>玻璃细调参数<span class="ilg-hint">需要调整或试用 iOS 折射时展开</span></summary>
+      <label class="checkbox_label" for="ilg-opt-iosSvgTrial"><input type="checkbox" id="ilg-opt-iosSvgTrial"><span>iOS WebKit SVG 折射实验（可能无效；关闭可回退）</span></label>
     <div data-engine="physical">
       <div class="ilg-sub">一键预设（从清到重，点完再用下面的滑块细调）</div>
       <div class="ilg-presets">${Object.entries(PRESETS).map(([k, [label]]) => `<button type="button" class="menu_button" data-preset="${k}" aria-pressed="false">${label}</button>`).join('')}</div>
@@ -1130,10 +1210,26 @@ function buildPanel() {
     ${SLIDERS.map(([k, label, min, max, step, , engine, prof]) => `<div class="ilg-row"${engine ? ` data-engine="${engine}"` : ''}${prof ? ` data-profile="${prof}"` : ''}><label for="ilg-opt-${k}"><span>${label}</span><output id="ilg-opt-${k}-v"></output></label><input type="range" id="ilg-opt-${k}" min="${min}" max="${max}" step="${step}"></div>`).join('')}
     <div class="ilg-hint">参数自动保存。新旧两套引擎的参数分开存，切回旧版就是原来的样子。关掉“启用液态玻璃美化”会撤去插件效果；恢复旧主题请手动选择安装前备份的主题。</div>
 
+    </details>
     <div class="menu_button" id="ilg-reset" role="button" tabindex="0">恢复默认参数</div>
   </div>
 </div>`;
     host.appendChild(wrap);
+
+    document.getElementById('ilg-opt-iosReportCopy').addEventListener('click', async event => {
+        const button = event.currentTarget;
+        const output = document.getElementById('ilg-opt-iosReport');
+        output.value = iosTrialReport();
+        output.hidden = false;
+        try {
+            await navigator.clipboard.writeText(output.value);
+            button.textContent = '已复制测试记录';
+        } catch {
+            output.focus();
+            output.select();
+            button.textContent = '请长按下方记录复制';
+        }
+    });
 
     // 当前数值正好等于某一档预设时，那个按钮显示为按下
     const markPresets = () => wrap.querySelectorAll('[data-preset]').forEach(b => {
@@ -1161,9 +1257,20 @@ function buildPanel() {
             if (n.dataset.profile !== (S.profile === 'lens' ? 'lens' : 'snell')) n.hidden = true;
         });
         markPresets();
+        const iosControl = document.getElementById('ilg-opt-iosSvgTrial');
+        iosControl.closest('label').hidden = !isIOS;
+        iosControl.disabled = !iosSvgEligible;
+        document.getElementById('ilg-opt-iosReportWrap').hidden = !isIOS;
+        document.getElementById('ilg-opt-compatibilityMode').value = S.compatibilityMode === 'blur' ? 'blur' : 'auto';
+        document.getElementById('ilg-compat-hint').textContent = compatibilityHint();
         document.getElementById('ilg-status').textContent = statusText();
         refreshCompanionTheme();
     };
+    document.getElementById('ilg-opt-compatibilityMode').addEventListener('change', e => {
+        if (!['auto', 'blur'].includes(e.target.value)) { sync(); return; }
+        S.compatibilityMode = e.target.value;
+        clearAll(); applyRoot(); sync(); ctx.saveSettingsDebounced();
+    });
     document.getElementById('ilg-opt-tone').addEventListener('change', e => {
         S.tone = e.target.value;
         toneOverride = null;
@@ -1208,13 +1315,14 @@ function buildPanel() {
         applyRoot(); sync(); ctx.saveSettingsDebounced();
     }));
     TOGGLES.forEach(([k]) => document.getElementById(`ilg-opt-${k}`).addEventListener('change', e => {
+        if (k === 'iosSvgTrial' && !iosSvgEligible) { e.target.checked = !!S[k]; return; }
         S[k] = e.target.checked;
         if (k === 'firstLineIndent') {
             root.classList.toggle('ilg-indent', S.enabled && !!S.firstLineIndent);
             ctx.saveSettingsDebounced();
             return;
         }
-        if (!S.enabled || k === 'enabled' || k === 'refract' || k === 'refractMes' || k === 'islands' || k === 'fold') clearAll();
+        if (!S.enabled || k === 'iosSvgTrial' || k === 'enabled' || k === 'refract' || k === 'refractMes' || k === 'islands' || k === 'fold') clearAll();
         applyRoot(); sync(); ctx.saveSettingsDebounced();
     }));
     SLIDERS.forEach(([k, , , , step, unit]) => document.getElementById(`ilg-opt-${k}`).addEventListener('input', e => {
@@ -1480,13 +1588,12 @@ new MutationObserver(muts => {
 
 // 角色卡状态栏：正文里自带底色的小面板，底色和当前深浅反着（深色模式里的白卡片、浅色模式里的黑卡片）时，
 // 标上 .ilg-lit / .ilg-dim，CSS 把那一块的字色变量和酒馆的字影换成配它底色的一套。
-// 半透明的底按“叠在外面那层上”算实际亮度；iframe 里的前端碰不到也不用管
+// 半透明的底按叠加亮度判断；可访问消息 iframe 的字影由 card-clarity.js 独立处理。
 const cardDirty = new Set();
 let cardTimer = 0;
 const parseRgba = s => { const m = s && s.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
 const lumOf = c => (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
-function blockBg(el) {
-    const cs = getComputedStyle(el);
+function blockBg(el, cs = getComputedStyle(el)) {
     let c = parseRgba(cs.backgroundColor);
     // 渐变底：取第一个颜色当近似
     if ((!c || c.a < 0.05) && cs.backgroundImage.includes('gradient')) c = parseRgba(cs.backgroundImage);
@@ -1495,10 +1602,20 @@ function blockBg(el) {
 function tagCard(text) {
     // 以 <html> 上的 class 为准：CSS 也是按它配色的
     const light = root.classList.contains('ilg-light');
+    let fixedOverlay = false, cardRenderer = false;
     const walk = (el, base) => {
         for (const k of el.children) {
+            const cs = getComputedStyle(k);
+            if (cs.position === 'fixed' && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getClientRects().length) fixedOverlay = true;
+            if (k.matches('iframe') && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getBoundingClientRect().width > 0 && k.getBoundingClientRect().height > 0) cardRenderer = true;
             if (k.matches('iframe, img, video, svg, canvas, q, em, i, b, strong, br')) continue;
-            const c = blockBg(k);
+            const c = blockBg(k, cs);
+            const panel = k.matches('div, section, article, aside, details, summary, dialog, button, [role="dialog"], [role="button"], [role="menu"], [role="listbox"], [role="option"]');
+            const choice = k.matches('button, select, option, input[type="button"], input[type="submit"], [role="button"], [role="option"]');
+            const surface = choice || (panel && (!!c || cs.backgroundImage !== 'none' || cs.position === 'fixed'));
+            k.classList.toggle('ilg-card-surface', surface);
+            if (surface && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getClientRects().length) cardRenderer = true;
+
             let lum = base;
             if (c) lum = lumOf(c) * c.a + base * (1 - c.a);
             k.classList.toggle('ilg-lit', !!c && lum > 0.62 && !light);
@@ -1507,6 +1624,12 @@ function tagCard(text) {
         }
     };
     walk(text, light ? 0.95 : 0.08);
+    const message = text.closest('.mes');
+    if (message && (message.classList.contains('ilg-content-overlay') !== fixedOverlay || message.classList.contains('ilg-card-renderer') !== cardRenderer)) {
+        message.classList.toggle('ilg-content-overlay', fixedOverlay);
+        message.classList.toggle('ilg-card-renderer', cardRenderer);
+        paint(message);
+    }
 }
 function queueCards(all) {
     if (all) chatEl.querySelectorAll('.mes_text').forEach(t => cardDirty.add(t));
@@ -1519,13 +1642,18 @@ function queueCards(all) {
 new MutationObserver(muts => {
     let hit = false;
     for (const m of muts) {
-        // 只认真正的内容变化；自己切 class 不会进这里（没监听 attributes）
+        // Ignore our luminance markers; host/card style and visibility changes still rescan the message.
+        if (m.type === 'attributes' && m.attributeName === 'class') {
+            const clean = value => (value || '').split(/\s+/).filter(c => c && !['ilg-lit', 'ilg-dim', 'ilg-card-surface'].includes(c)).sort().join(' ');
+            if (clean(m.oldValue) === clean(m.target.className)) continue;
+        }
+        // Only message content and its visibility changes belong to this pass.
         const t = (m.target.nodeType === 1 ? m.target : m.target.parentElement)?.closest?.('.mes_text');
         if (t) { cardDirty.add(t); hit = true; continue; }
         m.addedNodes.forEach(n => { if (n.nodeType === 1) (n.matches('.mes_text') ? [n] : n.querySelectorAll('.mes_text')).forEach(x => { cardDirty.add(x); hit = true; }); });
     }
     if (hit) queueCards(false);
-}).observe(chatEl, { childList: true, subtree: true, characterData: true });
+}).observe(chatEl, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['style', 'class', 'hidden', 'open'], attributeOldValue: true });
 
 buildPanel();
 refreshCompanionTheme();

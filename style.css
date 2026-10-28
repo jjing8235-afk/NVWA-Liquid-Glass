@@ -502,7 +502,7 @@ html.ilg.ilg-light body { --ilg-sh-light: 0.6; }
 html.ilg body #chat .mes.ilg-phys { --ilg-sh-mul: 0.6; }
 html.ilg body :is(.drawer-content, #character_popup, #world_popup, #options .options-content, #extensionsMenu).ilg-phys { --ilg-sh-mul: 1.7; }
 /* 贴地的一圈细影 + 中距离 + 远处的柔影，三层叠起来才有“浮起来”的厚度 */
-html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-glass).ilg-phys {
+html.ilg body :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island, .ilg-glass).ilg-phys {
     --ilg-sh: calc(var(--ilg-shadow-k) * var(--ilg-sh-mul, 1) * var(--ilg-sh-light));
     box-shadow:
         0 1px 1.5px rgba(var(--ilg-drop-rgb), calc(0.2 * var(--ilg-sh))),
@@ -511,6 +511,8 @@ html.ilg body :is(#top-bar, #nonQRFormItems, .ilg-glass).ilg-phys {
 }
 /* 旧版的渐变亮边让开（输入框获得焦点时的蓝圈也不要：和滤镜里的高光叠在一起像描了两层边） */
 html.ilg body .ilg-glass.ilg-phys:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::before { opacity: 0; }
+/* 楼层胶囊由同一物理材质管理，不能继续叠加降级白描边。 */
+html.ilg body #top-bar > #ilg-floor.ilg-glass.ilg-phys::before { opacity: 0; }
 /* 表面光泽：上方微亮往下淡出，让玻璃看起来是鼓起来的 */
 html.ilg body .ilg-sheen.ilg-phys:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::after {
     inset: 0;
@@ -3237,4 +3239,147 @@ html.ilg body > .select2-container:has(#select2-world_info-results, #select2-wor
 html.ilg body > .select2-container:has(#select2-world_info-results, #select2-world_editor_select-results) .select2-results__option--highlighted[aria-selected] {
     background-color: rgba(10, 132, 255, 0.18);
     color: var(--SmartThemeBodyColor);
+}
+
+/* iOS experiment: suppress only legacy decorations on tracked NVWA glass. */
+html.ilg.ilg-ios-experiment body .ilg-glass:not(.mes.ilg-phys)::before {
+    content: none;
+    opacity: 0;
+}
+html.ilg.ilg-ios-experiment body .ilg-glass.ilg-sheen::after {
+    content: none;
+}
+html.ilg.ilg-ios-experiment body .ilg-glass {
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.12);
+}
+html.ilg.ilg-ios-experiment body.noShadows .ilg-glass {
+    box-shadow: none;
+}
+
+html.ilg body .ilg-settings #ilg-opt-iosReport {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 180px;
+    margin-block: 8px;
+    padding: 10px;
+    font: inherit;
+    overflow-wrap: anywhere;
+}
+html.ilg body .ilg-settings #ilg-opt-iosReport[hidden] { display: none; }
+
+/* Registered native manager/confirmation controls: keep state independent of theme text/tick colors. */
+html.ilg body dialog.popup.ilg-glass > .popup-body :is(.popup-content > .extensions_info .extension_block > .extension_toggle > input[type="checkbox"], .popup-content label.checkbox_label > input:is(#del_char_checkbox, #del_chat_checkbox), .popup-inputs > label.checkbox_label > input[type="checkbox"]) {
+    -webkit-appearance: none;
+    appearance: none;
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    background-color: #1d2432;
+    border: 1px solid #b5c0d0;
+    border-radius: 5px;
+    box-shadow: none;
+    filter: none;
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body :is(.popup-content > .extensions_info .extension_block > .extension_toggle > input[type="checkbox"], .popup-content label.checkbox_label > input:is(#del_char_checkbox, #del_chat_checkbox), .popup-inputs > label.checkbox_label > input[type="checkbox"])::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    box-shadow: none;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    transform: scale(0);
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body :is(.popup-content > .extensions_info .extension_block > .extension_toggle > input[type="checkbox"], .popup-content label.checkbox_label > input:is(#del_char_checkbox, #del_chat_checkbox), .popup-inputs > label.checkbox_label > input[type="checkbox"]):checked {
+    background-color: #0a66d9;
+    border-color: #0a66d9;
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body :is(.popup-content > .extensions_info .extension_block > .extension_toggle > input[type="checkbox"], .popup-content label.checkbox_label > input:is(#del_char_checkbox, #del_chat_checkbox), .popup-inputs > label.checkbox_label > input[type="checkbox"]):checked::before { transform: scale(1); }
+html.ilg body dialog.popup.ilg-glass > .popup-body :is(.popup-content > .extensions_info .extension_block > .extension_toggle > input[type="checkbox"], .popup-content label.checkbox_label > input:is(#del_char_checkbox, #del_chat_checkbox), .popup-inputs > label.checkbox_label > input[type="checkbox"]):indeterminate {
+    background-color: #0a66d9;
+    border-color: #0a66d9;
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body :is(.popup-content > .extensions_info .extension_block > .extension_toggle > input[type="checkbox"], .popup-content label.checkbox_label > input:is(#del_char_checkbox, #del_chat_checkbox), .popup-inputs > label.checkbox_label > input[type="checkbox"]):indeterminate::before {
+    clip-path: polygon(0 40%, 100% 40%, 100% 60%, 0 60%);
+    transform: scale(1);
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body :is(.popup-content > .extensions_info .extension_block > .extension_toggle > input[type="checkbox"], .popup-content label.checkbox_label > input:is(#del_char_checkbox, #del_chat_checkbox), .popup-inputs > label.checkbox_label > input[type="checkbox"]):focus-visible {
+    outline: 2px solid #78b6ff;
+    outline-offset: 3px;
+}
+html.ilg body dialog.popup.ilg-glass > .popup-body :is(.popup-content > .extensions_info .extension_block > .extension_toggle > input[type="checkbox"], .popup-content label.checkbox_label > input:is(#del_char_checkbox, #del_chat_checkbox), .popup-inputs > label.checkbox_label > input[type="checkbox"]):disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    border-style: dashed;
+}
+html.ilg.ilg-light body dialog.popup.ilg-glass > .popup-body :is(.popup-content > .extensions_info .extension_block > .extension_toggle > input[type="checkbox"], .popup-content label.checkbox_label > input:is(#del_char_checkbox, #del_chat_checkbox), .popup-inputs > label.checkbox_label > input[type="checkbox"]):not(:checked):not(:indeterminate) {
+    background-color: #fff;
+    border-color: #667085;
+}
+
+/* Keep the common settings page scrollable without exposing every fine-tuning slider. */
+html.ilg body .ilg-settings .ilg-fine-tuning {
+    margin-block: 14px;
+    border-block: 1px solid var(--SmartThemeBorderColor);
+}
+html.ilg body .ilg-settings .ilg-fine-tuning > summary {
+    min-height: 48px;
+    padding: 12px 4px;
+    cursor: pointer;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+html.ilg body .ilg-settings .ilg-fine-tuning > summary .ilg-hint {
+    display: block;
+    margin: 4px 0 0 18px;
+    font-size: 0.85em;
+    font-weight: 400;
+}
+html.ilg body .ilg-settings .ilg-fine-tuning > summary:focus-visible {
+    outline: 2px solid #78b6ff;
+    outline-offset: 2px;
+}
+/* Remove inherited host text halos from native floating surfaces; authored content keeps explicit shadows. */
+html.ilg body :is(dialog.popup.ilg-glass > .popup-body, .drawer-content.ilg-glass, #extensionsMenu.ilg-glass, #options .options-content.ilg-glass, #ilg-fold-menu) {
+    --shadowWidth: 0;
+    text-shadow: none;
+}
+/* A same-document fixed card overlay must not be contained or clipped by NVWA message glass. */
+html.ilg body #chat .mes.ilg-content-overlay {
+    animation: none;
+    transform: none;
+    --shadowWidth: 0;
+}
+html.ilg body #chat .mes.ilg-content-overlay .mes_block {
+    overflow: visible;
+}
+html.ilg body #chat .mes.ilg-content-overlay .mes_text {
+    text-shadow: none;
+}
+
+/* Native dialog text needs a stable backing even when a desktop WebKit cannot render SVG refraction. */
+html.ilg body dialog.popup.ilg-glass:not(.ilg-adapted) {
+    background-color: rgba(18, 20, 30, 0.90);
+}
+html.ilg.ilg-light body dialog.popup.ilg-glass:not(.ilg-adapted) {
+    background-color: rgba(248, 249, 252, 0.94);
+}
+
+/* Automatic clarity override for card panels; follows the beautification master switch. */
+html.ilg body #chat .mes_text :is(.ilg-card-surface, .ilg-card-surface *),
+html.ilg body #chat .mes_text :is(.ilg-card-surface, .ilg-card-surface *)::before,
+html.ilg body #chat .mes_text :is(.ilg-card-surface, .ilg-card-surface *)::after {
+    text-shadow: none !important;
+}
+
+/* External fixed/semantic floating mounts are discovered at runtime, without card-specific selectors. */
+html.ilg body .ilg-floating-clarity,
+html.ilg body .ilg-floating-clarity *,
+html.ilg body .ilg-floating-clarity::before,
+html.ilg body .ilg-floating-clarity::after,
+html.ilg body .ilg-floating-clarity *::before,
+html.ilg body .ilg-floating-clarity *::after {
+    text-shadow: none !important;
 }

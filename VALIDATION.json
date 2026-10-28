@@ -1,0 +1,827 @@
+{
+  "version": "1.4.2",
+  "date": "2026-10-28",
+  "releaseKind": "official",
+  "promotedFrom": {
+    "repo": "jjing8235-afk/test",
+    "version": "1.4.2-tt.6",
+    "commit": "aa0e3eeaccd8fc71e76cf0ab1b00aaa238bf6782"
+  },
+  "formalBase": {
+    "repo": "jjing8235-afk/NVWA-Liquid-Glass",
+    "commit": "61b5f7134ea2e429b1d6faf94f953e8dfb4ff8ae",
+    "version": "1.4.1"
+  },
+  "userAcceptance": {
+    "status": "passed",
+    "evidence": "User reported no issue and explicitly requested upload to the official link",
+    "source": "Direct user message in the publication session",
+    "automatedDeviceClaim": false
+  },
+  "promotion": {
+    "runtimeCodeChanges": "Only version and UI/diagnostic release labels in index.js",
+    "parity": {
+      "card-clarity.js": true,
+      "style.css": true,
+      "glass2.js": true,
+      "orb.js": true,
+      "icons.css": true,
+      "install/NVWA 液态玻璃 · 美化主题.json": true,
+      "indexOnlyReleaseLabels": true,
+      "install/installer.js": true,
+      "install/build.mjs": true,
+      "install/NVWA 液态玻璃 · 酒馆助手安装脚本.json": true,
+      "installerPayloadMatchesSource": true
+    },
+    "formalExistingFilesRetained": 146,
+    "fileCount": 150,
+    "installerUnchanged": true,
+    "settingsNamespace": "iosLiquidGlass",
+    "settingsVersion": 9
+  },
+  "staticChecks": {
+    "entrySyntax": "pass",
+    "claritySyntax": "pass",
+    "manifest": {
+      "pass": true,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  "unit": {
+    "kind": "source-isolated",
+    "passed": 26,
+    "tests": [
+      "Android WebView automatically selects compatible path",
+      "Legacy Android opt-in true remains compatible",
+      "Legacy Android string cannot override explicit blur mode",
+      "Missing standard blur blocks WebView auto path",
+      "Missing SVG URL syntax blocks WebView auto path",
+      "CSS exceptions fail closed",
+      "iPhone remains fallback",
+      "iPad desktop identity remains fallback",
+      "Firefox remains fallback",
+      "Android UA without WebView or chrome marker stays fallback",
+      "Desktop with chrome keeps original path",
+      "Desktop without chrome is not force enabled",
+      "Explicit blur mode disables Chromium refraction",
+      "iPhone explicit iOS trial",
+      "iPad desktop explicit iOS trial",
+      "iOS prefixed-only syntax trial",
+      "iOS rejects saved string opt-in",
+      "iOS missing URL syntax stays fallback",
+      "Android auto path ignores iOS trial flag",
+      "Desktop cannot use iOS opt-in",
+      "Unified auto default preserves legacy fields, unrelated settings and backups",
+      "Reset restores auto adaptation and keeps iOS trial off while preserving unknown values and backups",
+      "Enabled, no-blur, message preference and message visibility still gate refraction",
+      "Status distinguishes requested compatibility from claimed rendering success",
+      "Auto/blur selector validates values, repaints and persists exactly once",
+      "iOS control rejects unsupported environments and saves supported opt-in exactly once"
+    ],
+    "limitations": [
+      "Synthetic capability matrix is not installed-device rendering evidence"
+    ]
+  },
+  "settings": {
+    "passed": [
+      "Reset preserves backups, cleanup preference, migration version and unknown settings",
+      "Companion theme: pending/missing/inactive/modified/ready; repeated checks never change settings",
+      "Companion JSON matches installed SillyTavern 1.18 theme import fields and merge logic",
+      "Packaged installer matches source and is disabled by default",
+      "Installer blocks non-companion themes before confirmation/API; prepared path uses stub only",
+      "Local CSS assets: 101 references exist",
+      "Font and icon license files present"
+    ],
+    "missing": [],
+    "harness": "Original public checker assertions with local-only source-path adaptation to the installed host; no host API calls"
+  },
+  "regressions": {
+    "popupBoundary": {
+      "passed": [
+        "Only registered non-transparent host Popup instances qualify; look-alikes and absent API fail closed",
+        "Host confirmation is trackable; custom dialogs and worldbook double-glass are not",
+        "No preserve markers or injected close button; content boundary and shared-control scopes are explicit",
+        "Only explicitly compatible preset and memory roots in registered Popup instances are adapted; foreign look-alikes and unrelated content remain untouched",
+        "Floor shares input bar material, not toast blur"
+      ]
+    },
+    "filterReuse": {
+      "passed": [
+        "Full and nine-slice geometry matches fresh filters across resize and back; nodes and image sources retained",
+        "Unchanged material reuses nodes; resize only patches bounds; parameter, map and engine changes rebuild; lighting survives reuse",
+        "Zero-size hidden surfaces keep their valid filter untouched; legacy path invalidates physical cache",
+        "Drawer internal changes do not regroup navbar; direct icon/panel additions and open-state changes still update"
+      ]
+    },
+    "firstLineIndent": {
+      "passed": [
+        "New settings default off; old saved true/false and unrelated fields preserved",
+        "Preference toggle updates root and saves once without rebuilding glass",
+        "Enabled/disabled root gate and conservative paragraph-only CSS boundary present"
+      ]
+    }
+  },
+  "freshOfficialBrowser": {
+    "date": "2026-10-28",
+    "surface": "Complete experiment module with original engine and CSS, synthetic ST context/DOM",
+    "cases": [
+      {
+        "engine": "windows-webkit",
+        "variant": "iphone390",
+        "iosIdentitySimulated": true,
+        "platform": "Win32",
+        "tests": [
+          "Full ES-module entry loads; opt-in false; iOS-only control and root marker correct",
+          "Default iOS fallback contains no SVG URL",
+          "User-triggered diagnostic report contains runtime state and keeps visible refraction unconfirmed",
+          "Explicit trial builds physical filter nodes; status never claims visible refraction",
+          "Global blur override gates explicit iOS trial; auto restores it",
+          "WebKit resource SVG has nonzero bounds and nonempty primitives",
+          "Light/dark floor and input suppress legacy rim; full-page captures saved",
+          "Host noShadows respected",
+          "Host no-blur clears standard and WebKit filters",
+          "Master refraction toggle gates trial and status",
+          "Message toggle does not disable floor/input",
+          "Trial off restores blur fallback and keeps rim correction",
+          "Reload preserves explicit opt-in using isolated fixture persistence",
+          "Beautification off removes root marker and both filter properties",
+          "Reset disables trial and retains user backup/unknown settings",
+          "Third-party border intact; no horizontal overflow or uncaught errors"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "windows-webkit",
+        "variant": "ipad834",
+        "iosIdentitySimulated": true,
+        "platform": "MacIntel",
+        "tests": [
+          "Full ES-module entry loads; opt-in false; iOS-only control and root marker correct",
+          "Default iOS fallback contains no SVG URL",
+          "User-triggered diagnostic report contains runtime state and keeps visible refraction unconfirmed",
+          "Explicit trial builds physical filter nodes; status never claims visible refraction",
+          "Global blur override gates explicit iOS trial; auto restores it",
+          "WebKit resource SVG has nonzero bounds and nonempty primitives",
+          "Light/dark floor and input suppress legacy rim; full-page captures saved",
+          "Host noShadows respected",
+          "Host no-blur clears standard and WebKit filters",
+          "Master refraction toggle gates trial and status",
+          "Message toggle does not disable floor/input",
+          "Trial off restores blur fallback and keeps rim correction",
+          "Reload preserves explicit opt-in using isolated fixture persistence",
+          "Beautification off removes root marker and both filter properties",
+          "Reset disables trial and retains user backup/unknown settings",
+          "Third-party border intact; no horizontal overflow or uncaught errors"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "windows-webkit",
+        "variant": "desktop1280",
+        "iosIdentitySimulated": false,
+        "platform": "Win32",
+        "tests": [
+          "Full ES-module entry loads; opt-in false; iOS-only control and root marker correct",
+          "ST Chromium and eligible Android WebView select automatic paths",
+          "Third-party border intact; no horizontal overflow or uncaught errors"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "edge",
+        "variant": "iphone390",
+        "iosIdentitySimulated": true,
+        "platform": "Win32",
+        "tests": [
+          "Full ES-module entry loads; opt-in false; iOS-only control and root marker correct",
+          "Default iOS fallback contains no SVG URL",
+          "User-triggered diagnostic report contains runtime state and keeps visible refraction unconfirmed",
+          "Explicit trial builds physical filter nodes; status never claims visible refraction",
+          "Global blur override gates explicit iOS trial; auto restores it",
+          "WebKit resource SVG has nonzero bounds and nonempty primitives",
+          "Light/dark floor and input suppress legacy rim; full-page captures saved",
+          "Host noShadows respected",
+          "Host no-blur clears standard and WebKit filters",
+          "Master refraction toggle gates trial and status",
+          "Message toggle does not disable floor/input",
+          "Trial off restores blur fallback and keeps rim correction",
+          "Reload preserves explicit opt-in using isolated fixture persistence",
+          "Beautification off removes root marker and both filter properties",
+          "Reset disables trial and retains user backup/unknown settings",
+          "Third-party border intact; no horizontal overflow or uncaught errors"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "edge",
+        "variant": "desktop1280",
+        "iosIdentitySimulated": false,
+        "platform": "Win32",
+        "tests": [
+          "Full ES-module entry loads; opt-in false; iOS-only control and root marker correct",
+          "ST Chromium and eligible Android WebView select automatic paths",
+          "Third-party border intact; no horizontal overflow or uncaught errors"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "edge",
+        "variant": "android390",
+        "iosIdentitySimulated": false,
+        "platform": "Win32",
+        "tests": [
+          "Full ES-module entry loads; opt-in false; iOS-only control and root marker correct",
+          "ST Chromium and eligible Android WebView select automatic paths",
+          "Android automatic path preserves physical input/floor and old-rim fix without a TT checkbox",
+          "Synthetic iOS toggle rejected on Android; automatic path remains enabled",
+          "Android auto selection survives reload/merge with iOS default false",
+          "Android light/dark preserve top/input/floor refraction styling",
+          "Android host noShadows/no-blur behavior retained",
+          "Android message opt-out preserves floor/input",
+          "Android explicit blur fallback removes SVG URL",
+          "Saved blur override survives reload; reset restores auto with iOS trial off and theme backups intact",
+          "Third-party border intact; no horizontal overflow or uncaught errors"
+        ],
+        "errors": []
+      }
+    ],
+    "totalChecks": 65,
+    "hostApiRequests": [],
+    "limitations": [
+      "Desktop engines only; all iPhone/iPad identities are simulated",
+      "UI paths and SVG construction tested; no claim of iOS visible refraction",
+      "TT installation and native settings persistence require device testing"
+    ]
+  },
+  "freshOfficialFloatingWindows": {
+    "caseCount": 8,
+    "cases": [
+      {
+        "engine": "edge",
+        "width": 390,
+        "tone": "dark",
+        "checks": [
+          "Arbitrary fixed dialog under a body mount automatically cleared",
+          "Fixed window without roles and absolute semantic menu covered",
+          "Accessible floating iframe covered; unrelated hidden iframe and host/prose excluded",
+          "Close/reopen, master disable/restore and detached mount cleanup pass",
+          "No card-specific selectors; font, palette, border and box shadow preserved"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "edge",
+        "width": 390,
+        "tone": "light",
+        "checks": [
+          "Arbitrary fixed dialog under a body mount automatically cleared",
+          "Fixed window without roles and absolute semantic menu covered",
+          "Accessible floating iframe covered; unrelated hidden iframe and host/prose excluded",
+          "Close/reopen, master disable/restore and detached mount cleanup pass",
+          "No card-specific selectors; font, palette, border and box shadow preserved"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "edge",
+        "width": 1280,
+        "tone": "dark",
+        "checks": [
+          "Arbitrary fixed dialog under a body mount automatically cleared",
+          "Fixed window without roles and absolute semantic menu covered",
+          "Accessible floating iframe covered; unrelated hidden iframe and host/prose excluded",
+          "Close/reopen, master disable/restore and detached mount cleanup pass",
+          "No card-specific selectors; font, palette, border and box shadow preserved"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "edge",
+        "width": 1280,
+        "tone": "light",
+        "checks": [
+          "Arbitrary fixed dialog under a body mount automatically cleared",
+          "Fixed window without roles and absolute semantic menu covered",
+          "Accessible floating iframe covered; unrelated hidden iframe and host/prose excluded",
+          "Close/reopen, master disable/restore and detached mount cleanup pass",
+          "No card-specific selectors; font, palette, border and box shadow preserved"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "webkit",
+        "width": 390,
+        "tone": "dark",
+        "checks": [
+          "Arbitrary fixed dialog under a body mount automatically cleared",
+          "Fixed window without roles and absolute semantic menu covered",
+          "Accessible floating iframe covered; unrelated hidden iframe and host/prose excluded",
+          "Close/reopen, master disable/restore and detached mount cleanup pass",
+          "No card-specific selectors; font, palette, border and box shadow preserved"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "webkit",
+        "width": 390,
+        "tone": "light",
+        "checks": [
+          "Arbitrary fixed dialog under a body mount automatically cleared",
+          "Fixed window without roles and absolute semantic menu covered",
+          "Accessible floating iframe covered; unrelated hidden iframe and host/prose excluded",
+          "Close/reopen, master disable/restore and detached mount cleanup pass",
+          "No card-specific selectors; font, palette, border and box shadow preserved"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "webkit",
+        "width": 1280,
+        "tone": "dark",
+        "checks": [
+          "Arbitrary fixed dialog under a body mount automatically cleared",
+          "Fixed window without roles and absolute semantic menu covered",
+          "Accessible floating iframe covered; unrelated hidden iframe and host/prose excluded",
+          "Close/reopen, master disable/restore and detached mount cleanup pass",
+          "No card-specific selectors; font, palette, border and box shadow preserved"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "webkit",
+        "width": 1280,
+        "tone": "light",
+        "checks": [
+          "Arbitrary fixed dialog under a body mount automatically cleared",
+          "Fixed window without roles and absolute semantic menu covered",
+          "Accessible floating iframe covered; unrelated hidden iframe and host/prose excluded",
+          "Close/reopen, master disable/restore and detached mount cleanup pass",
+          "No card-specific selectors; font, palette, border and box shadow preserved"
+        ],
+        "errors": []
+      }
+    ],
+    "hostApiRequests": [],
+    "realDeviceAcceptance": "pending"
+  },
+  "freshOfficialFrameOrigins": {
+    "caseCount": 2,
+    "cases": [
+      {
+        "engine": "edge",
+        "checks": [
+          "Same-origin URL iframe nested inside inherited-origin srcdoc gets clarity",
+          "Cross-origin URL iframe is skipped before document access",
+          "Destroy removes nested runtime styles; no page errors"
+        ],
+        "errors": []
+      },
+      {
+        "engine": "webkit",
+        "checks": [
+          "Same-origin URL iframe nested inside inherited-origin srcdoc gets clarity",
+          "Cross-origin URL iframe is skipped before document access",
+          "Destroy removes nested runtime styles; no page errors"
+        ],
+        "errors": []
+      }
+    ]
+  },
+  "acceptedEvidenceWithUnchangedRuntime": {
+    "sourceVersion": "1.4.2-tt.6",
+    "checkbox": {
+      "cases": [
+        {
+          "engine": "edge",
+          "width": 390,
+          "tone": "dark",
+          "statePixelDifference": 90.93,
+          "checks": "checked/unchecked/disabled/mixed, pointer and keyboard, focus, foreign dialog, extension-off, overflow, no errors"
+        },
+        {
+          "engine": "edge",
+          "width": 390,
+          "tone": "light",
+          "statePixelDifference": 81.86,
+          "checks": "checked/unchecked/disabled/mixed, pointer and keyboard, focus, foreign dialog, extension-off, overflow, no errors"
+        },
+        {
+          "engine": "edge",
+          "width": 1280,
+          "tone": "dark",
+          "statePixelDifference": 90.93,
+          "checks": "checked/unchecked/disabled/mixed, pointer and keyboard, focus, foreign dialog, extension-off, overflow, no errors"
+        },
+        {
+          "engine": "edge",
+          "width": 1280,
+          "tone": "light",
+          "statePixelDifference": 81.86,
+          "checks": "checked/unchecked/disabled/mixed, pointer and keyboard, focus, foreign dialog, extension-off, overflow, no errors"
+        },
+        {
+          "engine": "webkit",
+          "width": 390,
+          "tone": "dark",
+          "statePixelDifference": 90.48,
+          "checks": "checked/unchecked/disabled/mixed, pointer and keyboard, focus, foreign dialog, extension-off, overflow, no errors"
+        },
+        {
+          "engine": "webkit",
+          "width": 390,
+          "tone": "light",
+          "statePixelDifference": 80.5,
+          "checks": "checked/unchecked/disabled/mixed, pointer and keyboard, focus, foreign dialog, extension-off, overflow, no errors"
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "tone": "dark",
+          "statePixelDifference": 90.48,
+          "checks": "checked/unchecked/disabled/mixed, pointer and keyboard, focus, foreign dialog, extension-off, overflow, no errors"
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "tone": "light",
+          "statePixelDifference": 80.5,
+          "checks": "checked/unchecked/disabled/mixed, pointer and keyboard, focus, foreign dialog, extension-off, overflow, no errors"
+        }
+      ],
+      "caseCount": 8,
+      "realDeviceAcceptance": "pending; full extension in synthetic host, real ST checkbox stylesheet"
+    },
+    "ui": {
+      "caseCount": 8,
+      "cases": [
+        {
+          "engine": "edge",
+          "width": 390,
+          "tone": "dark",
+          "baselineOverlayBounds": {
+            "left": 27,
+            "right": 393,
+            "width": 366
+          },
+          "protectedOverlayBounds": {
+            "left": 12,
+            "right": 378
+          },
+          "checks": [
+            "Details collapsed by default; sliders hidden; click and keyboard toggle preserve values",
+            "Fixed-overlay displacement reproduced on tt.3; viewport alignment restored; panel text shadow automatically removed",
+            "Dynamic overlay closing restores message glass",
+            "Native delete/current-chat/custom checkboxes show state and preserve click/Space semantics",
+            "Unrelated content and unregistered popup excluded; off restores host styles without changing checked state",
+            "Native popup inherited shadow suppressed; no page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "edge",
+          "width": 390,
+          "tone": "light",
+          "baselineOverlayBounds": {
+            "left": 27,
+            "right": 393,
+            "width": 366
+          },
+          "protectedOverlayBounds": {
+            "left": 12,
+            "right": 378
+          },
+          "checks": [
+            "Details collapsed by default; sliders hidden; click and keyboard toggle preserve values",
+            "Fixed-overlay displacement reproduced on tt.3; viewport alignment restored; panel text shadow automatically removed",
+            "Dynamic overlay closing restores message glass",
+            "Native delete/current-chat/custom checkboxes show state and preserve click/Space semantics",
+            "Unrelated content and unregistered popup excluded; off restores host styles without changing checked state",
+            "Native popup inherited shadow suppressed; no page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "edge",
+          "width": 1280,
+          "tone": "dark",
+          "baselineOverlayBounds": {
+            "left": 27,
+            "right": 393,
+            "width": 366
+          },
+          "protectedOverlayBounds": {
+            "left": 12,
+            "right": 1268
+          },
+          "checks": [
+            "Details collapsed by default; sliders hidden; click and keyboard toggle preserve values",
+            "Fixed-overlay displacement reproduced on tt.3; viewport alignment restored; panel text shadow automatically removed",
+            "Dynamic overlay closing restores message glass",
+            "Native delete/current-chat/custom checkboxes show state and preserve click/Space semantics",
+            "Unrelated content and unregistered popup excluded; off restores host styles without changing checked state",
+            "Native popup inherited shadow suppressed; no page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "edge",
+          "width": 1280,
+          "tone": "light",
+          "baselineOverlayBounds": {
+            "left": 27,
+            "right": 393,
+            "width": 366
+          },
+          "protectedOverlayBounds": {
+            "left": 12,
+            "right": 1268
+          },
+          "checks": [
+            "Details collapsed by default; sliders hidden; click and keyboard toggle preserve values",
+            "Fixed-overlay displacement reproduced on tt.3; viewport alignment restored; panel text shadow automatically removed",
+            "Dynamic overlay closing restores message glass",
+            "Native delete/current-chat/custom checkboxes show state and preserve click/Space semantics",
+            "Unrelated content and unregistered popup excluded; off restores host styles without changing checked state",
+            "Native popup inherited shadow suppressed; no page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "webkit",
+          "width": 390,
+          "tone": "dark",
+          "baselineOverlayBounds": {
+            "left": 27,
+            "right": 393,
+            "width": 366
+          },
+          "protectedOverlayBounds": {
+            "left": 12,
+            "right": 378
+          },
+          "checks": [
+            "Details collapsed by default; sliders hidden; click and keyboard toggle preserve values",
+            "Fixed-overlay displacement reproduced on tt.3; viewport alignment restored; panel text shadow automatically removed",
+            "Dynamic overlay closing restores message glass",
+            "Native delete/current-chat/custom checkboxes show state and preserve click/Space semantics",
+            "Unrelated content and unregistered popup excluded; off restores host styles without changing checked state",
+            "Native popup inherited shadow suppressed; no page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "webkit",
+          "width": 390,
+          "tone": "light",
+          "baselineOverlayBounds": {
+            "left": 27,
+            "right": 393,
+            "width": 366
+          },
+          "protectedOverlayBounds": {
+            "left": 12,
+            "right": 378
+          },
+          "checks": [
+            "Details collapsed by default; sliders hidden; click and keyboard toggle preserve values",
+            "Fixed-overlay displacement reproduced on tt.3; viewport alignment restored; panel text shadow automatically removed",
+            "Dynamic overlay closing restores message glass",
+            "Native delete/current-chat/custom checkboxes show state and preserve click/Space semantics",
+            "Unrelated content and unregistered popup excluded; off restores host styles without changing checked state",
+            "Native popup inherited shadow suppressed; no page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "tone": "dark",
+          "baselineOverlayBounds": {
+            "left": 27,
+            "right": 393,
+            "width": 366
+          },
+          "protectedOverlayBounds": {
+            "left": 12,
+            "right": 1268
+          },
+          "checks": [
+            "Details collapsed by default; sliders hidden; click and keyboard toggle preserve values",
+            "Fixed-overlay displacement reproduced on tt.3; viewport alignment restored; panel text shadow automatically removed",
+            "Dynamic overlay closing restores message glass",
+            "Native delete/current-chat/custom checkboxes show state and preserve click/Space semantics",
+            "Unrelated content and unregistered popup excluded; off restores host styles without changing checked state",
+            "Native popup inherited shadow suppressed; no page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "tone": "light",
+          "baselineOverlayBounds": {
+            "left": 27,
+            "right": 393,
+            "width": 366
+          },
+          "protectedOverlayBounds": {
+            "left": 12,
+            "right": 1268
+          },
+          "checks": [
+            "Details collapsed by default; sliders hidden; click and keyboard toggle preserve values",
+            "Fixed-overlay displacement reproduced on tt.3; viewport alignment restored; panel text shadow automatically removed",
+            "Dynamic overlay closing restores message glass",
+            "Native delete/current-chat/custom checkboxes show state and preserve click/Space semantics",
+            "Unrelated content and unregistered popup excluded; off restores host styles without changing checked state",
+            "Native popup inherited shadow suppressed; no page errors"
+          ],
+          "errors": []
+        }
+      ],
+      "hostApiRequests": [],
+      "realDeviceAcceptance": "pending",
+      "limitations": [
+        "Minimal overlay fixture is not the supplied rolecard; original card source and affected device remain untested",
+        "Cross-origin iframe content and card-owned fixed widths require original-source diagnosis"
+      ]
+    },
+    "clarity": {
+      "caseCount": 8,
+      "cases": [
+        {
+          "engine": "edge",
+          "width": 390,
+          "tone": "dark",
+          "beforeShadow": "rgb(68, 34, 51) 2px 2px 2px",
+          "normalProseShadowPreserved": "rgba(0, 0, 0, 0.75) 0px 1px 2px",
+          "choicePixelDifference": 8.69,
+          "checks": [
+            "Automatic card-panel and same-origin iframe text-shadow removal including pseudo-elements",
+            "No new checkbox or saved clarity field; master off restores authored shadows and removes iframe styles",
+            "Plain prose, palette, font, border and box shadow preserved; choice click works",
+            "Accessible frame load/reload, dynamic insert, nested frames and removal cleanup",
+            "Opaque-origin and unrelated frames untouched; no frame source writes",
+            "Only self-rendered card messages bypass outer glass; plain-message glass and removal restoration verified; no duplicate styles or page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "edge",
+          "width": 390,
+          "tone": "light",
+          "beforeShadow": "rgb(68, 34, 51) 2px 2px 2px",
+          "normalProseShadowPreserved": "rgba(0, 0, 0, 0.75) 0px 1px 2px",
+          "choicePixelDifference": 8.69,
+          "checks": [
+            "Automatic card-panel and same-origin iframe text-shadow removal including pseudo-elements",
+            "No new checkbox or saved clarity field; master off restores authored shadows and removes iframe styles",
+            "Plain prose, palette, font, border and box shadow preserved; choice click works",
+            "Accessible frame load/reload, dynamic insert, nested frames and removal cleanup",
+            "Opaque-origin and unrelated frames untouched; no frame source writes",
+            "Only self-rendered card messages bypass outer glass; plain-message glass and removal restoration verified; no duplicate styles or page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "edge",
+          "width": 1280,
+          "tone": "dark",
+          "beforeShadow": "rgb(68, 34, 51) 2px 2px 2px",
+          "normalProseShadowPreserved": "rgba(0, 0, 0, 0.75) 0px 1px 2px",
+          "choicePixelDifference": 8.69,
+          "checks": [
+            "Automatic card-panel and same-origin iframe text-shadow removal including pseudo-elements",
+            "No new checkbox or saved clarity field; master off restores authored shadows and removes iframe styles",
+            "Plain prose, palette, font, border and box shadow preserved; choice click works",
+            "Accessible frame load/reload, dynamic insert, nested frames and removal cleanup",
+            "Opaque-origin and unrelated frames untouched; no frame source writes",
+            "Only self-rendered card messages bypass outer glass; plain-message glass and removal restoration verified; no duplicate styles or page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "edge",
+          "width": 1280,
+          "tone": "light",
+          "beforeShadow": "rgb(68, 34, 51) 2px 2px 2px",
+          "normalProseShadowPreserved": "rgba(0, 0, 0, 0.75) 0px 1px 2px",
+          "choicePixelDifference": 8.69,
+          "checks": [
+            "Automatic card-panel and same-origin iframe text-shadow removal including pseudo-elements",
+            "No new checkbox or saved clarity field; master off restores authored shadows and removes iframe styles",
+            "Plain prose, palette, font, border and box shadow preserved; choice click works",
+            "Accessible frame load/reload, dynamic insert, nested frames and removal cleanup",
+            "Opaque-origin and unrelated frames untouched; no frame source writes",
+            "Only self-rendered card messages bypass outer glass; plain-message glass and removal restoration verified; no duplicate styles or page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "webkit",
+          "width": 390,
+          "tone": "dark",
+          "beforeShadow": "rgb(68, 34, 51) 2px 2px 2px",
+          "normalProseShadowPreserved": "rgba(0, 0, 0, 0.75) 0px 1px 2px",
+          "choicePixelDifference": 8.72,
+          "checks": [
+            "Automatic card-panel and same-origin iframe text-shadow removal including pseudo-elements",
+            "No new checkbox or saved clarity field; master off restores authored shadows and removes iframe styles",
+            "Plain prose, palette, font, border and box shadow preserved; choice click works",
+            "Accessible frame load/reload, dynamic insert, nested frames and removal cleanup",
+            "Opaque-origin and unrelated frames untouched; no frame source writes",
+            "Only self-rendered card messages bypass outer glass; plain-message glass and removal restoration verified; no duplicate styles or page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "webkit",
+          "width": 390,
+          "tone": "light",
+          "beforeShadow": "rgb(68, 34, 51) 2px 2px 2px",
+          "normalProseShadowPreserved": "rgba(0, 0, 0, 0.75) 0px 1px 2px",
+          "choicePixelDifference": 8.72,
+          "checks": [
+            "Automatic card-panel and same-origin iframe text-shadow removal including pseudo-elements",
+            "No new checkbox or saved clarity field; master off restores authored shadows and removes iframe styles",
+            "Plain prose, palette, font, border and box shadow preserved; choice click works",
+            "Accessible frame load/reload, dynamic insert, nested frames and removal cleanup",
+            "Opaque-origin and unrelated frames untouched; no frame source writes",
+            "Only self-rendered card messages bypass outer glass; plain-message glass and removal restoration verified; no duplicate styles or page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "tone": "dark",
+          "beforeShadow": "rgb(68, 34, 51) 2px 2px 2px",
+          "normalProseShadowPreserved": "rgba(0, 0, 0, 0.75) 0px 1px 2px",
+          "choicePixelDifference": 8.72,
+          "checks": [
+            "Automatic card-panel and same-origin iframe text-shadow removal including pseudo-elements",
+            "No new checkbox or saved clarity field; master off restores authored shadows and removes iframe styles",
+            "Plain prose, palette, font, border and box shadow preserved; choice click works",
+            "Accessible frame load/reload, dynamic insert, nested frames and removal cleanup",
+            "Opaque-origin and unrelated frames untouched; no frame source writes",
+            "Only self-rendered card messages bypass outer glass; plain-message glass and removal restoration verified; no duplicate styles or page errors"
+          ],
+          "errors": []
+        },
+        {
+          "engine": "webkit",
+          "width": 1280,
+          "tone": "light",
+          "beforeShadow": "rgb(68, 34, 51) 2px 2px 2px",
+          "normalProseShadowPreserved": "rgba(0, 0, 0, 0.75) 0px 1px 2px",
+          "choicePixelDifference": 8.72,
+          "checks": [
+            "Automatic card-panel and same-origin iframe text-shadow removal including pseudo-elements",
+            "No new checkbox or saved clarity field; master off restores authored shadows and removes iframe styles",
+            "Plain prose, palette, font, border and box shadow preserved; choice click works",
+            "Accessible frame load/reload, dynamic insert, nested frames and removal cleanup",
+            "Opaque-origin and unrelated frames untouched; no frame source writes",
+            "Only self-rendered card messages bypass outer glass; plain-message glass and removal restoration verified; no duplicate styles or page errors"
+          ],
+          "errors": []
+        }
+      ],
+      "hostApiRequests": [],
+      "limitations": [
+        "Desktop engines with synthetic card panels; supplied rolecard source unavailable",
+        "Opaque-origin and cross-origin iframe contents cannot be changed",
+        "Card CSS with inline important text shadows, drop-shadow filters, stroke or duplicated text may require card source"
+      ],
+      "realDeviceAcceptance": "pending"
+    }
+  },
+  "realHostEvidence": {
+    "mode": "Read-only real SillyTavern browser DOM and computed-style inspection",
+    "installedManifestVersion": "1.4.1",
+    "ownership": "Reported panel is a fixed role=dialog mounted directly outside message content and iframes",
+    "observed": {
+      "textShadow": "rgba(0, 0, 0, 0.5) 0px 0px 2px",
+      "filter": "none",
+      "backdropFilter": "none",
+      "sourceSelector": "*",
+      "sourceDeclaration": "0px 0px calc(var(--shadowWidth) * 1px) var(--SmartThemeShadowColor)"
+    },
+    "genericReadOnlyTraversalHitsCurrentWindow": true,
+    "hostShellExcluded": true,
+    "patchedComponentAppliedToRealInstance": false,
+    "originalInstallationModified": false,
+    "acceptance": "Updated original-card visual and reload acceptance pending; source-built fixture evidence is separate"
+  },
+  "limits": [
+    "Generic external scanning skips core host trees and hidden mounts; absolute unlabelled arbitrary containers are not guaranteed",
+    "Cross-origin and opaque sandbox iframe contents remain unchanged",
+    "Inline important text shadows, strokes, drop-shadow filters or duplicate text may need different diagnosis",
+    "Actual Android/iOS TT display and long-chat performance remain device acceptance",
+    "User acceptance is not an independently observed iOS real-device refraction result",
+    "Existing local official installation was not replaced during repository publication",
+    "End-to-end installer execution and installation/update paths on each TT client remain host-specific acceptance"
+  ],
+  "publishTarget": "jjing8235-afk/NVWA-Liquid-Glass",
+  "publicationMethod": "Preserve parent history, use existing tree, verify every blob and update main without force"
+}

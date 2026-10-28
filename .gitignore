@@ -1,1 +1,3 @@
+node_modules/
 dev/verify/out/
+.DS_Store

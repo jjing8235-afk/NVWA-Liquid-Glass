@@ -2,6 +2,16 @@
 
 先读这一份，再动代码。更新记录在 `CHANGELOG.md`。
 
+## 当前正式版：1.4.2
+
+发布基线为已验收的 1.4.2-tt.6，用户于 2026-10-28 反馈“没有问题”并授权上传正式仓库。功能逻辑沿用验收版本，仅版本、名称、地址和文档作发布整理。正式安装器保持原样。
+
+card-clarity.js 管理消息/浮层 iframe 和通用外部浮层的自动字影处理。外部候选按固定定位或 dialog/menu/listbox/popover 语义识别，排除宿主核心树，不得添加卡片名称或专用 ID 白名单。卡内面板标记由 index.js 管理。
+
+主文档规则由 html.ilg 控制；iframe 内的独立样式由美化总开关负责注入和撤回，不能要求 iframe 自带 html.ilg。用户要求自动处理，不增加字影开关；卡内显式文字阴影也会去掉，关闭美化后恢复。不得扩大为全站清字影、修改源卡、清理用户设置或解除来源隔离。
+
+新增环境字段按默认值合并，继续使用 iosLiquidGlass 和 S.v=9，保留未知字段及备份。compatibilityMode 默认 auto；旧安卓勾选字段保留但不再决定路径；iosSvgTrial 默认 false。后续迁移必须另行验证。
+
 ## 这是什么
 
 SillyTavern（酒馆）1.18 的 UI 扩展，纯前端：`manifest.json` 只加载 `index.js`（ES 模块）和 `style.css`。没有构建步骤，改完刷新酒馆页面就生效。
@@ -9,6 +19,7 @@ SillyTavern（酒馆）1.18 的 UI 扩展，纯前端：`manifest.json` 只加�
 | 文件 | 作用 |
 |---|---|
 | `index.js` | 设置面板、玻璃跟踪（给元素挂折射滤镜）、深浅切换、顶栏折叠菜单、快捷回复折叠、首页问候、思考小球、卡片小面板识别、弹窗样式让行、角色卡的世界书小标、配套主题准备状态检查（只读）。设置存在 `extensionSettings.iosLiquidGlass`，`S.v` 是设置版本号（现在是 9），改默认值要加一段迁移 |
+| `card-clarity.js` | 通用浮层识别及可访问 iframe 的文字样式、来源检查和生命周期清理 |
 | `glass2.js` | 新版物理折射引擎（斯涅尔折射查找表、九宫格贴图） |
 | `orb.js` | 思考时的点阵小球（canvas，所有小球共用一个 rAF 循环） |
 | `style.css` | 全部样式。按 `/* ---------- 标题 ---------- */` 分段，越往后越新；后面的段会覆盖前面的 |
@@ -138,7 +149,11 @@ node server.js --configPath D:/SillyTavern/config.yaml --dataRoot D:/SillyTavern
 ## 还没验证 / 已知问题
 
 - 酒馆助手一键安装脚本没有完整走过一遍（只在一个临时酒馆上验证过手动安装）。
-- 真实的“胭脂盒”人物册（《我不吃牛肉》卡）没在测试环境里跑过，只用仿造的浮窗验证过字影去掉了。
+- 反馈人物册已在真实电脑酒馆完成只读 DOM 定位：body 独立浮层受宿主 2px 全局字影影响。通用识别能命中；用户随后验收测试版通过并授权正式发布。不要把这两项证据混写成自动化已在该旧版宿主完成新版安装/刷新验收。
 - 思考小球没在真实流式输出的模型上看过。
 - 阻塞弹窗的关闭行为由宿主管理，插件不新增强制关闭入口。
 - 卡片小面板的识别只看元素自己的底色；底色写在伪元素（`::before`）或背景图片上的面板识别不到。
+
+## 1.4.2 验证入口
+
+node dev/verify/tt-compat-regression.mjs 覆盖自动适配与回退；settings-regression、popup-boundary-regression、filter-reuse-regression、first-line-indent-regression 保留隔离检查。通用浮层及 iframe 浏览器记录见 VALIDATION.json。跨域、未知无语义绝对定位层和 iOS 真机折射仍需单独确认。
