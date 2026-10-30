@@ -88,32 +88,34 @@ function raster(sample, x0, y0, cw, ch, sx, sy) {
     return { buf, cw, ch, max };
 }
 // 两张贴图：位移贴图（R/G=取样偏移）和法线贴图（R/G=朝外法线×倾斜度，B=倾斜度）
-function encode({ buf, cw, ch }, maxO) {
-    const dc = document.createElement('canvas'), nc = document.createElement('canvas');
-    dc.width = nc.width = cw; dc.height = nc.height = ch;
-    const dctx = dc.getContext('2d'), nctx = nc.getContext('2d');
-    const di = dctx.createImageData(cw, ch), ni = nctx.createImageData(cw, ch), D = di.data, N = ni.data;
+function encode({ buf, cw, ch }, maxO, normals) {
+    const dc = document.createElement('canvas'), nc = normals ? document.createElement('canvas') : null;
+    dc.width = cw; dc.height = ch;
+    if (nc) { nc.width = cw; nc.height = ch; }
+    const dctx = dc.getContext('2d'), nctx = nc?.getContext('2d');
+    const di = dctx.createImageData(cw, ch), ni = nctx?.createImageData(cw, ch), D = di.data, N = ni?.data;
     for (let p = 0, n = cw * ch; p < n; p++) {
         const b4 = p * 4, b5 = p * 5;
         D[b4] = 128 + buf[b5] / maxO * 127; D[b4 + 1] = 128 + buf[b5 + 1] / maxO * 127; D[b4 + 2] = 128; D[b4 + 3] = 255;
-        N[b4] = 128 + buf[b5 + 2] * 127; N[b4 + 1] = 128 + buf[b5 + 3] * 127; N[b4 + 2] = buf[b5 + 4] * 255; N[b4 + 3] = 255;
+        if (N) { N[b4] = 128 + buf[b5 + 2] * 127; N[b4 + 1] = 128 + buf[b5 + 3] * 127; N[b4 + 2] = buf[b5 + 4] * 255; N[b4 + 3] = 255; }
     }
-    dctx.putImageData(di, 0, 0); nctx.putImageData(ni, 0, 0);
-    return { d: dc.toDataURL('image/png'), n: nc.toDataURL('image/png') };
+    dctx.putImageData(di, 0, 0);
+    if (nctx) nctx.putImageData(ni, 0, 0);
+    return { d: dc.toDataURL('image/png'), ...(nc ? { n: nc.toDataURL('image/png') } : {}) };
 }
 // feDisplacementMap 的偏移 = scale × (通道值 − 0.5)，所以 scale 取最大偏移 × 255/127
 const scaleOf = maxO => maxO * 255 / 127;
 
 // 小玻璃（短边放不下两个圆角）：整张贴图
-function buildFull(w, h, r, bez, L, dpr) {
+function buildFull(w, h, r, bez, L, dpr, normals) {
     const k = Math.min(dpr, Math.sqrt(200000 / (w * h)));
     const cw = Math.max(2, Math.round(w * k)), ch = Math.max(2, Math.round(h * k));
     const t = raster(sampler(w, h, r, bez, L), 0, 0, cw, ch, w / cw, h / ch), maxO = Math.max(t.max, 0.001);
-    return { full: encode(t, maxO), scale: scaleOf(maxO), max: maxO };
+    return { full: encode(t, maxO, normals), scale: scaleOf(maxO), max: maxO };
 }
 /* 大玻璃：九宫格。中间是平的不用画；直边上的贴图沿着边方向不变，取 1 像素宽的条拉伸；只有四个角要整块算。
    所以贴图大小和玻璃尺寸无关：长消息卡片也是按屏幕分辨率画的，边缘高光不糊，流式输出变高时也不用重画 */
-function buildTiles(r, bez, L, dpr) {
+function buildTiles(r, bez, L, dpr, normals) {
     const C = Math.ceil(Math.max(r, bez)), W = 2 * C + 4, mid = W / 2 - 0.5, n = Math.max(1, Math.round(C * dpr)), s = C / n;
     const f = sampler(W, W, r, bez, L);
     const parts = {
@@ -124,23 +126,25 @@ function buildTiles(r, bez, L, dpr) {
     };
     const maxO = Math.max(0.001, ...Object.values(parts).map(p => p.max));
     const tiles = {};
-    for (const [k, p] of Object.entries(parts)) tiles[k] = encode(p, maxO);
+    for (const [k, p] of Object.entries(parts)) tiles[k] = encode(p, maxO, normals);
     return { tiles, C, scale: scaleOf(maxO), max: maxO };
 }
 
+// 只有启用光照或厚度阴影时才需要法线贴图；位移贴图始终保持原精度。
+const needsNormals = o => o.specular > 0 || o.edgeShade > 0 || o.fresnel > 0 || o.caustic > 0;
 const cache = new Map();
 export function getMaps(w, h, r, o) {
     // 弧面最宽占短边的 30%（放大镜截面 40%），小玻璃中间留出平坦区；厚度同比缩小，边缘的“坡度”和大玻璃一致
     const lens = o.profile === 'lens';
     const bez = Math.max(2, Math.min(o.bezel, Math.min(w, h) * (lens ? 0.4 : 0.3))), thick = o.thickness * bez / o.bezel;
-    const mag = lens ? o.magnify : 0;
+    const mag = lens ? o.magnify : 0, normals = needsNormals(o);
     const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
     const tiled = Math.min(w, h) >= 2 * Math.ceil(Math.max(r, bez)) + 4;
-    const key = [tiled ? 'T' : `${w}x${h}`, Math.round(r), o.profile, bez, thick, o.ior, mag, dpr].join('|');
+    const key = [tiled ? 'T' : `${w}x${h}`, Math.round(r), o.profile, bez, thick, o.ior, mag, dpr, normals].join('|');
     let m = cache.get(key);
     if (!m) {
         const L = lut(o.profile, bez, thick, o.ior, mag);
-        m = tiled ? buildTiles(Math.round(r), bez, L, dpr) : buildFull(w, h, r, bez, L, dpr);
+        m = tiled ? buildTiles(Math.round(r), bez, L, dpr, normals) : buildFull(w, h, r, bez, L, dpr, normals);
         if (cache.size > 80) cache.clear();
         cache.set(key, m);
     }
@@ -205,9 +209,12 @@ export function physicalFilter(m, o, w, h, angle) {
     const k = o.profile === 'lens' ? Math.min(o.strength, 0.95 / (1 - 1 / Math.max(1.01, o.magnify))) : o.strength;
     const sc = m.scale * k, sp = o.specular, g = o.sharp;
     let out = 'refr', src = 'SourceGraphic';
-    let html = mapLayer(m, 'd', w, h, 'rgb(128,128,128)', 'dmap') + mapLayer(m, 'n', w, h, 'rgb(128,128,0)', 'nmap') +
-        // tb：白色，透明度 = 表面倾斜度。细亮边、边缘反光、内部聚光、厚度阴影都从它来
-        '<feColorMatrix in="nmap" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 1 0 0" result="tb"/>';
+    let html = mapLayer(m, 'd', w, h, 'rgb(128,128,128)', 'dmap');
+    if (needsNormals(o)) {
+        // tb：白色，透明度 = 表面倾斜度。仅供已启用的光照与厚度阴影使用。
+        html += mapLayer(m, 'n', w, h, 'rgb(128,128,0)', 'nmap') +
+            '<feColorMatrix in="nmap" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 1 0 0" result="tb"/>';
+    }
     if (o.blur > 0) { html += `<feGaussianBlur in="SourceGraphic" stdDeviation="${num(o.blur)}" edgeMode="duplicate" result="pre"/>`; src = 'pre'; }
     if (o.saturate !== 1) { html += `<feColorMatrix in="${src}" type="saturate" values="${num(o.saturate)}" result="sat"/>`; src = 'sat'; }
     if (o.brightness !== 1 || o.contrast !== 1) {

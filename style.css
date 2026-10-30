@@ -210,6 +210,16 @@ html.ilg body .ilg-glass:where(#top-bar, #top-bar *, #top-settings-holder, #top-
     mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
 
+/* 普通消息玻璃不继承旧引擎的白色描边和内侧亮影；物理玻璃的底色蒙版保持原样。 */
+html.ilg body.bubblechat #chat .mes.ilg-glass:not(.ilg-phys):not(.smallSysMes)::before {
+    content: none;
+}
+html.ilg body.bubblechat:not(.noShadows) #chat .mes.ilg-glass:not(.ilg-phys):not(.smallSysMes) {
+    box-shadow:
+        0 var(--ilg-lift-y) var(--ilg-lift-b) rgba(var(--ilg-drop-rgb), var(--ilg-drop)),
+        0 2px 6px rgba(var(--ilg-drop-rgb), calc(var(--ilg-drop) * 0.55));
+}
+
 /* ---------- 浅色壁纸：深色文字 + 更白的玻璃（酒馆把颜色变量写在 html 上，这里在 body 层覆盖） ---------- */
 html.ilg.ilg-light body {
     --ilg-k: 1.25;
@@ -286,6 +296,22 @@ html.ilg body :is(#top-bar, #top-settings-holder, .drawer-content, #nonQRFormIte
 }
 html.ilg body #chat .mes :is(.mes_text, .mes_reasoning) { font-family: var(--mainFontFamily); }
 html.ilg body #chat .mes .mes_text > p { line-height: 1.75; }
+
+/* Chat-only font sizing leaves host UI and frame documents under their own typography. */
+html.ilg body #chat.ilg-chat-font .mes:not(.smallSysMes) :is(.mes_text, .mes_reasoning) {
+    --mainFontSize: var(--ilg-chat-font-size);
+    font-size: var(--ilg-chat-font-size);
+}
+html.ilg body .ilg-settings .ilg-chat-font-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+html.ilg body .ilg-settings .ilg-chat-font-controls input[type="range"] { flex: 1; min-width: 40px; }
+html.ilg body .ilg-settings #ilg-opt-chatFontSize-number { width: 72px; flex: 0 0 72px; min-height: 36px; }
+html.ilg body .ilg-settings #ilg-chat-font-reset { flex: none; min-height: 36px; margin: 0; white-space: nowrap; }
+html.ilg body .ilg-settings #ilg-chat-font-hint { color: var(--SmartThemeBodyColor); opacity: 0.75; }
+
 html.ilg body #chat .name_text { font-weight: 700; letter-spacing: 0.01em; }
 html.ilg body #chat :is(.timestamp, .mesIDDisplay, .mes_timer) { opacity: 0.6; font-variant-numeric: tabular-nums; }
 
@@ -401,7 +427,8 @@ html.ilg body :is(#options .options-content, #extensionsMenu) {
     border-radius: 20px;
     min-width: 210px;
     background-color: rgba(22, 16, 30, 0.5);
-    animation: ilg-menu-in .24s cubic-bezier(.3, 1.3, .5, 1);
+    /* The host already fades these menus; avoid resampling glass through a second scale animation. */
+    animation: none;
 }
 html.ilg.ilg-light body :is(#options .options-content, #extensionsMenu) { background-color: rgba(255, 255, 255, 0.62); }
 @keyframes ilg-menu-in {
@@ -765,10 +792,12 @@ html.ilg.ilg-fold body :is(#ilg-fold-button.ilg-alert .ilg-fold-icon, .ilg-fold-
 
 /* 弹出的玻璃菜单：四列图标 + 文字 */
 /* position 写在隐藏状态上也要生效：挂玻璃时会读 position，读到 static 就会被改成 relative */
-#ilg-fold-menu { display: none; position: fixed; z-index: 3010; }
+#ilg-fold-menu { --ilg-fold-menu-width: 336px; display: none; position: fixed; z-index: 3010; }
 html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) {
     display: grid;
-    grid-template-columns: repeat(4, 76px);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    box-sizing: border-box;
+    width: min(var(--ilg-fold-menu-width), calc(100vw - 16px));
     gap: 4px;
     padding: 10px;
     border-radius: 24px;
@@ -781,7 +810,7 @@ html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) {
 }
 html.ilg.ilg-fold.ilg-light body #ilg-fold-menu:not([hidden]) { background-color: rgba(255, 255, 255, 0.88); }
 @media screen and (max-width: 360px) {
-    html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) { grid-template-columns: repeat(4, 1fr); width: calc(100vw - 16px); }
+    html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) { --ilg-fold-menu-width: calc(100vw - 16px); grid-template-columns: repeat(4, 1fr); width: var(--ilg-fold-menu-width); }
 }
 /* 独立挂在 body 的自有菜单也必须自带明暗文字，不能继承主题中的白字和文字阴影。 */
 html.ilg body #ilg-fold-menu {
@@ -1023,8 +1052,8 @@ html.ilg body.reduced-motion #ilg-home :is(.ilg-home-logo, .ilg-home-title, .ilg
 }
 
 /* ---------- 聊天记录卡片：酒馆欢迎面板里的最近聊天列表，浮在屏幕正中的一块玻璃 ---------- */
-html.ilg.ilg-home.ilg-recent-open body #chat > .welcomePanel.ilg-recent {
-    display: flex;
+html.ilg.ilg-home body #chat > .welcomePanel.ilg-recent {
+    display: none;
     flex-direction: column;
     gap: 2px;
     position: fixed;
@@ -1044,9 +1073,26 @@ html.ilg.ilg-home.ilg-recent-open body #chat > .welcomePanel.ilg-recent {
     color: var(--SmartThemeBodyColor);
     font-family: var(--ilg-ui-font);
     background-color: rgba(22, 16, 30, 0.58);
-    animation: ilg-menu-in .26s cubic-bezier(.3, 1.3, .5, 1);
+    animation: none;
 }
-html.ilg.ilg-light.ilg-recent-open body #chat > .welcomePanel.ilg-recent { background-color: rgba(255, 255, 255, 0.7); }
+html.ilg.ilg-light.ilg-home body #chat > .welcomePanel.ilg-recent { background-color: rgba(255, 255, 255, 0.7); }
+/* Keep the same native list and glass mounted between opens. */
+html.ilg.ilg-home.ilg-recent-open body #chat > .welcomePanel.ilg-recent {
+    display: flex;
+}
+html.ilg body #chat > .welcomePanel.ilg-recent .ilg-recent-title { margin-right: auto; }
+html.ilg body #chat > .welcomePanel.ilg-recent .ilg-recent-settings {
+    border: 0;
+    border-radius: 10px;
+    padding: 5px 9px;
+    font: inherit;
+    color: inherit;
+    background: var(--ilg-chip);
+    cursor: pointer;
+}
+html.ilg body #chat > .welcomePanel.ilg-recent .ilg-recent-settings:focus-visible { outline: 2px solid #0a84ff; outline-offset: 2px; }
+html.ilg body #chat > .welcomePanel.ilg-recent .ilg-recent-status { margin: 6px 10px; font-size: 13px; }
+html.ilg body #chat > .welcomePanel.ilg-recent:has(.recentChat) .ilg-recent-status { display: none; }
 html.ilg body .welcomePanel.ilg-recent .ilg-recent-head:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     position: sticky;
     top: -6px;
@@ -1201,6 +1247,11 @@ html.ilg body #ilg-fold-menu .ilg-fold-label { font-size: 12.5px; letter-spacing
     html.ilg body #ilg-fold-menu .ilg-fold-label { font-size: 13px; }
 }
 
+/* Native drawers resolve their final height once; do not rebuild glass at every intermediate height. */
+html.ilg body #top-settings-holder > .drawer > .drawer-content {
+    transition: none;
+    animation: none;
+}
 /* ---------- 二级页面（从菜单打开的抽屉）：浮起来的圆角玻璃页，四周留出和顶栏一样的空隙，底部让出输入框 ---------- */
 html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-content {
     border-radius: 24px;
@@ -1643,7 +1694,7 @@ html.ilg body #chat .mes:not(.smallSysMes) .avatar::before {
     mask-composite: exclude;
 }
 html.ilg body #chat .mes[is_user="true"] .avatar::before { background: conic-gradient(from var(--ilg-ring-a), var(--ilg-ring-user)); }
-html.ilg body #chat .mes:not(.smallSysMes) .avatar img {
+html.ilg body #chat .mes:not(.smallSysMes) .avatar :is(img, .missing-avatar) {
     display: block;
     width: 100%;
     height: 100%;
@@ -1652,6 +1703,15 @@ html.ilg body #chat .mes:not(.smallSysMes) .avatar img {
     box-shadow: none;
     -webkit-mask: var(--ilg-squircle) center / 100% 100% no-repeat;
     mask: var(--ilg-squircle) center / 100% 100% no-repeat;
+}
+/* Failed avatar images are replaced by the host with a fixed-size icon; fit it inside the same ring. */
+html.ilg body #chat .mes:not(.smallSysMes) .avatar > .missing-avatar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: calc(var(--ilg-av, var(--avatar-base-width, 50px)) * .65);
 }
 @keyframes ilg-ring-spin { to { --ilg-ring-a: 570deg; } }
 html.ilg body[data-generating] #chat .mes.last_mes:not([is_user="true"]) .avatar::before { animation: ilg-ring-spin 2.6s linear infinite; }
@@ -1865,7 +1925,7 @@ html.ilg body #form_sheld #send_form:has(#send_textarea:focus-visible) { outline
 
 /* ---------- NVWA 预设 / 记忆面板定点适配：只有已确认的原生 Popup 生效 ----------
    只适配用户明确指定的两个内容根，不改变其他第三方浮窗。
-   外壳和吸顶标签栏的折射由 JS 引擎绘制，不叠加高模糊、白色亮边或实心底。 */
+   外壳保留折射，吸顶标签栏共用外壳玻璃，避免重复过滤同一背景。 */
 html.ilg body dialog.popup.ilg-adapted {
     border-radius: 28px;
     background-color: rgba(12, 8, 20, 0.12);
@@ -1894,13 +1954,15 @@ html.ilg.ilg-light body dialog.popup.ilg-adapted > .popup-body > .popup-content 
     --nvp-shadow: rgba(30, 40, 70, 0.12);
 }
 html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) > :is(.nvp-tabbar, .m-tabbar) {
-    background: rgba(16, 14, 26, 0.12);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(16, 14, 26, 0.28);
     border-radius: 18px;
     padding: 4px;
     margin-bottom: 8px;
 }
 html.ilg.ilg-light body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) > :is(.nvp-tabbar, .m-tabbar) {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.38);
 }
 html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory) :is(.nvp-tabs, .m-tabs) {
     border-radius: 14px;
@@ -1921,6 +1983,17 @@ html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > #nvwa-me
     border-color: var(--m-line);
     background-color: var(--m-bg);
     color: var(--m-text);
+}
+
+/* Presentation only: section/tab state and all preset handlers remain owned by the preset. */
+html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > #nvwa-panel {
+    --nvp-d: 50ms;
+}
+html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > #nvwa-panel :is(.nvp-page.on, .nvp-sec, .nvp-plan) {
+    animation: none;
+}
+html.ilg body dialog.popup.ilg-adapted > .popup-body > .popup-content > #nvwa-panel .nvp-sec-b {
+    transition: none;
 }
 
 /* ---------- 预设（提示词管理）面板 ----------
@@ -3383,3 +3456,4 @@ html.ilg body .ilg-floating-clarity *::before,
 html.ilg body .ilg-floating-clarity *::after {
     text-shadow: none !important;
 }
+

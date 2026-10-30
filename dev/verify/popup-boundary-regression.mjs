@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const root=new URL('../../',import.meta.url);
 const source=fs.readFileSync(new URL('index.js',root),'utf8').replace(/\r\n/g,'\n');
-const css=fs.readFileSync(new URL('style.css',root),'utf8');
+const css=fs.readFileSync(new URL('style.css',root),'utf8').replace(/\/\*[\s\S]*?\*\//g,'');
 const passed=[];
 const selector=source.match(/const NATIVE_POPUP_SEL = '([^']+)'/)[1];
 const nativeBody=source.match(/function isNativePopup\(el\) \{([\s\S]*?)\n\}/)[1];
@@ -40,7 +40,8 @@ assert(!adapted(contentPopup(true,null)),'Unrelated native content is not a comp
 const scopedRules=[...css.matchAll(/([^{}]+)\{[^{}]*\}/g)].filter(m=>/#nvwa-(panel|memory)/.test(m[1]));
 assert(scopedRules.length>=7);
 assert(scopedRules.every(m=>m[1].trim().startsWith('html.ilg')&&m[1].includes('dialog.popup.ilg-adapted > .popup-body > .popup-content > ')));
-assert(source.includes("if (tabbar) track(tabbar, 'panelTab')"));
+assert(!source.includes("track(tabbar,"), 'Compatible tabbars share their registered popup shell instead of owning a second filter');
+assert(css.includes('    backdrop-filter: none;'), 'Shared tabbar material must not add another backdrop filter');
 assert(source.includes("'ilg-phys', 'ilg-adapted'"));
 assert(source.includes('class="ilg-presets"'),'Keep the existing material preset controls layout');
 assert(!source.includes('ilg-adapteds'),'Adaptation class must not rename unrelated controls');
