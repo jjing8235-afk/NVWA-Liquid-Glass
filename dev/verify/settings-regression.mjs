@@ -66,7 +66,7 @@ assert.equal(theme.avatar_style, 3);
 passed.push('Companion theme: pending/missing/inactive/modified/ready; repeated checks never change settings');
 
 // 采用安装版本的导入合并函数验证格式；不调用导入/保存 API。
-const host = fs.readFileSync(path.join(root, '../../../power-user.js'), 'utf8').replace(/\r\n/g, '\n');
+const host = fs.readFileSync(process.env.NVWA_HOST_POWER_USER || path.join(root, '../../../power-user.js'), 'utf8').replace(/\r\n/g, '\n');
 const snapshotBody = host.match(/export function getThemeObject\(name\) \{([\s\S]*?)\n\}/)?.[1];
 const mergeBody = host.match(/function getNewTheme\(parsed\) \{([\s\S]*?)\n\}/)?.[1];
 assert.ok(snapshotBody && mergeBody, 'Installed host theme contract must exist');
@@ -83,7 +83,7 @@ passed.push('Companion JSON matches installed SillyTavern 1.18 theme import fiel
 const installer = JSON.parse(fs.readFileSync(
     path.join(root, 'install/NVWA 液态玻璃 · 酒馆助手安装脚本.json'), 'utf8',
 ));
-assert.equal(installer.content, fs.readFileSync(path.join(root, 'install/installer.js'), 'utf8'));
+assert.equal(installer.content.replace(/\r\n/g, '\n'), fs.readFileSync(path.join(root, 'install/installer.js'), 'utf8').replace(/\r\n/g, '\n'));
 assert.equal(installer.enabled, false);
 passed.push('Packaged installer matches source and is disabled by default');
 const installSource = fs.readFileSync(path.join(root, 'install/installer.js'), 'utf8');

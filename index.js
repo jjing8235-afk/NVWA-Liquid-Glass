@@ -30,7 +30,7 @@ const PRESETS = {
 };
 
 const DEFAULTS = {
-    chatFontSize: 0, firstLineIndent: false, compatibilityMode: 'auto', androidWebViewRefract: false, iosSvgTrial: false,
+    chatBackground: 'glass', chatFontSize: 0, firstLineIndent: false, cardSolid: true, justifyText: false, compatibilityMode: 'auto', androidWebViewRefract: false, iosSvgTrial: false,
     enabled: true, float: true, islands: true, fold: true, qrFold: true, home: true, toneBtn: true, homeName: 'NVWA 用户', icons: true, refract: true, refractMes: true, font: true, tone: 'time', dayStart: 7, dayEnd: 19, avatar: 'line', orb: true,
     engine: 'physical', follow: true, pLight: 135,
     // 自然弧度没写的参数（厚度、折射率等，只给物理折射截面用）沿用清透立体的
@@ -84,6 +84,8 @@ const TOGGLES = [
     ['refractMes', '消息卡片也折射（长聊天卡顿时关掉）'],
     ['font', '统一字体：思源黑体（苹果设备用苹方）'],
     ['firstLineIndent', '普通正文首行缩进两个汉字（不影响列表、代码和自带样式面板）'],
+    ['cardSolid', '卡片使用不透明底（沿用卡片自身颜色）'],
+    ['justifyText', '正文两端对齐（右边不参差；关掉是左对齐，右边缘会自然留白）'],
     ['islands', '顶栏拆成三个分组的悬浮岛'],
     ['fold', '顶栏折叠：设置类图标收进左上角菜单'],
     ['qrFold', '快捷回复收进输入框左边的按钮'],
@@ -95,6 +97,7 @@ const TOGGLES = [
 ctx.extensionSettings[MODULE] = Object.assign({}, DEFAULTS, ctx.extensionSettings[MODULE]);
 const S = ctx.extensionSettings[MODULE];
 S.chatFontSize = normalizeChatFontSize(S.chatFontSize);
+S.chatBackground = S.chatBackground === 'transparent' ? 'transparent' : 'glass';
 // v2：玻璃改得更厚、更透。只迁移还停在旧默认值的参数，用户自己调过的不动
 if (!S.v || S.v < 2) {
     const OLD = { scale: 70, bevel: 22, aberration: 6, barBlur: 2, mesBlur: 6, panelBlur: 18, tint: 0.08 };
@@ -274,7 +277,7 @@ function buildPhysical(it, el, w, h, r) {
     const kind = KIND[it.kind];
     const o = {
         profile: S.profile, ior: S.pIor, magnify: S.pMagnify, bezel: S.pBezel * kind.bezelK, thickness: S.pThickness * kind.thickK,
-        strength: S.pStrength * kind.k, aberration: S.pAberration, blur: kind.blur(),
+        strength: S.pStrength * kind.k, aberration: S.pAberration, blur: it.kind === 'mes' && S.chatBackground === 'transparent' ? 0 : kind.blur(),
         saturate: S.pSaturate, brightness: S.pBrightness, contrast: S.pContrast,
         specular: S.pSpecular, sharp: S.pSharp, edgeShade: S.pEdgeShade, fresnel: S.pFresnel, caustic: S.pCaustic,
     };
@@ -323,6 +326,28 @@ function refractAllowed(it) {
     return true;
 }
 
+// Cards keep their fixed-position descendants outside the filter's containing block.
+// The independent layer uses the same filter builder as ordinary message and input glass.
+function messageSurface(el, it) {
+    const separate = el.classList.contains('ilg-content-overlay') || el.classList.contains('ilg-card-renderer');
+    el.classList.toggle('ilg-message-backdrop', separate);
+    if (!separate) {
+        it.backdrop?.remove();
+        it.backdrop = null;
+        return el;
+    }
+    if (!it.backdrop) {
+        const layer = document.createElement('div');
+        layer.className = 'ilg-message-glass';
+        layer.setAttribute('aria-hidden', 'true');
+        el.prepend(layer);
+        it.backdrop = layer;
+    }
+    el.style.backdropFilter = 'none';
+    el.style.webkitBackdropFilter = 'none';
+    return it.backdrop;
+}
+
 function paint(el) {
     const it = items.get(el);
     if (!it) return;
@@ -333,37 +358,32 @@ function paint(el) {
         it.kind = panel ? 'clearPanel' : 'panel';
         el.classList.toggle('ilg-adapted', !!panel);
     }
+    const surface = it.kind === 'mes' ? messageSurface(el, it) : el;
     if (document.body.classList.contains('no-blur')) {
         setPhys(el, it, false);
-        el.style.backdropFilter = 'none';
-        el.style.webkitBackdropFilter = 'none';
+        surface.style.backdropFilter = 'none';
+        surface.style.webkitBackdropFilter = 'none';
         return;
     }
-    // Fixed overlays need viewport coordinates; self-rendered panels/frames must not pass through message SVG compositing.
-    if (it.kind === 'mes' && (el.classList.contains('ilg-content-overlay') || el.classList.contains('ilg-card-renderer'))) {
-        setPhys(el, it, false);
-        el.style.backdropFilter = 'none';
-        el.style.webkitBackdropFilter = 'none';
-        return;
-    }
-    const tail = `blur(${KIND[it.kind].blur()}px) saturate(${S.saturate}) brightness(${S.brightness})`;
+    const blur = it.kind === 'mes' && S.chatBackground === 'transparent' ? 0 : KIND[it.kind].blur();
+    const tail = `blur(${blur}px) saturate(${S.saturate}) brightness(${S.brightness})`;
     const w = el.offsetWidth, h = el.offsetHeight;
     // A closed drawer has no pixels to update; retain its last valid filter for reopening.
     if (!w || !h) return;
-    const phys = refractAllowed(it) && w > 0 && h > 0 && S.engine === 'physical';
+    const phys = refractAllowed(it) && S.engine === 'physical';
     setPhys(el, it, phys);
-    if (canRefract() && !isIOS) el.style.webkitBackdropFilter = '';
+    if (canRefract() && !isIOS) surface.style.webkitBackdropFilter = '';
     if (phys) {
         buildPhysical(it, el, w, h, radiusOf(el, w, h));
-        el.style.backdropFilter = `url(#${it.id})`;
-        if (isIOS) el.style.webkitBackdropFilter = `url(#${it.id})`;
-    } else if (refractAllowed(it) && w > 0 && h > 0) {
+        surface.style.backdropFilter = `url(#${it.id})`;
+        if (isIOS) surface.style.webkitBackdropFilter = `url(#${it.id})`;
+    } else if (refractAllowed(it)) {
         buildFilter(it, w, h, radiusOf(el, w, h));
-        el.style.backdropFilter = `url(#${it.id}) ${tail}`;
-        if (isIOS) el.style.webkitBackdropFilter = `url(#${it.id}) ${tail}`;
+        surface.style.backdropFilter = `url(#${it.id}) ${tail}`;
+        if (isIOS) surface.style.webkitBackdropFilter = `url(#${it.id}) ${tail}`;
     } else {
-        el.style.backdropFilter = tail;
-        if (isIOS || !canRefract()) el.style.webkitBackdropFilter = tail;
+        surface.style.backdropFilter = tail;
+        if (isIOS || !canRefract()) surface.style.webkitBackdropFilter = tail;
     }
 }
 // .ilg-phys：高光已经在滤镜里画了，CSS 那套亮边/内阴影要让开（见 style.css 的新版引擎部分）
@@ -432,9 +452,10 @@ function untrack(el) {
     const it = items.get(el);
     if (!it) return;
     it.filter?.remove();
+    it.backdrop?.remove();
     ro.unobserve(el);
     io.unobserve(el);
-    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys', 'ilg-adapted');
+    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys', 'ilg-adapted', 'ilg-message-backdrop');
     el.style.backdropFilter = '';
     el.style.webkitBackdropFilter = '';
     if (it.posFixed) el.style.position = '';
@@ -1041,6 +1062,7 @@ function applySurfaceSettings() {
     root.style.setProperty('--ilg-shadow-k', S.pShadow);
     root.style.setProperty('--ilg-sheen-k', S.pSheen);
     root.style.setProperty('--ilg-mes-a', S.mesTint);
+    root.classList.toggle('ilg-chat-transparent', S.enabled && S.chatBackground === 'transparent');
     root.style.setProperty('--ilg-scrim-a', S.scrim);
     root.style.setProperty('--ilg-tint', `rgba(255, 255, 255, ${lightBg ? Math.min(0.7, S.tint + 0.3) : S.tint})`);
 }
@@ -1061,6 +1083,7 @@ function applyRoot() {
     root.classList.toggle('ilg', S.enabled);
     root.classList.toggle('ilg-ios-experiment', S.enabled && isIOS);
     root.classList.toggle('ilg-indent', S.enabled && !!S.firstLineIndent);
+    root.classList.toggle('ilg-justify', S.enabled && !!S.justifyText);
     root.classList.toggle('ilg-float', S.enabled && S.float);
     root.classList.toggle('ilg-icons', S.enabled && S.icons);
     root.classList.toggle('ilg-font', S.enabled && S.font);
@@ -1211,7 +1234,7 @@ function statusText() {
 
 function iosTrialReport() {
     const rows = [
-        'NVWA ST / TT 通用测试 1.4.2-tt.6',
+        'NVWA 液态玻璃 1.4.4 · iOS 诊断',
         'UA: ' + navigator.userAgent,
         '平台 / 触摸点: ' + navigator.platform + ' / ' + navigator.maxTouchPoints,
         '视口 / DPR: ' + innerWidth + ' × ' + innerHeight + ' / ' + devicePixelRatio,
@@ -1241,7 +1264,7 @@ function buildPanel() {
     wrap.innerHTML = `
 <div class="inline-drawer">
   <div class="inline-drawer-toggle inline-drawer-header">
-    <b>NVWA 液态玻璃 · ST / TT 通用测试</b>
+    <b>NVWA 液态玻璃</b>
     <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
   </div>
   <div class="inline-drawer-content">
@@ -1258,6 +1281,18 @@ function buildPanel() {
         <option value="blur">仅模糊（折射异常时选择）</option>
       </select></div>
     ${TOGGLES.filter(([k]) => k !== 'iosSvgTrial').map(([k, label]) => `<label class="checkbox_label" for="ilg-opt-${k}"><input type="checkbox" id="ilg-opt-${k}"><span>${label}</span></label>`).join('')}
+    <div class="ilg-row"><label for="ilg-opt-chatBackground"><span>聊天背景</span></label>
+      <select id="ilg-opt-chatBackground" class="text_pole" aria-describedby="ilg-chat-background-hint">
+        <option value="glass">模糊玻璃（原来的效果）</option>
+        <option value="transparent">透明玻璃（保留边缘与圆角）</option>
+      </select>
+      <p class="ilg-hint" id="ilg-chat-background-hint">两档都保留玻璃轮廓。透明档去掉消息的磨砂和底色，保留边缘折射与阴影；卡片自身底色由上方“不透明底”开关控制。</p>
+    </div>
+    <div class="ilg-row">
+      <button type="button" id="ilg-card-report-copy" class="menu_button">复制卡片显示诊断</button>
+      <p class="ilg-hint" id="ilg-card-report-hint" role="status">TT 卡片仍有透明异常时，在出问题的聊天里复制。不含聊天正文、角色名和链接地址。</p>
+      <textarea id="ilg-card-report" class="text_pole" rows="8" readonly hidden aria-label="卡片显示诊断记录" aria-describedby="ilg-card-report-hint"></textarea>
+    </div>
     <div class="ilg-row ilg-chat-font-row">
       <label for="ilg-opt-chatFontSize"><span>聊天正文字号</span><output id="ilg-opt-chatFontSize-v" for="ilg-opt-chatFontSize ilg-opt-chatFontSize-number">跟随酒馆</output></label>
       <div class="ilg-chat-font-controls">
@@ -1329,6 +1364,21 @@ function buildPanel() {
         }
     });
 
+    document.getElementById('ilg-card-report-copy').addEventListener('click', async () => {
+        const output = document.getElementById('ilg-card-report');
+        const hint = document.getElementById('ilg-card-report-hint');
+        output.value = cardDisplayReport();
+        output.hidden = false;
+        try {
+            await navigator.clipboard.writeText(output.value);
+            hint.textContent = '诊断已复制，可粘贴给维护者。';
+        } catch {
+            output.focus();
+            output.select();
+            hint.textContent = '请长按下方记录复制，再粘贴给维护者。';
+        }
+    });
+
     // 当前数值正好等于某一档预设时，那个按钮显示为按下
     const markPresets = () => wrap.querySelectorAll('[data-preset]').forEach(b => {
         const p = PRESETS[b.dataset.preset][1];
@@ -1361,11 +1411,15 @@ function buildPanel() {
     document.getElementById('ilg-chat-font-reset').addEventListener('click', () => saveChatFont(0));
     const sync = () => {
         syncChatFont();
+        document.getElementById('ilg-opt-chatBackground').value = S.chatBackground;
         TOGGLES.forEach(([k]) => { document.getElementById(`ilg-opt-${k}`).checked = !!S[k]; });
         SLIDERS.forEach(([k, , , , step, unit]) => {
             document.getElementById(`ilg-opt-${k}`).value = S[k];
             document.getElementById(`ilg-opt-${k}-v`).textContent = fmt(step, unit, S[k]);
         });
+        // 这里的 .value 是脚本直接改的，不会触发 input 事件，所以蓝色进度条要自己重画一遍。
+        // 少了这一步，点“一键预设”或“恢复默认”之后圆点会跳到新位置，蓝条还停在上一次的进度上。
+        wrap.querySelectorAll('input[type="range"]').forEach(paintRange);
         document.getElementById('ilg-opt-tone').value = S.tone;
         document.getElementById('ilg-opt-dayStart').value = S.dayStart;
         document.getElementById('ilg-opt-dayEnd').value = S.dayEnd;
@@ -1390,6 +1444,13 @@ function buildPanel() {
         document.getElementById('ilg-status').textContent = statusText();
         refreshCompanionTheme();
     };
+    document.getElementById('ilg-opt-chatBackground').addEventListener('change', e => {
+        if (!['glass', 'transparent'].includes(e.target.value)) { sync(); return; }
+        S.chatBackground = e.target.value;
+        applySurfaceSettings();
+        repaintAll();
+        ctx.saveSettingsDebounced();
+    });
     document.getElementById('ilg-opt-compatibilityMode').addEventListener('change', e => {
         if (!['auto', 'blur'].includes(e.target.value)) { sync(); return; }
         S.compatibilityMode = e.target.value;
@@ -1443,6 +1504,17 @@ function buildPanel() {
         S[k] = e.target.checked;
         if (k === 'firstLineIndent') {
             root.classList.toggle('ilg-indent', S.enabled && !!S.firstLineIndent);
+            ctx.saveSettingsDebounced();
+            return;
+        }
+        // 这两个只影响正文排版和卡片底色，不必重建玻璃
+        if (k === 'justifyText') {
+            root.classList.toggle('ilg-justify', S.enabled && !!S.justifyText);
+            ctx.saveSettingsDebounced();
+            return;
+        }
+        if (k === 'cardSolid') {
+            queueCards(true);
             ctx.saveSettingsDebounced();
             return;
         }
@@ -1642,17 +1714,52 @@ iconLink.rel = 'stylesheet';
 iconLink.href = new URL('./icons.css', import.meta.url).href;
 document.head.appendChild(iconLink);
 
-// 滑块左边那段蓝色：CSS 读不到滑块当前值，所以把进度写进 --ilg-fill（按 20px 圆钮的中心算，蓝条正好止于圆钮下面）
+// 滑块左边那段蓝色：CSS 读不到滑块当前值，所以把进度写进 --ilg-fill（按圆钮的中心算，蓝条正好止于圆钮下面）
+const RANGE_THUMB = 20; // 和 CSS 里 ::-webkit-slider-thumb 的宽高一致
 function paintRange(el) {
     if (!el.closest(HOST_UI_SEL) || el.closest('dialog, .popup, [role="dialog"]:not(.ilg-recent)')) return;
     const min = Number(el.min || 0), max = Number(el.max || 100), v = Number(el.value);
     const p = max > min ? Math.min(1, Math.max(0, (v - min) / (max - min))) : 0;
-    const fill = `calc(${p.toFixed(4)} * (100% - 20px) + 10px)`;
+    const fill = `calc(${p.toFixed(4)} * (100% - ${RANGE_THUMB}px) + ${RANGE_THUMB / 2}px)`;
     if (el.style.getPropertyValue('--ilg-fill') !== fill) el.style.setProperty('--ilg-fill', fill);
 }
 const paintRanges = () => document.querySelectorAll('input[type="range"]').forEach(paintRange);
+
+// 手机上一扒拉就改值：原生滑块只要手指落在轨道任何位置就立刻跳值，滚动聊天/抽屉时蹭到就中招。
+// 改成「只有按在圆点附近才算拖动」：按在轨道别处、或者按在圆点上却是竖着划，值一律还原。
+// 电脑上用鼠标的不受影响（鼠标点轨道还是照常跳，那是精确调节的便利）。
+const coarsePointer = matchMedia('(pointer: coarse)');
+const rangeGuards = new WeakMap();
+const thumbCenter = el => {
+    const r = el.getBoundingClientRect();
+    const min = Number(el.min || 0), max = Number(el.max || 100);
+    const p = max > min ? Math.min(1, Math.max(0, (Number(el.value) - min) / (max - min))) : 0;
+    return r.left + RANGE_THUMB / 2 + p * (r.width - RANGE_THUMB);
+};
+document.addEventListener('pointerdown', e => {
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement) || el.type !== 'range') return;
+    // 按下去这一刻 value 还没被浏览器改，用它算圆点位置
+    const nearThumb = Math.abs(e.clientX - thumbCenter(el)) <= RANGE_THUMB * 0.9;
+    rangeGuards.set(el, { value: el.value, skip: coarsePointer.matches && !nearThumb });
+}, true);
+['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, e => {
+    if (e.target instanceof HTMLInputElement && e.target.type === 'range') rangeGuards.delete(e.target);
+}, true));
 ['input', 'change'].forEach(t => document.addEventListener(t, e => {
-    if (e.target instanceof HTMLInputElement && e.target.type === 'range') paintRange(e.target);
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement) || el.type !== 'range') return;
+    const guard = rangeGuards.get(el);
+    if (guard?.skip) {
+        // 还原成按下之前的值，并且在捕获阶段截住，别让设置面板把这次误触存进 S
+        if (el.value !== guard.value) {
+            el.value = guard.value;
+            paintRange(el);
+        }
+        e.stopPropagation();
+        return;
+    }
+    paintRange(el);
 }, true));
 // 酒馆读预设时是直接改 value（不发 input 事件），所以打开抽屉、切预设之后再统一刷一遍
 document.addEventListener('click', e => { if (e.target.closest?.('.drawer-toggle, .inline-drawer-toggle')) requestAnimationFrame(paintRanges); }, true);
@@ -1746,12 +1853,106 @@ const cardDirty = new Set();
 let cardTimer = 0;
 const parseRgba = s => { const m = s && s.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
 const lumOf = c => (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+// Computed display metadata only: never include message text, frame URLs or settings payloads.
+function cardDisplayReport() {
+    const describe = el => {
+        const win = el.ownerDocument.defaultView;
+        const cs = win.getComputedStyle(el);
+        const rect = el.getBoundingClientRect();
+        const style = nodeStyle => ({
+            color: nodeStyle.backgroundColor,
+            image: /url\(/i.test(nodeStyle.backgroundImage) ? '[image URL omitted]' : nodeStyle.backgroundImage,
+            opacity: nodeStyle.opacity,
+            filter: nodeStyle.backdropFilter || nodeStyle.webkitBackdropFilter || 'none',
+        });
+        const result = {
+            tag: el.tagName.toLowerCase(),
+            classes: [...el.classList].slice(0, 8).map(c => c.slice(0, 80)),
+            size: [Math.round(rect.width), Math.round(rect.height)],
+            visible: !!rect.width && !!rect.height && cs.display !== 'none' && cs.visibility !== 'hidden',
+            position: cs.position,
+            background: style(cs),
+            before: style(win.getComputedStyle(el, '::before')),
+            after: style(win.getComputedStyle(el, '::after')),
+            solid: el.classList.contains('ilg-solid'),
+        };
+        if (el.matches('.mes')) result.glass = style(win.getComputedStyle(el.querySelector(':scope > .ilg-message-glass') || el));
+        if (el.tagName === 'IFRAME') {
+            try {
+                const doc = el.contentDocument;
+                result.frameAccess = doc?.body ? 'same-origin' : 'unavailable';
+                if (doc?.body) result.frameBackground = { html: style(win.getComputedStyle(doc.documentElement)), body: style(win.getComputedStyle(doc.body)) };
+            } catch { result.frameAccess = 'cross-origin'; }
+        }
+        return result;
+    };
+    const messages = [...chatEl.querySelectorAll('.mes')];
+    // Include the opening and the visible messages first; keep reports bounded in long chats.
+    const visible = messages.filter(m => { const r = m.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; });
+    const selected = [...new Set([...messages.slice(0, 1), ...visible, ...messages.slice(-3)])].slice(0, 8);
+    let remaining = 100;
+    const details = selected.map(message => {
+        const elements = [...message.querySelectorAll('.mes_text, .mes_text :is(div, section, article, aside, details, iframe, button)')];
+        const candidates = elements.filter(el => {
+            const cs = getComputedStyle(el);
+            return el.matches('.mes_text, iframe, .ilg-card-surface') || cs.backgroundImage !== 'none' || cs.position === 'fixed';
+        });
+        const sampled = candidates.slice(0, remaining);
+        remaining -= sampled.length;
+        return { message: describe(message), candidates: candidates.length, sampled: sampled.map(describe), truncated: sampled.length < candidates.length };
+    });
+    return JSON.stringify({
+        format: 'nvwa-card-display-1', version: '1.4.4',
+        viewport: [innerWidth, innerHeight, devicePixelRatio],
+        userAgent: navigator.userAgent,
+        enabled: !!S.enabled, chatBackground: S.chatBackground, cardSolid: !!S.cardSolid,
+        compatibilityMode: S.compatibilityMode, engine: S.engine,
+        bubble: document.body.classList.contains('bubblechat'), noBlur: document.body.classList.contains('no-blur'),
+        messageCount: messages.length, sampledMessages: details,
+    }, null, 2);
+}
+
 function blockBg(el, cs = getComputedStyle(el)) {
     let c = parseRgba(cs.backgroundColor);
     // 渐变底：取第一个颜色当近似
     if ((!c || c.a < 0.05) && cs.backgroundImage.includes('gradient')) c = parseRgba(cs.backgroundImage);
     return c && c.a >= 0.05 ? c : null;
 }
+// 卡片自己的「实色底」怎么取：
+// 卡片的底色可能写在 background-color、写在渐变里、甚至写在 ::before / ::after 上（模板爱这么干）。
+// 取所有候选里不透明度最高的那个颜色，当铺在下面的一层实色。
+// 还要判断这张卡到底有没有「透」的地方：颜色层看自身不透明度，渐变层看有没有淡到接近 0 的色标。
+const cardColors = el => {
+    const cs = getComputedStyle(el);
+    const layers = [
+        [el.style.backgroundColor, 'color'],
+        [cs.backgroundColor, 'color'],
+        [el.style.backgroundImage || el.style.background, 'image'],
+        [cs.backgroundImage, 'image'],
+    ];
+    for (const p of ['::before', '::after']) {
+        const ps = getComputedStyle(el, p);
+        if (ps.content === 'none' || ps.display === 'none') continue;
+        layers.push([ps.backgroundColor, 'color'], [ps.backgroundImage, 'image']);
+    }
+    let best = null, translucent = false;
+    for (const [src, kind] of layers) {
+        if (!src || src === 'none') continue;
+        const list = String(src).match(/rgba?\([^)]+\)/g);
+        if (!list || !list.length) continue;
+        let maxA = 0, minA = 1;
+        for (const s of list) {
+            const c = parseRgba(s);
+            if (!c) continue;
+            maxA = Math.max(maxA, c.a);
+            minA = Math.min(minA, c.a);
+            if (c.a >= 0.35 && (!best || c.a > best.a)) best = c;
+        }
+        // 渐变：只要有一段淡到几乎透明，这张卡就是「会透」的
+        if (kind === 'image' ? minA < 0.995 : (maxA > 0.02 && maxA < 0.995)) translucent = true;
+    }
+    return { best, translucent };
+};
 function tagCard(text) {
     // 以 <html> 上的 class 为准：CSS 也是按它配色的
     const light = root.classList.contains('ilg-light');
@@ -1764,21 +1965,42 @@ function tagCard(text) {
             const cs = getComputedStyle(k);
             if (cs.position === 'fixed' && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getClientRects().length) fixedOverlay = true;
             if (k.matches('iframe') && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getBoundingClientRect().width > 0 && k.getBoundingClientRect().height > 0) cardRenderer = true;
-            if (k.matches('iframe, img, video, svg, canvas, q, em, i, b, strong, br')) continue;
+            if (k.matches('img, video, svg, canvas, q, em, i, b, strong, br')) continue;
             const c = blockBg(k, cs);
-            const panel = k.matches('div, section, article, aside, details, summary, dialog, button, [role="dialog"], [role="button"], [role="menu"], [role="listbox"], [role="option"]');
+            const frame = k.matches('iframe');
+            const panel = frame || k.matches('div, section, article, aside, details, summary, dialog, button, [role="dialog"], [role="button"], [role="menu"], [role="listbox"], [role="option"]');
             const choice = k.matches('button, select, option, input[type="button"], input[type="submit"], [role="button"], [role="option"]');
-            const surface = choice || (panel && (!!c || cs.backgroundImage !== 'none' || cs.position === 'fixed'));
-            if (surface && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getClientRects().length) cardRenderer = true;
+            // 底色也可能画在 ::before / ::after 上（模板常用这招），这种情况元素自身读不到背景，得一起算进来
+            const card = panel ? cardColors(k) : { best: null, translucent: false };
+            // 自绘卡片走独立的模糊底层，避开整条消息的 SVG 合成（见 paint()）。
+            // 保持既有判据，避免普通正文因伪元素底色而进入额外的卡片兼容路径。
+            const renderer = choice || (panel && (!!c || cs.backgroundImage !== 'none' || cs.position === 'fixed'));
+            const surface = frame || choice || (panel && (!!c || cs.backgroundImage !== 'none' || !!card.best || cs.position === 'fixed'));
+            if (renderer && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getClientRects().length) cardRenderer = true;
 
             let lum = base;
             if (c) lum = lumOf(c) * c.a + base * (1 - c.a);
-            updates.push({ element: k, surface, lit: !!c && lum > 0.62 && !light, dim: !!c && lum < 0.38 && light, lum });
+            // 卡片里只要有一处是透的，就用它最实的那个颜色补一层底；全不透明的卡不补。
+            // 算过一次就沿用存下的值：我们自己那条 !important 会把渲染出来的背景色变成实色，
+            // 再按渲染值重算就会误判成“已经不透明了”，于是开关来回跳。
+            const previousSolid = k.style.getPropertyValue('--ilg-card-solid');
+            // Drop the obsolete neutral backing; transparent frame margins belong to the authored card.
+            const kept = previousSolid === 'var(--ilg-card-fallback)' ? '' : previousSolid;
+            const solid = kept || (card.translucent && card.best
+                ? `rgb(${Math.round(card.best.r)}, ${Math.round(card.best.g)}, ${Math.round(card.best.b)})` : '');
+            updates.push({ element: k, surface, lit: !!c && lum > 0.62 && !light, dim: !!c && lum < 0.38 && light, lum, solid });
         }
-        for (const { element, surface, lit, dim } of updates) {
+        for (const { element, surface, lit, dim, solid } of updates) {
             element.classList.toggle('ilg-card-surface', surface);
             element.classList.toggle('ilg-lit', lit);
             element.classList.toggle('ilg-dim', dim);
+            const wantSolid = !!solid && S.cardSolid;
+            if (wantSolid) {
+                if (element.style.getPropertyValue('--ilg-card-solid') !== solid) element.style.setProperty('--ilg-card-solid', solid);
+            } else if (element.style.getPropertyValue('--ilg-card-solid')) {
+                element.style.removeProperty('--ilg-card-solid');
+            }
+            element.classList.toggle('ilg-solid', wantSolid);
         }
         for (const { element, lum } of updates) if (element.children.length) walk(element, lum);
     };

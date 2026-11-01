@@ -2,11 +2,22 @@
 
 先读这一份，再动代码。更新记录在 `CHANGELOG.md`。
 
-## 当前正式版：1.4.3
+## 当前正式版：1.4.4
 
-发布基线为测试仓库 1.4.3-test.7（7cd8ff0e1877efda2df8c3fb3c08b993c99c7370）。用户于 2026-10-30 明确要求同步正式版并提供社区公告；运行代码逐字节沿用该测试提交，仅正式清单与文档作发布整理。正式安装器和主题保持原样。后续以此正式版为基线维护，不使用桌面/D 盘历史副本覆盖。
+发布基线为测试仓库 1.4.4-test.8（462a6dfabecdb7b85d8fef688bf66cd37fbd8d2c）。用户于 2026-11-01 明确授权晋升正式版并准备社区更新报告。运行代码沿用该测试提交，只有正式界面名称和诊断版本字符串不同；style.css、glass2.js、card-clarity.js、orb.js 与测试基线一致。保留正式安装器、配套主题、字体素材及全部既有文件。
 
-本轮新增聊天字号 12–32 px、局部重绘、菜单开合优化、消息缺图头像自适应与首页原生记录缓存。记录设置仅转发到宿主原按钮，没有增加历史接口或强制重建欢迎页。安卓 TT 原机空列表根因尚未复现；桌面检查不能替代手机耗时、未知 TT 版本或 iOS 折射验收。
+本轮新增聊天背景 glass / transparent，默认 glass；透明档保留边缘、圆角、折射与阴影，不改写用户的 mesBlur。自绘卡片滤镜应用于独立 .ilg-message-glass 背景层，父消息不设置滤镜以保护固定浮窗定位。messageSurface() 复用背景层；卡片移除、模式变化或 untrack() 时正确清理。
+
+cardSolid 默认 true，但只能用卡片可识别的自身颜色补底；未知 iframe 或图片不能用统一深 / 浅色兜底。保留对旧 var(--ilg-card-fallback) 标记的清理，防止透明留白被补成矩形。用户已确认 TT 原卡黑框消失；其他卡片全量兼容和所有真机性能未据此验收。
+
+新增 chatBackground / cardSolid / justifyText 字段通过既有默认值合并路径加载，保留其他字段；产品版本 1.4.4 不改变设置版本 S.v=9。诊断按钮不采集正文、角色名和链接地址，visible 仅代表有布局尺寸；解读滤镜时要同时核对视口位置，屏幕外消息暂停物理折射是既有优化。
+
+### 当前验证入口
+
+- 入口语法与 manifest；运行全部 dev/verify/*-regression.mjs。settings-regression.mjs 在独立源码目录运行时通过 NVWA_HOST_POWER_USER 指向目标宿主的 public/scripts/power-user.js，只读取并隔离执行函数，不调用导入 / 保存 API。
+- 隔离浏览器：fold-menu-font-browser、shared-performance-browser、panel-transitions-browser、home-avatar-browser、host-interaction-browser、interaction-scope-browser。使用现有 Playwright 与浏览器，不安装新依赖。
+- 本轮玻璃材质、透明留白和固定浮窗的真实本机页面验证使用隔离浏览器，导航前拦截保存请求；不写真实主题、聊天、预设或角色卡。桌面分支覆盖不能替代 TT / iOS 真机。
+- 发布前核对与 test.8 的运行代码一致性及正式 install/ 文件 blob 不变；发布后回读远端 main、manifest 与完整文件树。
 
 card-clarity.js 管理消息/浮层 iframe 和通用外部浮层的自动字影处理。外部候选按固定定位或 dialog/menu/listbox/popover 语义识别，排除宿主核心树，不得添加卡片名称或专用 ID 白名单。卡内面板标记由 index.js 管理。
 

@@ -228,6 +228,7 @@ html.ilg.ilg-light body {
 }
 html.ilg.ilg-light body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
     --SmartThemeBodyColor: rgba(28, 30, 38, 1);
+    --SmartThemeCheckboxTickColor: #fff;
     --SmartThemeEmColor: rgba(60, 64, 78, 0.72);
     --SmartThemeQuoteColor: rgba(176, 92, 0, 1);
     --SmartThemeUnderlineColor: rgba(0, 102, 214, 1);
@@ -815,12 +816,14 @@ html.ilg.ilg-fold.ilg-light body #ilg-fold-menu:not([hidden]) { background-color
 /* 独立挂在 body 的自有菜单也必须自带明暗文字，不能继承主题中的白字和文字阴影。 */
 html.ilg body #ilg-fold-menu {
     --SmartThemeBodyColor: #f5f7fb;
+    --SmartThemeCheckboxTickColor: #1d1d1f;
     --SmartThemeShadowColor: transparent;
     --ilg-fold-secondary: #d4dae4;
     text-shadow: none;
 }
 html.ilg.ilg-light body #ilg-fold-menu {
     --SmartThemeBodyColor: #1d1d1f;
+    --SmartThemeCheckboxTickColor: #fff;
     --ilg-fold-secondary: #454854;
 }
 html.ilg body #ilg-fold-menu .ilg-fold-tile {
@@ -1241,9 +1244,11 @@ html.ilg body #ilg-fold-menu .ilg-fold-cap {
 }
 html.ilg:not(.ilg-light) body #ilg-fold-menu .ilg-fold-tile { text-shadow: none; }
 html.ilg body #ilg-fold-menu .ilg-fold-label { font-size: 12.5px; letter-spacing: 0.02em; white-space: nowrap; }
-/* 电脑上菜单宽一点，图标格子大一点 */
+/* 电脑上菜单宽一点，图标格子大一点。
+   四列固定 86px + 三个 6px 间隙 + 左右各 12px 内边距 = 386px，--ilg-fold-menu-width 必须跟着一起变，
+   不然玻璃底还是 336px，第四列（世界书）和“聊天记录”那一行会伸到玻璃外面去。 */
 @media screen and (min-width: 1001px) {
-    html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) { grid-template-columns: repeat(4, 86px); gap: 6px; padding: 12px; }
+    html.ilg.ilg-fold body #ilg-fold-menu:not([hidden]) { --ilg-fold-menu-width: 386px; grid-template-columns: repeat(4, 86px); gap: 6px; padding: 12px; }
     html.ilg body #ilg-fold-menu .ilg-fold-label { font-size: 13px; }
 }
 
@@ -1441,9 +1446,10 @@ html.ilg body {
     --ilg-box-line: rgba(255, 255, 255, 0.4);
     --ilg-placeholder: rgba(235, 235, 245, 0.4);
 }
-html.ilg body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
-    --SmartThemeCheckboxTickColor: #fff;
-}
+/* 这里原来无条件写死 --SmartThemeCheckboxTickColor: #fff。
+   深色模式下酒馆的复选框底色仍取自主题的 SmartThemeBodyColor（浅色），白勾压在浅底上等于没勾；
+   而我们自己的复选框在下面单独把勾设成白色了，所以这条不需要、还会误伤第三方面板，去掉。
+   我们改过 --SmartThemeBodyColor 的地方都按明暗各自配了勾色。 */
 html.ilg.ilg-light body {
     --ilg-accent: #007aff;
     --ilg-field: rgba(255, 255, 255, 0.72);
@@ -1459,6 +1465,7 @@ html.ilg.ilg-light body {
 html.ilg.ilg-light body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
     --SmartThemeBlurTintColor: rgba(244, 244, 248, 0.68);
     --SmartThemeBodyColor: rgba(29, 29, 31, 1);
+    --SmartThemeCheckboxTickColor: #fff;
     --SmartThemeEmColor: rgba(60, 60, 67, 0.62);
 }
 /* 浅色壁纸压暗一点点：整屏的白光是“刺眼”的主要来源；玻璃折射的是压暗后的画面，弧度不受影响 */
@@ -1520,6 +1527,20 @@ html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-hold
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.14);
 }
 
+/* 我自己的设置面板：把滑块命中区抬起来，视觉轨道仍然只有 4px。
+   原来 input 整个盒子就是 4px 高，手机上要精确压在那一条上才拖得动，摸偏一点就点到别处；
+   现在盒子 28px、两条 4px 的色带用 background-position: center 居中，看到的样子没变，手指能压住的地方变大了。
+   touch-action: pan-y 让竖着划屏幕时浏览器继续滚抽屉，只有横向拖才改值，减少滚动时误改。 */
+html.ilg body .ilg-settings input[type="range"] {
+    height: 28px;
+    margin: 0;
+    background:
+        linear-gradient(var(--ilg-accent), var(--ilg-accent)) 0 center / var(--ilg-fill, 0%) 4px no-repeat,
+        linear-gradient(var(--ilg-track), var(--ilg-track)) 0 center / 100% 4px no-repeat !important;
+    border-radius: 999px;
+    touch-action: pan-y;
+}
+
 /* 勾选框：没勾是空心方框，勾上是蓝底白勾。原来浅色下不管勾没勾都是一个黑方块 */
 html.ilg body input[type="checkbox"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     background-color: var(--ilg-box);
@@ -1528,6 +1549,10 @@ html.ilg body input[type="checkbox"]:where(#top-bar, #top-bar *, #top-settings-h
     border-radius: 5px;
     box-shadow: none;
     filter: none;
+    /* 勾是酒馆用 ::before 的 inset box-shadow 画的，颜色只认 --SmartThemeCheckboxTickColor；
+       它的默认值是按“复选框底色”另算的一套数字，我们换了底色它不会跟着换。
+       这里两种模式下都是蓝底，所以勾固定白色，不再依赖主题怎么算。 */
+    --SmartThemeCheckboxTickColor: #fff;
 }
 html.ilg body input[type="checkbox"]:checked:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     background-color: var(--ilg-accent);
@@ -1884,6 +1909,7 @@ html.ilg body #chat .mes_text .ilg-lit {
     --ilg-narr: rgba(29, 29, 31, 0.86);
     --ilg-think: rgba(60, 60, 67, 0.62);
     --SmartThemeBodyColor: rgb(29, 29, 31);
+    --SmartThemeCheckboxTickColor: #fff;
     --SmartThemeQuoteColor: rgba(184, 74, 28, 1);
     --SmartThemeEmColor: rgba(60, 60, 67, 0.62);
     --SmartThemeShadowColor: transparent;
@@ -1895,6 +1921,7 @@ html.ilg body #chat .mes_text .ilg-dim {
     --ilg-narr: rgba(242, 242, 247, 0.9);
     --ilg-think: rgba(235, 235, 245, 0.62);
     --SmartThemeBodyColor: rgb(245, 247, 251);
+    --SmartThemeCheckboxTickColor: #1d1d1f;
     --SmartThemeQuoteColor: rgba(255, 196, 140, 1);
     --SmartThemeEmColor: rgba(235, 235, 245, 0.62);
     --SmartThemeShadowColor: rgba(0, 0, 0, 0.5);
@@ -2117,6 +2144,34 @@ html.ilg.ilg-icons body #nonQRFormItems #send_but { margin: 0; }
     html.ilg body #chat .mes .mes_reasoning_details .mes_reasoning_summary { margin-right: 0; }
     /* 消息卡片自己左右各 18px：手机上这是「不挤」最直观的一半，原来 10px 太贴边了 */
     html.ilg body #chat .mes:not(.smallSysMes) { padding-left: 18px; padding-right: 18px; }
+    /* 右边这一列必须跟左边一模一样。宿主把翻页箭头的留白记在 padding-right 上，
+       第三方预设（比如前端美化里的段落规则）还可能再补一层，两边一叠加，整段正文就往左歪。
+       这里把右内侧留白全部清零，并且加了 !important：谁的规则更靠后都盖不掉。
+       这样正文盒子左右各 18px，和自己的头像、名字行对得上。 */
+    html.ilg body #chat .mes .mes_text { padding-right: 0 !important; margin-right: 0 !important; }
+    html.ilg body #chat .mes .mes_text > p { padding-right: 0 !important; margin-right: 0 !important; }
+    /* 段落改回左对齐。两端对齐会把每一行都顶到盒子右边，右边只要多出一像素就成一条空列，
+       看着就是「整体偏左」；左对齐的参差边缘反而看不出这点偏差。
+       想要它顶满盒子的人，可以在设置里打开「正文两端对齐」。 */
+    html.ilg body #chat .mes .mes_text > p { text-align: left; }
+}
+
+/* 正文两端对齐（设置里可选）：每一行都顶到盒子两边，右边不再参差，
+   整段读起来是齐的矩形，也就不会显得「整体偏左」。最后一行仍然靠左，不拉长字距。 */
+html.ilg.ilg-justify body #chat .mes .mes_text > p,
+html.ilg.ilg-justify body #chat .mes .mes_text > li {
+    text-align: justify;
+    text-align-last: left;
+    text-justify: inter-character;
+}
+
+/* 正文里自带底色的卡片（角色卡的状态栏、模板面板）：它们的底色多半是半透明紫 / 半透明黑，
+   叠在亮壁纸上就「透」了，同一张卡上半实、下半虚。tagCard() 把卡片自己的颜色算出来写进
+   --ilg-card-solid，这里铺一层实色在它自己的渐变下面，壁纸就不再透上来。
+   设置里的「卡片都用不透明底」可以关掉，关掉后恢复原样。 */
+html.ilg body #chat .mes_text .ilg-card-surface.ilg-solid {
+    /* 卡片模板大多把底色写在 style 属性里，行内样式优先级比样式表高，这里必须 !important 才盖得住 */
+    background-color: var(--ilg-card-solid) !important;
 }
 
 /* 3) 预设自带的时间栏（「凝嘤嘤」：两侧一串像素爱心）。大爱心故意画在 SVG 框外
@@ -3292,12 +3347,14 @@ html.ilg:not(.ilg-light) body #world_popup_entries_list .WIEnteryHeaderControls 
 /* 原生世界书下拉列表独立挂在 body：按宿主控件 ID 限定，不接管第三方下拉框。 */
 html.ilg body > .select2-container:has(#select2-world_info-results, #select2-world_editor_select-results) {
     --SmartThemeBodyColor: #f5f7fb;
+    --SmartThemeCheckboxTickColor: #1d1d1f;
     --SmartThemeBlurTintColor: rgba(22, 26, 38, 0.95);
     --SmartThemeShadowColor: transparent;
     color: var(--SmartThemeBodyColor);
 }
 html.ilg.ilg-light body > .select2-container:has(#select2-world_info-results, #select2-world_editor_select-results) {
     --SmartThemeBodyColor: #1d1d1f;
+    --SmartThemeCheckboxTickColor: #fff;
     --SmartThemeBlurTintColor: rgba(248, 249, 252, 0.96);
 }
 html.ilg body > .select2-container:has(#select2-world_info-results, #select2-world_editor_select-results) .select2-dropdown {
@@ -3457,3 +3514,64 @@ html.ilg body .ilg-floating-clarity *::after {
     text-shadow: none !important;
 }
 
+/* 手机上藏掉聊天区和外壳的滚动条：它正好贴在玻璃右边那一列，深色壁纸下就是一条从上到下的发白竖缝，
+   社区反馈“右边有一条缝”就是指这个。滚动照旧，只是不再画出那条轨道和圆角滑块。 */
+@media screen and (max-width: 768px) {
+    html.ilg body #chat,
+    html.ilg body #sheld { scrollbar-width: none; }
+    html.ilg body #chat::-webkit-scrollbar,
+    html.ilg body #sheld::-webkit-scrollbar { width: 0; height: 0; display: none; }
+}
+
+/* Card messages use the original glass engine on a sibling of their authored content. */
+html.ilg body.bubblechat #chat .mes.ilg-message-backdrop {
+    isolation: isolate;
+    background-color: transparent;
+}
+html.ilg body.bubblechat #chat .mes > .ilg-message-glass {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    border-radius: inherit;
+    pointer-events: none;
+}
+html.ilg body.bubblechat #chat .mes.ilg-message-backdrop:not(.ilg-phys) > .ilg-message-glass {
+    background-color: var(--SmartThemeBotMesBlurTintColor);
+}
+html.ilg body.bubblechat #chat .mes.ilg-message-backdrop:not(.ilg-phys)[is_user="true"] > .ilg-message-glass {
+    background-color: var(--SmartThemeUserMesBlurTintColor);
+}
+/* Transparent means clear glass: keep the contour, refraction, sheen and elevation. */
+html.ilg.ilg-chat-transparent body.bubblechat #chat .mes.ilg-glass {
+    background-color: transparent;
+    outline: 1px solid rgba(255, 255, 255, 0.24);
+    outline-offset: -1px;
+}
+html.ilg.ilg-light.ilg-chat-transparent body.bubblechat #chat .mes.ilg-glass {
+    outline-color: rgba(45, 60, 85, 0.22);
+}
+html.ilg.ilg-chat-transparent body.bubblechat #chat .mes.ilg-phys::before,
+html.ilg.ilg-chat-transparent body.bubblechat #chat .mes.ilg-glass > .ilg-message-glass {
+    background: transparent;
+}
+/* The host preference applies immediately to layers outside the current viewport too. */
+html.ilg body.no-blur #chat .mes > .ilg-message-glass {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+html.ilg body .ilg-settings #ilg-card-report {
+    width: 100%;
+    max-height: 18rem;
+    resize: vertical;
+}
+
+html.ilg body .ilg-settings #ilg-opt-chatBackground,
+html.ilg body .ilg-settings #ilg-card-report-copy {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 44px;
+}
+html.ilg body .ilg-settings #ilg-card-report-copy {
+    justify-content: center;
+    white-space: normal;
+}
