@@ -46,8 +46,32 @@ try {
     assert.equal(await page.evaluate(()=>fixtureFailure),null);
     assert.equal(await page.locator('#ilg-capture-badge').count(),0,'No capture UI before manual start');
     await page.evaluate(()=>{document.getElementById('ilg-open-settings').click();document.getElementById('ilg-studio-tab-diagnostics').click();});
+    await page.locator('#ilg-studio').evaluate(el=>Promise.all(el.getAnimations().map(animation=>animation.finished.catch(()=>{}))));
+    await page.addStyleTag({content:'button {background:#efefef;color:#eee;border:2px outset #aaa}'});
+    for(const width of [320,394])for(const tone of ['dark','light']){
+        await page.setViewportSize({width,height:806});
+        await page.locator('#ilg-studio').evaluate((el,tone)=>el.dataset.tone=tone,tone);
+        const visual=await page.locator('#ilg-capture-start').evaluate(button=>{
+            const cs=getComputedStyle(button),rgb=s=>(s.match(/[\d.]+/g)||[]).slice(0,3).map(Number),lum=a=>a.map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4}).reduce((n,x,i)=>n+x*[.2126,.7152,.0722][i],0);
+            const a=lum(rgb(cs.color)),b=lum(rgb(cs.backgroundColor));return{contrast:(Math.max(a,b)+.05)/(Math.min(a,b)+.05),height:button.getBoundingClientRect().height,overflow:document.getElementById('ilg-studio').scrollWidth>document.getElementById('ilg-studio').clientWidth+2};
+        });
+        assert(visual.contrast>=4.5,'Capture button text needs contrast in '+tone+' at '+width+'px');assert(visual.height>=44);assert(!visual.overflow);
+    }
+    await page.setViewportSize({width:394,height:806});
+    for(const [scenario,phrase] of [['general','上下滑动'],['appearance','右上角'],['rendering','静止约 3 秒'],['keyboard','键盘挡住']]){
+        await page.locator('#ilg-capture-scenario').selectOption(scenario);
+        assert.equal(await page.locator('#ilg-capture-steps li').count(),3);
+        assert((await page.locator('#ilg-capture-steps').innerText()).includes(phrase));
+    }
     await page.locator('#ilg-capture-scenario').selectOption('appearance');
+    assert.equal(await page.locator('#ilg-capture-steps li').count(),3);
+    assert((await page.locator('#ilg-capture-steps').innerText()).includes('右上角'));
+    const uiOut=path.join(root,'dev/verify/out/interaction-capture');fs.mkdirSync(uiOut,{recursive:true});
+    for(const tone of ['dark','light']){await page.locator('#ilg-studio').evaluate((el,tone)=>el.dataset.tone=tone,tone);await page.locator('#ilg-interaction-diagnostics').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(uiOut,engine+'-controls-'+tone+'.png'),scale:'css'});}
+    if(process.env.NVWA_CAPTURE_UI_ONLY==='1'){console.log(JSON.stringify({engine,passed:true,themes:2,widths:[320,394],buttonContrast:true,steps:true}));await context.close();}else{
+
     await page.locator('#ilg-capture-start').click();
+    assert.equal(await page.locator('#ilg-capture-scenario').isDisabled(),true);
     assert.equal(await page.locator('#ilg-studio').evaluate(e=>e.open),false);
     await page.locator('#ilg-tone-button .drawer-icon').click();await page.waitForFunction(()=>document.getElementById('bg1').style.backgroundImage.includes('ink.png'));
     await page.locator('#ilg-tone-button .drawer-icon').click();await page.waitForFunction(()=>document.getElementById('bg1').style.backgroundImage.includes('porcelain.png'));
@@ -61,6 +85,7 @@ try {
     });
     await page.setViewportSize({width:394,height:700});
     await page.waitForFunction(()=>document.querySelector('#ilg-capture-badge [data-action="main"]')?.textContent==='导出诊断',null,{timeout:20000});
+    assert.equal(await page.locator('#ilg-capture-scenario').isDisabled(),false);
     const out=path.join(root,'dev/verify/out/interaction-capture');fs.mkdirSync(out,{recursive:true});
     await page.screenshot({path:path.join(out,engine+'-completed.png'),scale:'css'});
     const downloadPromise=page.waitForEvent('download');await page.locator('#ilg-capture-badge [data-action="main"]').click();const download=await downloadPromise;
@@ -75,5 +100,5 @@ try {
     assert(JSON.stringify(capture).length<100000);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);
     await page.locator('#ilg-capture-badge [data-action="close"]').click();assert.equal(await page.locator('#ilg-capture-badge').count(),0);assert.deepEqual(errors,[]);
     const result={engine,version,passed:true,fullRealTimeout:true,durationMs:capture.durationMs,checkpoints:capture.checkpoints.length,timeline:capture.timeline.length,captureBytes:Buffer.byteLength(JSON.stringify(capture)),singleTxt:true,privacy:true,physicalDevice:false};
-    fs.writeFileSync(path.join(out,engine+'.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));await context.close();
+    fs.writeFileSync(path.join(out,engine+'.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));await context.close();}
 } finally {await browser?.close();await new Promise(r=>server.close(r));}

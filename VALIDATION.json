@@ -1,6 +1,6 @@
 {
-  "currentVersion": "2.0.1",
-  "currentDisplayVersion": "2.0.1",
+  "currentVersion": "2.0.2",
+  "currentDisplayVersion": "2.0.2",
   "date": "2026-11-05",
   "version": "1.4.4-local.9",
   "baseline": "1.4.4-local.8",
@@ -2980,6 +2980,29 @@
       "no-event-text-url-message-or-stack",
       "opt-in-no-auto-upload"
     ],
+    "physicalPhoneVerified": false
+  },
+  "captureUI202": {
+    "date": "2026-11-12",
+    "version": "2.0.2",
+    "passed": true,
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "widths": [
+      320,
+      394
+    ],
+    "minButtonTextContrast": 4.5,
+    "minButtonHeight": 44,
+    "sceneInstructions": 4,
+    "full15SecondTimeoutAndSingleTxt": true,
+    "offlineRegressions": 27,
     "physicalPhoneVerified": false
   }
 }

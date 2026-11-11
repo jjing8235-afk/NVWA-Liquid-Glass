@@ -28,7 +28,7 @@ window.__ilgLoaded = new URL('.', import.meta.url).pathname;
 
 let studioUI = null;
 const MODULE = 'iosLiquidGlass';
-const BUILD_VERSION = '2.0.1';
+const BUILD_VERSION = '2.0.2';
 const ENGINE_NAMES = Object.freeze({performance:'御风性能引擎',refraction:'棱光折射引擎'});
 const NS = 'http://www.w3.org/2000/svg';
 const ctx = SillyTavern.getContext();
@@ -2710,11 +2710,17 @@ function viewportDiagnostic() {
         wallpapers:bundledWallpapers.status(),workers:{reflections:reflections.status(),ball:((({mode,reason,suspended,pending,failures})=>({mode,reason,suspended,pending,failures}))(ballGlass.status()))},lighting:lighting.status(),captureNote:'Frame intervals describe page callbacks, not display flicker detection'};
 }
 const CAPTURE_SCENARIOS = {
-    general: ['综合交互', '滚动聊天、拖动小球，再弹出键盘打几个字并收起。'],
-    appearance: ['黑白切换 / 壁纸', '点击右上角外观图标切换两三次，等壁纸恢复或错误提示出现。'],
-    rendering: ['屏闪 / 折射', '停在会闪的卡片处，先静止片刻再上下滚动；若肉眼看到屏闪，可另附短录屏。'],
-    keyboard: ['键盘 / 拖动', '拖动小球，再弹出键盘输入几个字、收起键盘并继续拖动。'],
+    general: ['综合交互', ['上下滑动聊天几次，停一下，再来回滑动。', '拖动悬浮小球几次，观察是否跟手；未开启小球时可跳过。', '点输入框打几个字，收起键盘，再拖动一次小球。']],
+    appearance: ['黑白切换 / 壁纸', ['点击右上角的太阳、月亮或调色盘图标。', '连续切换两三次；如提示正在恢复壁纸，留在页面等待结果。', '观察壁纸和文字颜色是否变化，以及有没有错误提示。']],
+    rendering: ['屏闪 / 折射', ['停在原来会闪的卡片处，先静止约 3 秒，观察静止时是否也闪。', '上下滑动这张卡片几次，再停住，观察屏闪或卡顿出现的时机。', '方便时另录约 10 秒视频；反馈时说明静止、滚动或打字时是否闪。']],
+    keyboard: ['键盘 / 拖动', ['拖动悬浮小球几次，观察是否跟手；先确认小球已开启。', '点输入框打几个字，观察输入框有没有被键盘挡住。', '收起键盘，再拖动小球，观察位置和跟手是否恢复。']],
 };
+function updateCaptureInstructions() {
+    const controls=document.getElementById('ilg-interaction-diagnostics');if(!controls)return;
+    const scenario=controls.querySelector('select').value;
+    controls.querySelector('#ilg-capture-steps').replaceChildren(...CAPTURE_SCENARIOS[scenario][1].map(text=>{const li=document.createElement('li');li.textContent=text;return li;}));
+}
+
 function exportCompatibilityDiagnostic() {
     if(interactionDiagnostics.status().recording)interactionDiagnostics.stop('exported');
     const text=iosTrialReport()+'\n\n'+cardDisplayReport({includeCapture:false});
@@ -2724,16 +2730,18 @@ function exportCompatibilityDiagnostic() {
 function captureBadge() {
     let badge=document.getElementById('ilg-capture-badge');if(badge)return badge;
     badge=document.createElement('aside');badge.id='ilg-capture-badge';badge.setAttribute('aria-label','交互诊断采集');
-    badge.innerHTML='<span role="status" aria-live="polite"></span><button type="button" data-action="main">结束</button><button type="button" data-action="close" aria-label="收起采集提示" hidden>×</button>';
+    badge.innerHTML='<span role="status" aria-live="polite"></span><button type="button" data-action="main">提前结束</button><button type="button" data-action="close" aria-label="收起采集提示" hidden>×</button>';
     badge.querySelector('[data-action="main"]').addEventListener('click',()=>{if(interactionDiagnostics.status().recording)interactionDiagnostics.stop('manual');else exportCompatibilityDiagnostic();});
     badge.querySelector('[data-action="close"]').addEventListener('click',()=>badge.remove());document.body.append(badge);return badge;
 }
 const interactionDiagnostics=createInteractionDiagnostics({snapshot:viewportDiagnostic,onProgress(progress){
-    const badge=captureBadge();badge.querySelector('span').textContent='采集中 · '+Math.ceil(progress.remainingMs/1000)+' 秒';badge.querySelector('[data-action="main"]').textContent='结束';badge.querySelector('[data-action="close"]').hidden=true;
+    const badge=captureBadge();badge.querySelector('span').textContent='采集中 · '+Math.ceil(progress.remainingMs/1000)+' 秒';badge.querySelector('[data-action="main"]').textContent='提前结束';badge.querySelector('[data-action="close"]').hidden=true;
 },onFinish(result){
     const missing=result.coverage.missing.length;
     const labels={chatScroll:'滚动聊天',ballDrag:'拖动小球',composerInput:'输入文字',visualViewportChange:'视口变化',appearanceAttempt:'外观切换'};
-    const text='采集'+(result.quality.fullDuration?'完成':'已提前结束')+'（'+(result.durationMs/1000).toFixed(1)+' 秒）'+(missing?'，未观察到：'+result.coverage.missing.map(key=>labels[key]||key).join('、'):'')+'。点击导出即可发送这一份诊断。';
+    const reason=result.quality.fullDuration?'15 秒采集完成':({manual:'已手动提前结束',hidden:'切到后台，采集已中断',pagehide:'离开页面，采集已中断',disabled:'美化已关闭，采集已停止',exported:'已在导出时提前结束'}[result.reason]||'采集已提前结束');
+    const text=reason+'（实际 '+(result.durationMs/1000).toFixed(1)+' 秒）。'+(missing?'未记录到：'+result.coverage.missing.map(key=>labels[key]||key).join('、')+'。建议按上方步骤重新采集；如果已复现问题，也可导出这次结果。':'点击屏幕提示条的“导出诊断”，把下载的 TXT 文件发回即可。');
+    const scenario=document.getElementById('ilg-capture-scenario');if(scenario)scenario.disabled=false;
     const status=document.getElementById('ilg-capture-state');if(status)status.textContent=text;
     const button=document.getElementById('ilg-capture-start');if(button)button.textContent='重新采集 15 秒';
     const badge=captureBadge();badge.querySelector('span').textContent=missing?'采集结束 · 有未测操作':'采集结束';badge.querySelector('[data-action="main"]').textContent='导出诊断';badge.querySelector('[data-action="close"]').hidden=false;
@@ -2934,11 +2942,21 @@ function buildPanel() {
     tiltControls.querySelector('#ilg-tilt-state').textContent = lighting.status();
     tiltControls.querySelector('#ilg-tilt-calibrate').addEventListener('click', requestMobileTilt);
     const captureControls=document.createElement('div');captureControls.id='ilg-interaction-diagnostics';captureControls.className='ilg-tilt-controls';
-    captureControls.innerHTML='<label for="ilg-capture-scenario">主要复测</label><select id="ilg-capture-scenario" class="text_pole">'+Object.entries(CAPTURE_SCENARIOS).map(([key,[label]])=>'<option value="'+key+'">'+label+'</option>').join('')+'</select><button type="button" id="ilg-capture-start">开始 15 秒交互采集</button><p id="ilg-capture-state" role="status" aria-live="polite">'+CAPTURE_SCENARIOS.general[1]+' 开始后设置会收起，结束可直接导出。仅本次手动采集，不记录正文、输入内容或壁纸地址。</p>';
-    captureControls.querySelector('select').addEventListener('change',e=>{if(!interactionDiagnostics.status().recording)captureControls.querySelector('p').textContent=CAPTURE_SCENARIOS[e.target.value][1]+' 采集结束后点击导出诊断即可。';});
-    captureControls.querySelector('button').addEventListener('click',()=>{if(interactionDiagnostics.status().recording){interactionDiagnostics.stop('manual');return;}if(!S.enabled)return;if(interactionDiagnostics.start({scenario:captureControls.querySelector('select').value})){captureControls.querySelector('button').textContent='结束采集';captureControls.querySelector('p').textContent='正在采集，15 秒后自动结束；也可以点击屏幕上的提示条提前结束。';studioUI?.close(false);}});
+    captureControls.innerHTML='<label for="ilg-capture-scenario">这次要复测什么？</label><select id="ilg-capture-scenario" class="text_pole">'+Object.entries(CAPTURE_SCENARIOS).map(([key,[label]])=>'<option value="'+key+'">'+label+'</option>').join('')+'</select><p class="ilg-capture-instruction-title">点击开始后，回到聊天按顺序操作：</p><ol id="ilg-capture-steps"></ol><p class="ilg-capture-export-help">采集中请留在酒馆页面，不要刷新或切后台。15 秒后自动结束，点击屏幕提示条的“导出诊断”，把下载的 TXT 发回即可。</p><button type="button" id="ilg-capture-start" aria-describedby="ilg-capture-steps ilg-capture-state">开始 15 秒采集</button><p id="ilg-capture-state" role="status" aria-live="polite">准备好后点击开始，设置面板会自动收起。想采满 15 秒，请不要重复点击“提前结束”。</p><p class="ilg-capture-privacy">仅手动采集，不记录聊天正文、输入内容或私人壁纸地址，不自动上传。</p>';
+    captureControls.querySelector('select').addEventListener('change',updateCaptureInstructions);
+    captureControls.querySelector('button').addEventListener('click',()=>{
+        if(interactionDiagnostics.status().recording){interactionDiagnostics.stop('manual');return;}
+        if(!S.enabled)return;
+        if(interactionDiagnostics.start({scenario:captureControls.querySelector('select').value})){
+            captureControls.querySelector('select').disabled=true;
+            captureControls.querySelector('button').textContent='提前结束采集';
+            captureControls.querySelector('#ilg-capture-state').textContent='正在采集。请按上方步骤操作，15 秒后自动结束；结束后点击屏幕提示条的“导出诊断”。';
+            studioUI?.close(false);
+        }
+    });
     wrap.querySelector('.inline-drawer-content').append(captureControls);
     studioUI = createSettingsPanel({ host, content: wrap, appearance: appearancePanel, version: BUILD_VERSION, settings: S, engines: ENGINE_NAMES });
+    updateCaptureInstructions();
 
     document.getElementById('ilg-opt-iosReportCopy').textContent = '导出兼容诊断 TXT';
     document.getElementById('ilg-opt-iosReportCopy').addEventListener('click', exportCompatibilityDiagnostic);

@@ -365,3 +365,20 @@ html.ilg:is([data-ilg-reading-style="moon"],[data-ilg-reading-style="sunny"]) #i
 @media(hover:hover) {#ilg-studio .ilg-shortcut-tile[aria-disabled=false]:hover {border-color:var(--s-accent);background:var(--s-fill-hi);}#ilg-studio .ilg-shortcut-tile[aria-pressed=true]:hover {background:var(--s-accent-soft);}}
 @media(max-width:360px) {#ilg-studio .ilg-shortcut-grid {gap:8px;}#ilg-studio .ilg-shortcut-picker {padding:4px 14px 14px;}#ilg-studio .ilg-shortcut-tile {min-height:58px;padding:12px;}#ilg-studio .ilg-shortcut-preview {padding:10px;}}
 @media(prefers-reduced-motion:reduce) {#ilg-studio .ilg-shortcut-tile {transition:none;}}
+
+/* Keep diagnostic actions readable even when the host supplies native white buttons. */
+#ilg-studio #ilg-interaction-diagnostics {padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0;}
+#ilg-studio #ilg-interaction-diagnostics > label {font-weight:600;color:var(--s-fg);}
+#ilg-studio #ilg-capture-scenario {width:100%;min-height:44px;margin:0;}
+#ilg-studio #ilg-interaction-diagnostics p {margin:0;font-size:13px;line-height:1.7;overflow-wrap:anywhere;color:var(--s-fg);}
+#ilg-studio #ilg-interaction-diagnostics .ilg-capture-instruction-title {font-weight:600;}
+#ilg-studio #ilg-capture-steps {margin:0;padding-inline-start:1.65em;color:var(--s-fg);font-size:13px;line-height:1.7;}
+#ilg-studio #ilg-capture-steps li + li {margin-top:7px;}
+#ilg-studio #ilg-capture-steps li::marker {color:var(--s-muted);font-weight:600;}
+#ilg-studio #ilg-capture-start {appearance:none;-webkit-appearance:none;display:block;width:100%;min-height:44px;margin:0;padding:11px 16px;border:1px solid transparent;border-radius:12px;background:var(--s-accent);color:#1d1d1f;-webkit-text-fill-color:currentColor;font:inherit;font-weight:600;line-height:1.45;white-space:normal;box-shadow:none;opacity:1;cursor:pointer;}
+#ilg-studio[data-tone="light"] #ilg-capture-start {color:#fff;}
+#ilg-studio #ilg-capture-start:hover {filter:brightness(1.06);}
+#ilg-studio #ilg-capture-start:active {filter:brightness(.94);}
+#ilg-studio #ilg-capture-start:focus-visible {outline:2px solid var(--s-accent);outline-offset:3px;}
+#ilg-studio #ilg-interaction-diagnostics .ilg-capture-privacy {color:var(--s-muted);font-size:12px;}
+@media(max-width:560px) {#ilg-studio #ilg-interaction-diagnostics {padding:14px 15px;}}
