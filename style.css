@@ -4670,3 +4670,6 @@ html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-hold
 #ilg-capture-badge button:focus-visible {outline:2px solid #89bdff;outline-offset:3px;}
 #ilg-capture-badge [data-action="close"] {background:transparent;color:inherit;font-size:18px;}
 #ilg-capture-badge [hidden] {display:none;}
+
+/* The bookshelf hides the native welcome panel; expose only the active NVWA recent dialog. */
+html.ilg.ilg-home.ilg-recent-open body.jd-bookshelf-home-active #chat.jd-bookshelf-home > .welcomePanel.ilg-recent {display:flex!important;}

@@ -28,7 +28,7 @@ window.__ilgLoaded = new URL('.', import.meta.url).pathname;
 
 let studioUI = null;
 const MODULE = 'iosLiquidGlass';
-const BUILD_VERSION = '2.0.2';
+const BUILD_VERSION = '2.0.3';
 const ENGINE_NAMES = Object.freeze({performance:'御风性能引擎',refraction:'棱光折射引擎'});
 const NS = 'http://www.w3.org/2000/svg';
 const ctx = SillyTavern.getContext();
@@ -2055,9 +2055,24 @@ function openWallpaperPicker() {
 }
 let appearanceSelection = 0;
 let lastAppearanceAction = null;
-function finishAppearance(outcome, mode) {
-    lastAppearanceAction = {mode, outcome};
-    interactionDiagnostics.mark('appearance-result', {mode, outcome});
+function finishAppearance(outcome, mode, details={}) {
+    lastAppearanceAction = {mode, outcome, ...details};
+    interactionDiagnostics.mark('appearance-result', {mode, outcome, ...details});
+}
+// ST's exported settings loader saves through the host even when its gallery is filtered or absent.
+// Clone every existing background preference and change only the selected owned file.
+async function selectVerifiedBundledWallpaper(mode, selection) {
+    try {
+        const backgrounds=await import('/scripts/backgrounds.js');
+        if(selection!==appearanceSelection||!S.enabled)return {ok:false,code:'superseded'};
+        if(chatBgLocked())return {ok:false,code:'chat-background-locked'};
+        if(typeof backgrounds.loadBackgroundSettings!=='function'||!backgrounds.background_settings||typeof backgrounds.background_settings!=='object')return {ok:false,code:'native-api-unavailable'};
+        const file=TONE_WALLS[mode];if(!file)return {ok:false,code:'native-api-unavailable'};
+        const url=typeof backgrounds.getBackgroundPath==='function'?backgrounds.getBackgroundPath(file):'backgrounds/'+encodeURIComponent(file);
+        backgrounds.loadBackgroundSettings({background:{...backgrounds.background_settings,name:file,url:'url('+JSON.stringify(url)+')'}});
+        if(wallpaperKey(wallpaperUrl()).split('/').pop()!==file)return {ok:false,code:'background-not-applied'};
+        return {ok:true};
+    } catch {return {ok:false,code:'native-selection-failed'};}
 }
 async function selectAppearance(mode) {
     const selection = ++appearanceSelection;
@@ -2065,7 +2080,7 @@ async function selectAppearance(mode) {
     interactionDiagnostics.mark('appearance-request', {mode});
     const current = wallpaperUrl();
     if (current && !onToneWall()) rememberCustomWallpaper(current);
-    let thumb;
+    let thumb, nativeApplied=false;
     if (mode === 'custom') {
         thumb = customWallThumb();
         if (!thumb && appearanceMode() !== 'custom') {
@@ -2082,13 +2097,18 @@ async function selectAppearance(mode) {
             if(selection!==appearanceSelection||!S.enabled){interactionDiagnostics.mark('appearance-result',{mode,outcome:'superseded'});return;}
             if(!result.ok){finishAppearance('unavailable',mode);toastr.warning('配套壁纸恢复未完成，请检查网络或宿主的背景上传功能，再点一次重试。','NVWA 液态玻璃');return;}
             thumb=wallThumb(mode);
-            if(!thumb){finishAppearance('unavailable',mode);toastr.warning('配套壁纸已在背景库中，请清除背景列表筛选或刷新酒馆后再切换。','NVWA 液态玻璃');return;}
+            if(!thumb){
+                const selected=await selectVerifiedBundledWallpaper(mode,selection);
+                if(selection!==appearanceSelection||!S.enabled)return;
+                if(!selected.ok){finishAppearance('unavailable',mode,{route:'host-settings',code:selected.code});toastr.warning(selected.code==='chat-background-locked'?'当前聊天的背景已锁定，请在酒馆背景面板中切换或先解除锁定。':'配套壁纸已在背景库，但当前宿主未完成切换，请导出兼容诊断。','NVWA 液态玻璃');return;}
+                nativeApplied=true;
+            }
         }
     }
     S.tone = mode === 'custom' ? 'auto' : mode;
     toneOverride = null;
     thumb?.click();
-    finishAppearance('dispatched', mode);
+    finishAppearance('dispatched', mode, {route:nativeApplied?'host-settings':'thumbnail'});
     void applyTone();
     const select = document.getElementById('ilg-opt-tone');
     if (select) select.value = S.tone;

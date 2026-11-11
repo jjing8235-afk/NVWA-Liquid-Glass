@@ -3,6 +3,7 @@ const SCENARIOS = ['general', 'appearance', 'rendering', 'keyboard'];
 const MARKERS = new Set(['appearance-request', 'appearance-result', 'wallpaper-recovery']);
 const ENUMS = {
     mode: ['light', 'dark', 'custom'],
+    route: ['thumbnail', 'host-settings'],
     outcome: ['dispatched', 'unavailable', 'superseded'],
     phase: ['idle', 'checking', 'uploading', 'verifying', 'refreshing', 'ready', 'failed'],
 };
@@ -13,7 +14,7 @@ const EVENTS = { composerFocuses:0, composerBlurs:0, ballDrags:0, ballMoves:0, c
 const cleanDetails = details => {
     const out = {};
     for (const [key, values] of Object.entries(ENUMS)) if (values.includes(details?.[key])) out[key] = details[key];
-    if (/^(?:inventory|asset|upload)-http-\d{3}$|^(?:inventory-shape|asset-empty|verification-missing|request-timeout|request-failed|refresh-unavailable)$/.test(details?.code || '')) out.code = details.code;
+    if (/^(?:inventory|asset|upload)-http-\d{3}$|^(?:inventory-shape|asset-empty|verification-missing|request-timeout|request-failed|refresh-unavailable|chat-background-locked|native-api-unavailable|background-not-applied|native-selection-failed)$/.test(details?.code || '')) out.code = details.code;
     return out;
 };
 export function createInteractionDiagnostics({snapshot=()=>({}),onFinish=()=>{},onProgress=()=>{},durationMs=15000,win=window,doc=document}={}) {

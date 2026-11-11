@@ -1,6 +1,6 @@
 {
-  "currentVersion": "2.0.2",
-  "currentDisplayVersion": "2.0.2",
+  "currentVersion": "2.0.3",
+  "currentDisplayVersion": "2.0.3",
   "date": "2026-11-05",
   "version": "1.4.4-local.9",
   "baseline": "1.4.4-local.8",
@@ -3004,5 +3004,55 @@
     "full15SecondTimeoutAndSingleTxt": true,
     "offlineRegressions": 27,
     "physicalPhoneVerified": false
+  },
+  "wallpaperAndBookshelf203": {
+    "date": "2026-11-12",
+    "passed": true,
+    "wallpaperCases": 16,
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "nativeAPIs": {
+      "sourceVersion": "SillyTavern 1.18.0",
+      "symbols": [
+        "background_settings",
+        "loadBackgroundSettings",
+        "getBackgroundPath"
+      ],
+      "isolatedInstalledFunctionBodies": true,
+      "liveST": false
+    },
+    "preserved": [
+      "background-fitting",
+      "background-animation",
+      "sort-order",
+      "thumbnail-columns",
+      "locked-chat-background",
+      "latest-choice"
+    ],
+    "bookshelf": {
+      "repository": "ayan-atelier/yantai-bookshelf",
+      "commit": "cefca0a81c4d10ee42eeb9cbce8d1272172569eb",
+      "version": "1.4.5",
+      "verified": "full-pinned-css plus native welcome fixture open-close-row-click",
+      "thirdPartyJSExecuted": false
+    },
+    "offlineRegressions": 27,
+    "physicalPhoneVerified": false,
+    "additionalIOSReport": {
+      "reportedBuild": "2.0.2",
+      "capturedSeconds": 15.011,
+      "chatScrollEvents": 60,
+      "ballDrags": 1,
+      "ballMoves": 29,
+      "composerInputs": 0,
+      "visualViewportEvents": 0,
+      "wallpaperFailure": "verified files but no gallery entries, repeated unavailable light selection",
+      "largestCallbackGapMs": 1252,
+      "largestGapNearVisibleSurfaceRemoval": true,
+      "stallCauseConfirmed": false,
+      "perfectIOSCompatibilityConfirmed": false
+    }
   }
 }
