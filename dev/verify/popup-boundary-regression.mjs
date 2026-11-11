@@ -26,7 +26,14 @@ assert(source.includes("track(floorChip, 'bar')"));assert(!source.includes("trac
 assert(css.includes('dialog.popup.ilg-glass > .popup-body > .popup-controls > .menu_button'));
 assert(css.includes('.popup-content, .popup-content *'));
 assert(css.includes(':where(#top-bar, #top-bar *, #top-settings-holder,'));
-assert(source.includes("if (!el.closest(HOST_UI_SEL) || el.closest('dialog, .popup, [role=\"dialog\"]:not(.ilg-recent)')) return;"));
+const paintRange = vm.runInNewContext(source.match(/function paintRange\(el\) \{[^]*?\n\}/)[0] + ';paintRange', {HOST_UI_SEL:'host',RANGE_THUMB:20});
+for (const [workbench,host,foreign,allowed] of [[false,true,false,true],[false,true,true,false],[false,false,true,false],[true,false,true,true],[false,false,false,false]]) {
+    let fill = '', writes = 0;
+    const el = {min:'0',max:'100',value:'45',closest(selector){return selector === '#ilg-studio' ? workbench : selector === 'host' ? host : foreign;},style:{getPropertyValue(){return fill;},setProperty(key,value){assert.equal(key,'--ilg-fill');fill=value;writes++;}}};
+    paintRange(el);paintRange(el);assert.equal(writes,allowed?1:0,'Only owned ranges receive an idempotent progress update');
+    if (allowed) {assert.equal(fill,'calc(0.4500 * (100% - 20px) + 10px)');el.value='100';paintRange(el);assert.equal(fill,'calc(1.0000 * (100% - 20px) + 10px)');}
+}
+passed.push('Progress includes the owned workbench and host controls; foreign dialog ranges remain untouched');
 passed.push('No preserve markers or injected close button; content boundary and shared-control scopes are explicit');
 const panelSelector=source.match(/const ADAPTED_PANEL_SEL = '([^']+)'/)[1];
 const panelBody=source.match(/function adaptedPanel\(el\) \{([\s\S]*?)\n\}/)[1];

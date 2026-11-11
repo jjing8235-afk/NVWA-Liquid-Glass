@@ -1,3 +1,4 @@
+import { controlCoreFilter } from './control-material.js';
 /* 液态玻璃 v2 物理引擎（从液态玻璃实验台 glass2.js 移植，去掉了实验台专用的水滴/放大镜/降级高光图）
    折射：按玻璃截面（边缘弧面 + 厚度 + 折射率）用斯涅尔定律算出每个像素该往哪偏，生成位移贴图
    高光：同一个弧面的法线生成法线贴图，滤镜里拿光源方向做点乘；换光源只改颜色矩阵，不用重画贴图 */
@@ -8,7 +9,7 @@ const PROFILES = {
     circle: x => { const a = 1 - x, b = 1 - a * a; return [Math.sqrt(b), a / Math.sqrt(b)]; },
     soft: x => { const a = 1 - x; return [1 - a * a, 2 * a]; },
 };
-const LUT_N = 256;
+export const LUT_N = 256;
 const luts = new Map();
 /* 放大镜截面：不按物理折射算，直接规定“屏幕上离边缘 s 处取样离边缘 u(s) 处”。
    u 的斜率从边缘的 1/mag 平滑升到弧带内侧的 1（smoothstep），斜率始终在 0~1 之间：
@@ -23,11 +24,11 @@ function lensLut(bezel, mag) {
     }
     return { d, s };
 }
-function lut(profile, bezel, thick, ior, mag) {
+export function lut(profile, bezel, thick, ior, mag) {
     const key = [profile, bezel, thick, ior, mag].join('|');
-    if (luts.has(key)) return luts.get(key);
+    if (luts.has(key)) { const value = luts.get(key); luts.delete(key); luts.set(key, value); return value; }
     if (profile === 'lens') {
-        if (luts.size > 40) luts.clear();
+        if (luts.size >= 40) luts.delete(luts.keys().next().value);
         luts.set(key, lensLut(bezel, mag));
         return luts.get(key);
     }
@@ -43,7 +44,7 @@ function lut(profile, bezel, thick, ior, mag) {
         d[i] = h * (a * nr) / (-eta + a * nz);
         s[i] = nr;
     }
-    if (luts.size > 40) luts.clear();
+    if (luts.size >= 40) luts.delete(luts.keys().next().value);
     luts.set(key, { d, s });
     return luts.get(key);
 }
@@ -133,6 +134,8 @@ function buildTiles(r, bez, L, dpr, normals) {
 // 只有启用光照或厚度阴影时才需要法线贴图；位移贴图始终保持原精度。
 const needsNormals = o => o.specular > 0 || o.edgeShade > 0 || o.fresnel > 0 || o.caustic > 0;
 const cache = new Map();
+let cachedChars = 0;
+const mapChars = m => (m.full ? [m.full] : Object.values(m.tiles)).reduce((n, p) => n + p.d.length + (p.n?.length || 0), 0);
 export function getMaps(w, h, r, o) {
     // 弧面最宽占短边的 30%（放大镜截面 40%），小玻璃中间留出平坦区；厚度同比缩小，边缘的“坡度”和大玻璃一致
     const lens = o.profile === 'lens';
@@ -145,12 +148,18 @@ export function getMaps(w, h, r, o) {
     if (!m) {
         const L = lut(o.profile, bez, thick, o.ior, mag);
         m = tiled ? buildTiles(Math.round(r), bez, L, dpr, normals) : buildFull(w, h, r, bez, L, dpr, normals);
-        if (cache.size > 80) cache.clear();
-        cache.set(key, m);
+        const chars = mapChars(m);
+        if (chars <= 4194304) {
+            while (cache.size && (cache.size >= 80 || cachedChars + chars > 4194304)) {
+                const first = cache.keys().next().value; cachedChars -= mapChars(cache.get(first)); cache.delete(first);
+            }
+            cache.set(key, m); cachedChars += chars;
+        }
     }
+    else { cache.delete(key); cache.set(key, m); }
     return m;
 }
-export function clearMaps() { cache.clear(); }
+export function clearMaps() { cache.clear(); cachedChars = 0; }
 
 // 光源方向 → 颜色矩阵：输出白色，透明度 = 法线 · 光源方向（sign=-1 时取对面那条反光）。0=右，90=上，135=左上
 export function lightRow(deg, sign) {
@@ -260,5 +269,6 @@ export function physicalFilter(m, o, w, h, angle) {
         }
         html += `<feBlend in="${acc}" in2="${out}" mode="screen"/>`;
     }
+    if (o.controlCore) html += controlCoreFilter(out, w, h, o.controlRadius, o.controlBlur);
     return html;
 }

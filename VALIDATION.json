@@ -1,162 +1,2851 @@
 {
-  "date": "2026-11-01",
-  "version": "1.4.4",
-  "sourceTestVersion": "1.4.4-test.8",
-  "sourceTestCommit": "462a6dfabecdb7b85d8fef688bf66cd37fbd8d2c",
-  "officialBaseCommit": "117cb6db11fb43e5120dc7812710c44823a34d6c",
-  "scope": "Promote tested message glass, transparent contour, touch slider, checkbox and frame margin fixes; retain official installer and theme.",
-  "checks": {
-    "syntax": [
+  "currentVersion": "2.0.0",
+  "currentDisplayVersion": "2.0",
+  "date": "2026-11-05",
+  "version": "1.4.4-local.9",
+  "baseline": "1.4.4-local.8",
+  "scope": "Original/Web isolation, directional lighting, independent Web recipes and unified settings workbench",
+  "upstream": {
+    "repository": "https://github.com/xiaofangstudio/liquid-glass-web",
+    "verifiedMain": "3094add905e60ee5aeb45e806751beb94425dd73",
+    "commitDate": "2026-10-22",
+    "newNamedPresets": false,
+    "localAdaptedPresets": [
+      "clear",
+      "thin",
+      "soft",
+      "crystal"
+    ]
+  },
+  "automated": {
+    "passed": true,
+    "checks": 28,
+    "results": [
       {
-        "file": "index.js",
-        "passed": true
+        "name": "web-presets-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 78
       },
       {
-        "file": "glass2.js",
-        "passed": true
+        "name": "material-isolation-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 52
       },
       {
-        "file": "card-clarity.js",
-        "passed": true
+        "name": "settings-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 61
       },
       {
-        "file": "orb.js",
-        "passed": true
+        "name": "clear-optics-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 89
       },
       {
-        "file": "install-installer.js",
-        "passed": true
+        "name": "tt-compat-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 65
       },
       {
-        "file": "install-build.mjs",
-        "passed": true
+        "name": "chat-background-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 67
+      },
+      {
+        "name": "filter-reuse-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 50
+      },
+      {
+        "name": "chat-font-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 48
+      },
+      {
+        "name": "first-line-indent-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 50
+      },
+      {
+        "name": "card-solid-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 49
+      },
+      {
+        "name": "popup-boundary-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 55
+      },
+      {
+        "name": "mobile-performance-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 144
+      },
+      {
+        "name": "form-scroll-regression",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 89
+      },
+      {
+        "name": "pose-lighting-browser",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 9659
+      },
+      {
+        "name": "material-isolation-browser",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 15452
+      },
+      {
+        "name": "studio-browser",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 16383
+      },
+      {
+        "name": "manifest",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 44
+      },
+      {
+        "name": "syntax-index.js",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 39
+      },
+      {
+        "name": "syntax-liquid-glass-web.js",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 38
+      },
+      {
+        "name": "syntax-glass-lighting.js",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 38
+      },
+      {
+        "name": "syntax-optics-settings.js",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 39
+      },
+      {
+        "name": "syntax-glass2.js",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 45
+      },
+      {
+        "name": "syntax-orb.js",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 41
+      },
+      {
+        "name": "syntax-card-clarity.js",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 36
+      },
+      {
+        "name": "syntax-web-presets.js",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 41
+      },
+      {
+        "name": "syntax-settings-panel.js",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 40
+      },
+      {
+        "name": "ios-material-browser",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 7095
+      },
+      {
+        "name": "liquid-web-browser",
+        "passed": true,
+        "exitCode": 0,
+        "milliseconds": 71753
       }
     ],
-    "sourceRegression": [
-      {
-        "name": "card-solid-regression.mjs",
-        "passed": true
-      },
-      {
-        "name": "chat-font-regression.mjs",
-        "passed": true
-      },
-      {
-        "name": "filter-reuse-regression.mjs",
-        "passed": true
-      },
-      {
-        "name": "first-line-indent-regression.mjs",
-        "passed": true
-      },
-      {
-        "name": "chat-background-regression.mjs",
-        "passed": true
-      },
-      {
-        "name": "settings-regression.mjs",
-        "passed": true
-      },
-      {
-        "name": "popup-boundary-regression.mjs",
-        "passed": true
-      },
-      {
-        "name": "form-scroll-regression.mjs",
-        "passed": true
-      },
-      {
-        "name": "tt-compat-regression.mjs",
-        "passed": true
-      },
-      {
-        "name": "mobile-performance-regression.mjs",
-        "passed": true
-      }
-    ],
-    "isolatedBrowser": [
-      {
-        "name": "shared-performance-browser.mjs",
-        "passed": true
-      },
-      {
-        "name": "fold-menu-font-browser.mjs",
-        "passed": true
-      },
-      {
-        "name": "home-avatar-browser.mjs",
-        "passed": true
-      },
-      {
-        "name": "panel-transitions-browser.mjs",
-        "passed": true
-      },
-      {
-        "name": "interaction-scope-browser.mjs",
-        "passed": true
-      },
-      {
-        "name": "host-interaction-browser.mjs",
-        "passed": true
-      }
-    ],
-    "manifest": {
-      "passed": true,
-      "warnings": 0,
-      "errors": 0
+    "studioCases": 4,
+    "studioSectionViews": 16,
+    "isolationCases": 4,
+    "webCases": 24,
+    "poseCases": 4,
+    "iosIdentityCases": 9,
+    "approvedClearGoldenPoints": 180,
+    "styleDetector": {
+      "newFindings": 0,
+      "preExistingFindings": 15
+    }
+  },
+  "contracts": {
+    "namespace": "iosLiquidGlass",
+    "settingsVersion": 9,
+    "materialRevision": 1,
+    "webPresetIndependent": true,
+    "separateWebFilter": true,
+    "originalShapeRestoredStockOnly": true,
+    "customTuningPreserved": true,
+    "toolbarAppearance": "direct cycle without popover",
+    "diagnostics": "direct UTF-8 TXT download; chat, draft, names, URLs and credentials excluded",
+    "reducedMotion": "direct light feedback retained; interpolation, springs and transitions disabled"
+  },
+  "live": {
+    "date": "2026-11-05",
+    "developmentStarted": "2026-11-04",
+    "version": "1.4.4-local.9",
+    "host": "SillyTavern 1.18.0 / Windows Edge",
+    "status": "desktop-verified",
+    "state": {
+      "dialogOpen": true,
+      "dialogTone": "light",
+      "draftLength": 0,
+      "iframes": 1,
+      "messages": 1,
+      "oldInlineControls": 0,
+      "reducedMotion": true,
+      "savedToneControl": "dark",
+      "sectionCount": 4,
+      "selectedMaterial": "liquid-web",
+      "selectedWebPreset": "clear",
+      "toolbarMode": "custom",
+      "toolbarPaletteIcon": true,
+      "version": "即时生效，自动保存1.4.4-local.9"
     },
-    "officialPageFixture": {
-      "frame": [
+    "toolbarCycle": {
+      "light": {
+        "mode": "light",
+        "open": false
+      },
+      "dark": {
+        "mode": "dark",
+        "tone": "dark"
+      },
+      "custom": {
+        "customIconPath": "M12 3a9 9 0 1 0 0 18h1.3a2.2 2.2 0 0 0 1.5-3.8 1.4 1.4 0 0 1 1-2.4H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z",
+        "mode": "custom",
+        "open": false
+      }
+    },
+    "recipes": [
+      {
+        "filter": "url(\"#ilg-f1-web\") blur(0.25px) contrast(1.2) brightness(1.05) saturate(1.1)",
+        "selected": "clear"
+      },
+      {
+        "filter": "url(\"#ilg-f1-web\") blur(0.15px) contrast(1.1) brightness(1.03) saturate(1.06)",
+        "selected": "thin"
+      },
+      {
+        "filter": "url(\"#ilg-f1-web\") blur(0.55px) contrast(1.12) brightness(1.04) saturate(1.08)",
+        "selected": "soft"
+      },
+      {
+        "filter": "url(\"#ilg-f1-web\") blur(0.25px) contrast(1.17) brightness(1.04) saturate(1.12)",
+        "selected": "crystal"
+      }
+    ],
+    "originalComposer": {
+      "background": "rgba(255, 255, 255, 0.13)",
+      "classes": "ilg-glass ilg-sheen ilg-phys",
+      "filter": "url(\"#ilg-f1\")",
+      "rect": {
+        "bottom": 1257,
+        "height": 52,
+        "left": 636.5,
+        "right": 1877.5,
+        "top": 1205,
+        "width": 1241,
+        "x": 636.5,
+        "y": 1205
+      },
+      "reducedMotion": true,
+      "rimOpacity": "0.78",
+      "transform": "none"
+    },
+    "mouse": [
+      {
+        "material": "original",
+        "left": {
+          "angle": "-63.3deg",
+          "background": "rgba(255, 255, 255, 0.13)",
+          "filter": "url(\"#ilg-f1\")",
+          "rect": {
+            "bottom": 1257,
+            "height": 52,
+            "left": 636.5,
+            "right": 1877.5,
+            "top": 1205,
+            "width": 1241,
+            "x": 636.5,
+            "y": 1205
+          }
+        },
+        "right": {
+          "angle": "62.9deg",
+          "filter": "url(\"#ilg-f1\")",
+          "rect": {
+            "bottom": 1257,
+            "height": 52,
+            "left": 636.5,
+            "right": 1877.5,
+            "top": 1205,
+            "width": 1241,
+            "x": 636.5,
+            "y": 1205
+          },
+          "transform": "none"
+        },
+        "responded": true,
+        "geometryStable": true,
+        "filterStable": true
+      },
+      {
+        "material": "liquid-web",
+        "left": {
+          "angle": "-63.3deg",
+          "filter": "url(\"#ilg-f1-web\") blur(0.25px) contrast(1.2) brightness(1.05) saturate(1.1)",
+          "rect": {
+            "bottom": 1257,
+            "height": 52,
+            "left": 636.5,
+            "right": 1877.5,
+            "top": 1205,
+            "width": 1241,
+            "x": 636.5,
+            "y": 1205
+          }
+        },
+        "right": {
+          "angle": "62.9deg",
+          "filter": "url(\"#ilg-f1-web\") blur(0.25px) contrast(1.2) brightness(1.05) saturate(1.1)",
+          "rect": {
+            "bottom": 1257,
+            "height": 52,
+            "left": 636.5,
+            "right": 1877.5,
+            "top": 1205,
+            "width": 1241,
+            "x": 636.5,
+            "y": 1205
+          },
+          "transform": "none"
+        },
+        "responded": true,
+        "geometryStable": true,
+        "filterStable": true
+      }
+    ],
+    "diagnostic": {
+      "downloadObservedOnDisk": true,
+      "bytes": 8303,
+      "driverDownloadEvent": "Not received; actual Downloads file was read and verified"
+    },
+    "logs": [],
+    "physicalIphoneVerified": false,
+    "published": false,
+    "settings": {
+      "changedFields": [
+        "pStrength",
+        "pThickness",
+        "pBezel",
+        "pIor",
+        "webPreset",
+        "materialRevision"
+      ],
+      "unrelatedPreferencesPreserved": true,
+      "installerWroteSettings": false,
+      "restoredOriginalPreset": "depth",
+      "refractionShapeFields": [
+        "pStrength",
+        "pThickness",
+        "pBezel",
+        "pIor"
+      ]
+    },
+    "diagnosticsPrivacy": {
+      "versionPresent": true,
+      "characterNameExcluded": true,
+      "wallpaperAddressExcluded": true,
+      "credentialShapeExcluded": true
+    },
+    "driverNotes": [
+      "Browser download event timed out; the actual downloaded TXT was independently read and verified",
+      "One refractive-chat screenshot request timed out; subsequent DOM interactions succeeded and application logs were empty"
+    ]
+  },
+  "limits": [
+    "Physical iPhone sensor, WebKit rendering, keyboard/safe-area and long-session performance pending",
+    "Desktop iOS identities and synthetic sensors are not physical mobile acceptance",
+    "Local only; no GitHub publication"
+  ],
+  "developmentStarted": "2026-11-04",
+  "followups": [
+    {
+      "date": "2026-11-09",
+      "version": "1.4.5-test.14",
+      "scope": "Folded menu alignment and mobile native drawer contour/scrollbars",
+      "environment": "Isolated headless Edge against local SillyTavern; save requests blocked",
+      "viewports": [
         {
-          "width": 350,
-          "passed": true,
-          "errors": 0,
-          "blockedSaves": 3
+          "width": 320,
+          "height": 700,
+          "light": false
         },
         {
-          "width": 1280,
-          "passed": true,
-          "errors": 0,
-          "blockedSaves": 3
-        }
-      ],
-      "material": [
+          "width": 320,
+          "height": 700,
+          "light": true
+        },
         {
           "width": 390,
-          "passed": true,
-          "errors": 0,
-          "blockedSaves": 5
+          "height": 844,
+          "light": false
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "light": true
+        },
+        {
+          "width": 844,
+          "height": 390,
+          "light": false
+        },
+        {
+          "width": 844,
+          "height": 390,
+          "light": true
         },
         {
           "width": 1280,
-          "passed": true,
-          "errors": 0,
-          "blockedSaves": 4
+          "height": 800,
+          "light": false
+        },
+        {
+          "width": 1280,
+          "height": 800,
+          "light": true
+        }
+      ],
+      "drawers": [
+        "left-nav-panel",
+        "rm_api_block",
+        "AdvancedFormatting",
+        "WorldInfo",
+        "user-settings-block",
+        "Backgrounds",
+        "rm_extensions_block",
+        "PersonaManagement",
+        "right-nav-panel"
+      ],
+      "drawerCases": 72,
+      "checks": [
+        "Menu icon centred within 0.5 CSS px of the glass; 44px touch hit area",
+        "All mobile native drawer outlines clipped to 24px corners",
+        "Scrolling decorative pseudo layers hidden on mobile drawers",
+        "Touch scrollbars hidden including nested scrolling areas; scrolling remains functional",
+        "Expanded menu hit region receives actual mouse events",
+        "Drawer close and back-to-menu actions work",
+        "10 offline regressions passed",
+        "Manifest validator passed"
+      ],
+      "limits": [
+        "Physical Android/TT and iOS/WebKit rendering not verified",
+        "TT-specific extra nested menus absent from the local ST installation remain unverified"
+      ]
+    },
+    {
+      "date": "2026-11-09",
+      "version": "1.4.5-test.15",
+      "scope": "Restrained, perceptible hand-held pose lighting",
+      "automated": [
+        "11 offline regressions including deterministic pose response, smoothing, bounds, neutral return and cleanup",
+        "Synthetic browser sensor checks for original/Web materials, stable filter/map/geometry/text, ball response, rotation and opt-in permission",
+        "Denied/rejected/thrown/missing/insecure/late permission fallbacks; missing-data status; hidden/no-blur/reduced-motion pause",
+        "Image comparisons at -6, 0 and +6 degrees in original, Web and CSS materials, both tones"
+      ],
+      "limits": [
+        "Synthetic desktop sensor data is not physical phone or WebKit acceptance",
+        "Pixel deltas establish a render change, not subjective user acceptance"
+      ],
+      "pixelEvidence": [
+        {
+          "material": "original",
+          "light": false,
+          "edgeMeanRgbDelta": 1.1,
+          "maxRgbDelta": 13.33,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "original",
+          "light": true,
+          "edgeMeanRgbDelta": 1.023,
+          "maxRgbDelta": 12.33,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "liquid-web",
+          "light": false,
+          "edgeMeanRgbDelta": 1.179,
+          "maxRgbDelta": 14.33,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "liquid-web",
+          "light": true,
+          "edgeMeanRgbDelta": 1.063,
+          "maxRgbDelta": 13,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "css",
+          "light": false,
+          "edgeMeanRgbDelta": 3.556,
+          "maxRgbDelta": 13.67,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "css",
+          "light": true,
+          "edgeMeanRgbDelta": 2.99,
+          "maxRgbDelta": 13,
+          "stableMaps": true,
+          "stableFilters": true
         }
       ]
     },
-    "testRuntimeParity": {
-      "indexOnlyDeclaredBranding": true,
-      "style.css": true,
-      "glass2.js": true,
-      "orb.js": true,
-      "card-clarity.js": true,
-      "icons.css": true
-    },
-    "officialInstallerAndThemePreserved": true,
-    "protectedSettingsAndPresetUnchanged": true
-  },
-  "deviceEvidence": [
     {
-      "device": "User TT Android device",
-      "evidence": "User confirmed that the black frame around the original card disappeared on test.8",
-      "acceptedScope": "Black rectangular backing regression"
+      "date": "2026-11-09",
+      "version": "1.4.5-test.16",
+      "scope": "Travelling pose rim independent of fixed reflection lighting; live sensor angle status",
+      "browser": "Isolated desktop Edge against local ST with synthetic ±4 degree events and blocked saves",
+      "automated": [
+        "Three materials and two tones; light cases use a flat pale background",
+        "Readable centre remains stable while the rim changes",
+        "Original/Web geometry, ink, filter and cached map stable; fused-ball contour retained",
+        "Permission denial/failure/insecure/missing-data/late-grant handling and rotation, hidden, no-blur, reduced-motion pause",
+        "11 offline regressions including throttled angle readout"
+      ],
+      "pixelEvidence": [
+        {
+          "material": "liquid-web",
+          "light": false,
+          "edgeMeanRgbDelta": 18.117,
+          "edgeMaxRgbDelta": 121,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "liquid-web",
+          "light": true,
+          "edgeMeanRgbDelta": 17.029,
+          "edgeMaxRgbDelta": 97.67,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "original",
+          "light": false,
+          "edgeMeanRgbDelta": 16.939,
+          "edgeMaxRgbDelta": 113,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "original",
+          "light": true,
+          "edgeMeanRgbDelta": 14.132,
+          "edgeMaxRgbDelta": 84.67,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "css",
+          "light": false,
+          "edgeMeanRgbDelta": 15.389,
+          "edgeMaxRgbDelta": 114,
+          "stableMaps": true,
+          "stableFilters": true
+        },
+        {
+          "material": "css",
+          "light": true,
+          "edgeMeanRgbDelta": 14.608,
+          "edgeMaxRgbDelta": 90,
+          "stableMaps": true,
+          "stableFilters": true
+        }
+      ],
+      "interiorEvidence": [
+        {
+          "tag": "web-dark",
+          "interiorMeanRgbDelta": 0,
+          "max": 0
+        },
+        {
+          "tag": "web-light",
+          "interiorMeanRgbDelta": 0,
+          "max": 0
+        },
+        {
+          "tag": "original-dark",
+          "interiorMeanRgbDelta": 0,
+          "max": 0
+        },
+        {
+          "tag": "original-light",
+          "interiorMeanRgbDelta": 0,
+          "max": 0
+        },
+        {
+          "tag": "css-dark",
+          "interiorMeanRgbDelta": 0,
+          "max": 1
+        },
+        {
+          "tag": "css-light",
+          "interiorMeanRgbDelta": 0,
+          "max": 0
+        }
+      ],
+      "limits": [
+        "Physical phone and WebKit rendering not observed",
+        "Pixel thresholds are regression checks, not human visibility acceptance"
+      ]
+    },
+    {
+      "date": "2026-11-09",
+      "version": "1.4.5-test.17",
+      "scope": "Floating-ball drag geometry reuse, bounded preset caches and mobile adaptation without changing visual recipes",
+      "automated": [
+        {
+          "name": "ball-drag-regression.mjs",
+          "passed": true,
+          "ms": 5356
+        },
+        {
+          "name": "card-solid-regression.mjs",
+          "passed": true,
+          "ms": 45
+        },
+        {
+          "name": "chat-background-regression.mjs",
+          "passed": true,
+          "ms": 64
+        },
+        {
+          "name": "chat-font-regression.mjs",
+          "passed": true,
+          "ms": 35
+        },
+        {
+          "name": "filter-reuse-regression.mjs",
+          "passed": true,
+          "ms": 39
+        },
+        {
+          "name": "first-line-indent-regression.mjs",
+          "passed": true,
+          "ms": 37
+        },
+        {
+          "name": "form-scroll-regression.mjs",
+          "passed": true,
+          "ms": 48
+        },
+        {
+          "name": "mobile-performance-regression.mjs",
+          "passed": true,
+          "ms": 92
+        },
+        {
+          "name": "mobile-tilt-response-regression.mjs",
+          "passed": true,
+          "ms": 34
+        },
+        {
+          "name": "popup-boundary-regression.mjs",
+          "passed": true,
+          "ms": 39
+        },
+        {
+          "name": "settings-regression.mjs",
+          "passed": true,
+          "ms": 39
+        },
+        {
+          "name": "tt-compat-regression.mjs",
+          "passed": true,
+          "ms": 45
+        }
+      ],
+      "parameters": {
+        "originalPresets": 7,
+        "webPresets": 4,
+        "presetValuesUnchanged": true,
+        "savedSettingsMigrationChanged": false
+      },
+      "geometry": {
+        "exactRasterComparisons": 24,
+        "freeTranslationCached": true,
+        "straightEdgeCached": true,
+        "cornersRebuilt": true,
+        "previewDensity": 1,
+        "settledMaxDPR": 2,
+        "finalRectAfterScale": true,
+        "dprInvalidation": true,
+        "noShadowMaskSkipped": true
+      },
+      "cacheBudgets": {
+        "ball": {
+          "entries": 32,
+          "pixels": 524288,
+          "encodedCharacters": 2097152
+        },
+        "physical": {
+          "entries": 80,
+          "encodedCharacters": 4194304
+        },
+        "physicalLUTs": 40,
+        "legacyMaps": 120,
+        "webBallTables": 12,
+        "eviction": "Least recently used entries, with cache/buffer cleanup on ball removal"
+      },
+      "browser": {
+        "host": "Local ST in desktop Edge; write requests blocked",
+        "performanceViewport": [
+          390,
+          844
+        ],
+        "cpuSlowdown": 4,
+        "before": {
+          "free": {
+            "avg": 36.26,
+            "p95": 60.4,
+            "png": 20,
+            "pngMs": 18.1,
+            "by": {
+              "ball": 20
+            }
+          },
+          "fused": {
+            "avg": 59.69,
+            "p95": 86.2,
+            "png": 148,
+            "pngMs": 120.9,
+            "by": {
+              "ball": 148
+            }
+          }
+        },
+        "after": {
+          "free": {
+            "avg": 22.95,
+            "p95": 42.9,
+            "png": 24,
+            "pngMs": 19.8,
+            "by": {
+              "ball": 24
+            }
+          },
+          "fused": {
+            "avg": 28.55,
+            "p95": 59.2,
+            "png": 40,
+            "pngMs": 34.8,
+            "by": {
+              "ball": 40
+            }
+          }
+        },
+        "allPresetDrag": [
+          {
+            "mode": "original",
+            "key": "natural",
+            "result": {
+              "free": {
+                "avg": 18.63,
+                "p95": 23.5,
+                "png": 12,
+                "pngMs": 11.7,
+                "by": {
+                  "ball": 12
+                }
+              },
+              "fused": {
+                "avg": 24.32,
+                "p95": 44.2,
+                "png": 40,
+                "pngMs": 35.8,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "original",
+            "key": "ultra",
+            "result": {
+              "free": {
+                "avg": 18.71,
+                "p95": 30.8,
+                "png": 28,
+                "pngMs": 26.9,
+                "by": {
+                  "ball": 28
+                }
+              },
+              "fused": {
+                "avg": 22.71,
+                "p95": 40.4,
+                "png": 40,
+                "pngMs": 31.6,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "original",
+            "key": "depth",
+            "result": {
+              "free": {
+                "avg": 20.49,
+                "p95": 32.6,
+                "png": 32,
+                "pngMs": 26.8,
+                "by": {
+                  "ball": 32
+                }
+              },
+              "fused": {
+                "avg": 22.82,
+                "p95": 39.8,
+                "png": 40,
+                "pngMs": 32,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "original",
+            "key": "thin",
+            "result": {
+              "free": {
+                "avg": 18.51,
+                "p95": 40.3,
+                "png": 28,
+                "pngMs": 22.7,
+                "by": {
+                  "ball": 28
+                }
+              },
+              "fused": {
+                "avg": 24.34,
+                "p95": 39.4,
+                "png": 40,
+                "pngMs": 34,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "original",
+            "key": "standard",
+            "result": {
+              "free": {
+                "avg": 18.24,
+                "p95": 30.2,
+                "png": 28,
+                "pngMs": 24.5,
+                "by": {
+                  "ball": 28
+                }
+              },
+              "fused": {
+                "avg": 23.95,
+                "p95": 40,
+                "png": 40,
+                "pngMs": 35.8,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "original",
+            "key": "thick",
+            "result": {
+              "free": {
+                "avg": 18.86,
+                "p95": 35.3,
+                "png": 28,
+                "pngMs": 24.2,
+                "by": {
+                  "ball": 28
+                }
+              },
+              "fused": {
+                "avg": 24.61,
+                "p95": 47.3,
+                "png": 40,
+                "pngMs": 35.7,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "original",
+            "key": "extreme",
+            "result": {
+              "free": {
+                "avg": 21.71,
+                "p95": 41.8,
+                "png": 28,
+                "pngMs": 32.3,
+                "by": {
+                  "ball": 28
+                }
+              },
+              "fused": {
+                "avg": 23.57,
+                "p95": 40.2,
+                "png": 40,
+                "pngMs": 37.2,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "liquid-web",
+            "key": "clear",
+            "result": {
+              "free": {
+                "avg": 18.37,
+                "p95": 30.8,
+                "png": 32,
+                "pngMs": 29,
+                "by": {
+                  "ball": 32
+                }
+              },
+              "fused": {
+                "avg": 22.87,
+                "p95": 40.2,
+                "png": 40,
+                "pngMs": 32.9,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "liquid-web",
+            "key": "thin",
+            "result": {
+              "free": {
+                "avg": 18.45,
+                "p95": 35.9,
+                "png": 32,
+                "pngMs": 27.4,
+                "by": {
+                  "ball": 32
+                }
+              },
+              "fused": {
+                "avg": 22.54,
+                "p95": 38.6,
+                "png": 40,
+                "pngMs": 34.1,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "liquid-web",
+            "key": "soft",
+            "result": {
+              "free": {
+                "avg": 16.35,
+                "p95": 18.4,
+                "png": 16,
+                "pngMs": 14.3,
+                "by": {
+                  "ball": 16
+                }
+              },
+              "fused": {
+                "avg": 22.94,
+                "p95": 40.3,
+                "png": 40,
+                "pngMs": 34.2,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "liquid-web",
+            "key": "crystal",
+            "result": {
+              "free": {
+                "avg": 18.71,
+                "p95": 40.5,
+                "png": 28,
+                "pngMs": 23.2,
+                "by": {
+                  "ball": 28
+                }
+              },
+              "fused": {
+                "avg": 23.48,
+                "p95": 42.7,
+                "png": 40,
+                "pngMs": 31.6,
+                "by": {
+                  "ball": 40
+                }
+              }
+            }
+          },
+          {
+            "mode": "css",
+            "key": "blur",
+            "result": {
+              "free": {
+                "avg": 16.36,
+                "p95": 29.8,
+                "png": 0,
+                "pngMs": 0,
+                "by": {}
+              },
+              "fused": {
+                "avg": 17.18,
+                "p95": 26.1,
+                "png": 0,
+                "pngMs": 0,
+                "by": {}
+              }
+            }
+          }
+        ],
+        "gestureChecks": {
+          "cleared": true,
+          "cancelled": true,
+          "recreated": true
+        },
+        "touchInput": "CDP Input.dispatchTouchEvent",
+        "touchChecks": {
+          "out": [
+            {
+              "mode": "original",
+              "fused": true,
+              "drag": true,
+              "kind": "phys",
+              "covers": true,
+              "release": true
+            },
+            {
+              "mode": "liquid-web",
+              "fused": true,
+              "drag": true,
+              "kind": "web",
+              "covers": true,
+              "release": true
+            }
+          ],
+          "tap": true,
+          "viewportDuringDrag": true,
+          "errors": []
+        },
+        "audits": [
+          {
+            "viewport": [
+              320,
+              740
+            ],
+            "presetTransitions": 22,
+            "allFiltersFinite": true,
+            "states": [
+              {
+                "name": "noShadows",
+                "sdf": true,
+                "shadow": "none"
+              },
+              {
+                "name": "reduced",
+                "sdf": true,
+                "shadow": "block"
+              },
+              {
+                "name": "noBlur",
+                "sdf": false,
+                "shadow": "block"
+              },
+              {
+                "name": "css",
+                "sdf": false
+              }
+            ]
+          },
+          {
+            "viewport": [
+              390,
+              844
+            ],
+            "presetTransitions": 22,
+            "allFiltersFinite": true,
+            "states": [
+              {
+                "name": "noShadows",
+                "sdf": true,
+                "shadow": "none"
+              },
+              {
+                "name": "reduced",
+                "sdf": true,
+                "shadow": "block"
+              },
+              {
+                "name": "noBlur",
+                "sdf": false,
+                "shadow": "block"
+              },
+              {
+                "name": "css",
+                "sdf": false
+              }
+            ]
+          },
+          {
+            "viewport": [
+              844,
+              390
+            ],
+            "presetTransitions": 22,
+            "allFiltersFinite": true,
+            "states": [
+              {
+                "name": "noShadows",
+                "sdf": true,
+                "shadow": "none"
+              },
+              {
+                "name": "reduced",
+                "sdf": true,
+                "shadow": "block"
+              },
+              {
+                "name": "noBlur",
+                "sdf": false,
+                "shadow": "block"
+              },
+              {
+                "name": "css",
+                "sdf": false
+              }
+            ]
+          }
+        ],
+        "narrow320": {
+          "web": {
+            "free": {
+              "avg": 22.59,
+              "p95": 42.2,
+              "png": 24,
+              "pngMs": 19.7,
+              "by": {
+                "ball": 24
+              }
+            },
+            "fused": {
+              "avg": 33.51,
+              "p95": 50.8,
+              "png": 88,
+              "pngMs": 73.3,
+              "by": {
+                "ball": 88
+              }
+            }
+          },
+          "original": {
+            "free": {
+              "avg": 25.82,
+              "p95": 53.5,
+              "png": 20,
+              "pngMs": 20.9,
+              "by": {
+                "ball": 20
+              }
+            },
+            "fused": {
+              "avg": 31.05,
+              "p95": 46.3,
+              "png": 88,
+              "pngMs": 69.4,
+              "by": {
+                "ball": 88
+              }
+            }
+          }
+        }
+      },
+      "limits": [
+        "Desktop emulation is not physical phone FPS or thermal evidence",
+        "iPhone/WebKit and long-session phone performance not observed",
+        "Rounded corners still require new fusion geometry; long-edge cache reuse cannot cover every path"
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "version": "1.4.5-test.18",
+      "scope": "NVWA-only first performance-engine iteration: ball raster/PNG worker plus bounded latest-task queue",
+      "contract": {
+        "consumers": [
+          "SDF floating ball"
+        ],
+        "workerCount": 1,
+        "maxActive": 1,
+        "maxPending": 1,
+        "latestPendingReplacesOld": true,
+        "obsoleteResultsCannotOverwriteCurrent": true,
+        "initialProbeAndUnsupportedPath": "existing synchronous drawing",
+        "busySettledDelayMs": 80,
+        "startupTimeoutMs": 2500,
+        "renderTimeoutMs": 1500,
+        "background": "terminate and resume lazily",
+        "pageLifecycle": "pagehide/pageshow and visibilitychange",
+        "removal": "terminate worker, clear queue/timers/listeners/cache/canvas",
+        "settingsMigration": false,
+        "presetValuesUnchanged": true,
+        "hostAPIsPatched": false,
+        "payload": "local geometry and material only; no chat content"
+      },
+      "automated": [
+        {
+          "name": "ball-drag-regression.mjs",
+          "passed": true,
+          "ms": 182
+        },
+        {
+          "name": "ball-raster-regression.mjs",
+          "passed": true,
+          "ms": 366
+        },
+        {
+          "name": "card-solid-regression.mjs",
+          "passed": true,
+          "ms": 34
+        },
+        {
+          "name": "chat-background-regression.mjs",
+          "passed": true,
+          "ms": 49
+        },
+        {
+          "name": "chat-font-regression.mjs",
+          "passed": true,
+          "ms": 32
+        },
+        {
+          "name": "filter-reuse-regression.mjs",
+          "passed": true,
+          "ms": 34
+        },
+        {
+          "name": "first-line-indent-regression.mjs",
+          "passed": true,
+          "ms": 34
+        },
+        {
+          "name": "form-scroll-regression.mjs",
+          "passed": true,
+          "ms": 45
+        },
+        {
+          "name": "glass-performance-regression.mjs",
+          "passed": true,
+          "ms": 31
+        },
+        {
+          "name": "mobile-performance-regression.mjs",
+          "passed": true,
+          "ms": 85
+        },
+        {
+          "name": "mobile-tilt-response-regression.mjs",
+          "passed": true,
+          "ms": 33
+        },
+        {
+          "name": "popup-boundary-regression.mjs",
+          "passed": true,
+          "ms": 39
+        },
+        {
+          "name": "settings-regression.mjs",
+          "passed": true,
+          "ms": 41
+        },
+        {
+          "name": "tt-compat-regression.mjs",
+          "passed": true,
+          "ms": 45
+        }
+      ],
+      "pixelParity": {
+        "baseline": "1.4.5-test.17",
+        "exactRasterCases": 110,
+        "decodedPNGComparisons": 418
+      },
+      "workerBrowser": {
+        "passed": true,
+        "rasterCases": 110,
+        "decodedPNGComparisons": 418,
+        "staleResultIgnored": true,
+        "latestResultApplied": true,
+        "removalTerminates": true,
+        "syncFallback": true,
+        "backgroundPause": true,
+        "pageLifecycle": true,
+        "arrayBufferEncoder": true,
+        "noCanvasProbe": true,
+        "cspFallback": true
+      },
+      "nativeTouch": {
+        "out": [
+          {
+            "mode": "original",
+            "fused": true,
+            "drag": true,
+            "kind": "phys",
+            "covers": true,
+            "release": true
+          },
+          {
+            "mode": "liquid-web",
+            "fused": true,
+            "drag": true,
+            "kind": "web",
+            "covers": true,
+            "release": true
+          }
+        ],
+        "tap": true,
+        "viewportDuringDrag": true,
+        "errors": []
+      },
+      "dragMatrix": [
+        {
+          "mode": "original",
+          "key": "natural",
+          "result": {
+            "free": {
+              "avg": 19.56,
+              "p95": 43.8,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 24.03,
+              "p95": 48.1,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "original",
+          "key": "ultra",
+          "result": {
+            "free": {
+              "avg": 18.54,
+              "p95": 28.9,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 22.79,
+              "p95": 43.9,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "original",
+          "key": "depth",
+          "result": {
+            "free": {
+              "avg": 17.66,
+              "p95": 27.1,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 22.36,
+              "p95": 44.5,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "original",
+          "key": "thin",
+          "result": {
+            "free": {
+              "avg": 18.18,
+              "p95": 32.6,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 22.98,
+              "p95": 46.9,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "original",
+          "key": "standard",
+          "result": {
+            "free": {
+              "avg": 17.39,
+              "p95": 28.5,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 21.75,
+              "p95": 42.1,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "original",
+          "key": "thick",
+          "result": {
+            "free": {
+              "avg": 18.58,
+              "p95": 26.9,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 22.43,
+              "p95": 46.7,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "original",
+          "key": "extreme",
+          "result": {
+            "free": {
+              "avg": 17.46,
+              "p95": 21.9,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 23.14,
+              "p95": 46.9,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "liquid-web",
+          "key": "clear",
+          "result": {
+            "free": {
+              "avg": 16.95,
+              "p95": 18.7,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 21.56,
+              "p95": 42.4,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "liquid-web",
+          "key": "thin",
+          "result": {
+            "free": {
+              "avg": 18.17,
+              "p95": 22.8,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 21.89,
+              "p95": 41.5,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "liquid-web",
+          "key": "soft",
+          "result": {
+            "free": {
+              "avg": 17.33,
+              "p95": 27.6,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 21.74,
+              "p95": 42.4,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "liquid-web",
+          "key": "crystal",
+          "result": {
+            "free": {
+              "avg": 16.76,
+              "p95": 18.2,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 22.13,
+              "p95": 42.3,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        },
+        {
+          "mode": "css",
+          "key": "blur",
+          "result": {
+            "free": {
+              "avg": 16.85,
+              "p95": 29,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            },
+            "fused": {
+              "avg": 17.47,
+              "p95": 27.4,
+              "png": 0,
+              "pngMs": 0,
+              "by": {}
+            }
+          }
+        }
+      ],
+      "gestureCleanup": {
+        "cleared": true,
+        "cancelled": true,
+        "recreated": true
+      },
+      "viewportAudits": [
+        {
+          "viewport": [
+            320,
+            740
+          ],
+          "presetTransitions": 22,
+          "finite": true,
+          "states": [
+            {
+              "name": "noShadows",
+              "sdf": true,
+              "shadow": "none"
+            },
+            {
+              "name": "reduced",
+              "sdf": true,
+              "shadow": "block"
+            },
+            {
+              "name": "noBlur",
+              "sdf": false,
+              "shadow": "block"
+            },
+            {
+              "name": "css",
+              "sdf": false
+            }
+          ]
+        },
+        {
+          "viewport": [
+            844,
+            390
+          ],
+          "presetTransitions": 22,
+          "finite": true,
+          "states": [
+            {
+              "name": "noShadows",
+              "sdf": true,
+              "shadow": "none"
+            },
+            {
+              "name": "reduced",
+              "sdf": true,
+              "shadow": "block"
+            },
+            {
+              "name": "noBlur",
+              "sdf": false,
+              "shadow": "block"
+            },
+            {
+              "name": "css",
+              "sdf": false
+            }
+          ]
+        }
+      ],
+      "narrowDrag": {
+        "free": {
+          "avg": 24.17,
+          "p95": 45.3,
+          "png": 0,
+          "pngMs": 0,
+          "by": {}
+        },
+        "fused": {
+          "avg": 26.93,
+          "p95": 45,
+          "png": 0,
+          "pngMs": 0,
+          "by": {}
+        }
+      },
+      "cooperativeObservations": {
+        "comparison": "test.18 synchronous fallback vs test.18 worker, simulated input/DOM output/scroll/drag; no model API calls",
+        "browser": "desktop Edge against local ST, saves blocked",
+        "samples": [
+          {
+            "path": "fallback",
+            "pageCpuSlowdown": 1,
+            "simulatedSteps": 120,
+            "meanFrameInterval": 10.43,
+            "p95FrameInterval": 13.7,
+            "maxTimerProbeGap": 32.2,
+            "p95TimerProbeGap": 27.6,
+            "appliedOpticalUpdates": 110,
+            "mainThreadBallPNG": 440,
+            "workerJobsSent": 0,
+            "workerResults": 0,
+            "maxInFlight": 0
+          },
+          {
+            "path": "worker",
+            "pageCpuSlowdown": 1,
+            "simulatedSteps": 120,
+            "meanFrameInterval": 6.29,
+            "p95FrameInterval": 7.6,
+            "maxTimerProbeGap": 29,
+            "p95TimerProbeGap": 19.3,
+            "appliedOpticalUpdates": 45,
+            "mainThreadBallPNG": 0,
+            "workerJobsSent": 97,
+            "workerResults": 96,
+            "maxInFlight": 1
+          },
+          {
+            "path": "fallback",
+            "pageCpuSlowdown": 4,
+            "simulatedSteps": 120,
+            "meanFrameInterval": 52.43,
+            "p95FrameInterval": 71.7,
+            "maxTimerProbeGap": 154.7,
+            "p95TimerProbeGap": 130.7,
+            "appliedOpticalUpdates": 109,
+            "mainThreadBallPNG": 440,
+            "workerJobsSent": 0,
+            "workerResults": 0,
+            "maxInFlight": 0
+          },
+          {
+            "path": "worker",
+            "pageCpuSlowdown": 4,
+            "simulatedSteps": 120,
+            "meanFrameInterval": 39.97,
+            "p95FrameInterval": 58.6,
+            "maxTimerProbeGap": 127.5,
+            "p95TimerProbeGap": 96.6,
+            "appliedOpticalUpdates": 108,
+            "mainThreadBallPNG": 0,
+            "workerJobsSent": 110,
+            "workerResults": 109,
+            "maxInFlight": 1
+          }
+        ]
+      },
+      "limits": [
+        "Physical phone FPS, temperature and battery use not observed",
+        "Worker and page CPU throttling need not be identical; timings are desktop observations, not device-core guarantees",
+        "DOM layout, final glass compositing and other extension rendering still use browser resources",
+        "iOS/CSS compatibility paths do not start the SDF ball worker"
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "version": "1.4.5-test.19",
+      "scope": "Cooperate with normal ST interactions by removing NVWA body-wide relational state selectors and unnecessary reflection work",
+      "host": {
+        "version": "1.18.0",
+        "browser": "desktop Edge headless",
+        "viewport": [
+          390,
+          844
+        ],
+        "syntheticMessages": 80,
+        "syntheticNodes": 1200,
+        "streamUpdates": 100,
+        "scrollSteps": 100,
+        "pageCpuSlowdown": 4
+      },
+      "changes": [
+        "Observe the existing top drawer and send-form trees for home coverage and Quick Reply availability; disable cleanup is paired",
+        "Skip the guaranteed-transparent reflection centre using unchanged sample positions and RGBA math",
+        "Only near-viewport messages retain canvas reflection resources"
+      ],
+      "observations": [
+        {
+          "material": "original",
+          "scene": "stream",
+          "pageCpuSlowdown": 4,
+          "beforeMeanMs": 91.69,
+          "afterMeanMs": 32.04,
+          "beforeP95Ms": 156.7,
+          "afterP95Ms": 59.4,
+          "beforeStyleMs": 59.89,
+          "afterStyleMs": 6.37
+        },
+        {
+          "material": "original",
+          "scene": "scroll",
+          "pageCpuSlowdown": 4,
+          "beforeMeanMs": 122.56,
+          "afterMeanMs": 33.91,
+          "beforeP95Ms": 211.6,
+          "afterP95Ms": 73.9,
+          "beforeStyleMs": 66.58,
+          "afterStyleMs": 8.83
+        },
+        {
+          "material": "liquid-web",
+          "scene": "stream",
+          "pageCpuSlowdown": 4,
+          "beforeMeanMs": 92.52,
+          "afterMeanMs": 30.1,
+          "beforeP95Ms": 165.1,
+          "afterP95Ms": 52.3,
+          "beforeStyleMs": 60.98,
+          "afterStyleMs": 5.92
+        },
+        {
+          "material": "liquid-web",
+          "scene": "scroll",
+          "pageCpuSlowdown": 4,
+          "beforeMeanMs": 116.01,
+          "afterMeanMs": 34.75,
+          "beforeP95Ms": 199.9,
+          "afterP95Ms": 75.8,
+          "beforeStyleMs": 64.5,
+          "afterStyleMs": 8.74
+        }
+      ],
+      "checks": {
+        "offlineRegressions": 15,
+        "hostLocalStateCases": 24,
+        "unrelatedStreamMutations": 100,
+        "unrelatedStreamQueries": 0,
+        "isolatedHostFloors": [
+          4,
+          80,
+          240
+        ],
+        "reflectionRawPixelCases": 52,
+        "rawPixelsExact": true,
+        "workerRawCases": 110,
+        "workerDecodedPNGComparisons": 418,
+        "workerLifecycleAndFallback": {
+          "passed": true,
+          "rasterCases": 110,
+          "decodedPNGComparisons": 418,
+          "staleResultIgnored": true,
+          "latestResultApplied": true,
+          "removalTerminates": true,
+          "syncFallback": true,
+          "backgroundPause": true,
+          "pageLifecycle": true,
+          "arrayBufferEncoder": true,
+          "noCanvasProbe": true,
+          "cspFallback": true
+        },
+        "presetTransitions": 44,
+        "dragPaths": 12,
+        "mainThreadBallPNGsDuringDrag": 0,
+        "nativePointerAndIMESizes": [
+          [
+            320,
+            740
+          ],
+          [
+            844,
+            390
+          ]
+        ],
+        "presetsUnchanged": true
+      },
+      "reflectionWork": {
+        "aggregateSampleVisitsBefore": 10293551,
+        "aggregateSampleVisitsAfter": 1665247,
+        "sample390x800Before": 287232,
+        "sample390x800After": 46200
+      },
+      "resourceObservation": {
+        "beforeRetainedMessageContours": 80,
+        "afterRetainedNearViewportContours": 3
+      },
+      "limitations": [
+        "Synthetic streaming and scrolling on a desktop browser, with save requests blocked; no model API request was made",
+        "Headless frame intervals and CDP page CPU slowdown are not physical-phone FPS, INP, battery or thermal measurements",
+        "Changes apply to NVWA-owned styling and rendering; ST core and unrelated extensions are not modified"
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "version": "1.4.5-test.20",
+      "scope": "High-floor direct manipulation: fixed overlay translations and native visibility management for distant plain messages",
+      "priority": "Responsive interaction; no new power-saving frame cap",
+      "changes": [
+        "Individual CSS translate for the ball, SDF glass/shadow and legacy neck; preserve press scale, snap transition and older-browser left/top fallback",
+        "Use existing ResizeObserver and 200px IntersectionObserver boundary; cache fractional content height, disable flex shrink while content-visibility:auto is active; retain message DOM",
+        "Restore nearby messages, invalidate on edits, actual width changes, reading typography, host fontScale and font loading; exclude latest reply, fixed/custom renderers, iframes/media, editing and open details",
+        "Disconnect metadata listeners and remove owned markers on untrack; add numeric message-rendering diagnostic counters"
+      ],
+      "syntheticStress": {
+        "hostVersion": "1.18.0",
+        "browser": "desktop Edge headless",
+        "viewport": [
+          390,
+          844
+        ],
+        "messages": 1000,
+        "nodes": 11000,
+        "pageCpuSlowdown": 4,
+        "pointerStepsPerPhase": 100,
+        "before": {
+          "free": {
+            "mean": 36.68297872340624,
+            "p95": 41.700000000186265,
+            "max": 45.90000000037253,
+            "png": 0,
+            "reads": 8,
+            "longCount": 5,
+            "longMax": 68,
+            "fused": false,
+            "perStep": {
+              "RecalcStyleDuration": 4.38967,
+              "LayoutDuration": 4.66038,
+              "ScriptDuration": 1.7145000000000001,
+              "TaskDuration": 42.42376,
+              "LayoutCount": 1.1,
+              "RecalcStyleCount": 1.21
+            }
+          },
+          "fused": {
+            "mean": 48.28191489361702,
+            "p95": 56.40000000037253,
+            "max": 146.8999999994412,
+            "png": 0,
+            "reads": 8,
+            "longCount": 18,
+            "longMax": 64,
+            "fused": true,
+            "perStep": {
+              "RecalcStyleDuration": 9.85662,
+              "LayoutDuration": 5.100119999999999,
+              "ScriptDuration": 3.76402,
+              "TaskDuration": 54.42282999999998,
+              "LayoutCount": 1.17,
+              "RecalcStyleCount": 1.24
+            }
+          }
+        },
+        "after": {
+          "free": {
+            "mean": 15.286170212769921,
+            "p95": 19.09999999962747,
+            "max": 38.799999999813735,
+            "png": 0,
+            "reads": 11,
+            "longCount": 0,
+            "longMax": 0,
+            "fused": false,
+            "perStep": {
+              "RecalcStyleDuration": 4.367030000000001,
+              "LayoutDuration": 0.7415299999999999,
+              "ScriptDuration": 1.67173,
+              "TaskDuration": 20.328840000000003,
+              "LayoutCount": 0.16,
+              "RecalcStyleCount": 1.28
+            }
+          },
+          "fused": {
+            "mean": 26.25744680851262,
+            "p95": 37,
+            "max": 141.1000000005588,
+            "png": 0,
+            "reads": 9,
+            "longCount": 1,
+            "longMax": 58,
+            "fused": true,
+            "perStep": {
+              "RecalcStyleDuration": 9.84794,
+              "LayoutDuration": 2.4623399999999998,
+              "ScriptDuration": 3.1106999999999996,
+              "TaskDuration": 30.856530000000003,
+              "LayoutCount": 0.57,
+              "RecalcStyleCount": 1.32
+            }
+          }
+        },
+        "initialScrollTopBefore": 189460,
+        "initialScrollTopAfter": 189460,
+        "autoManagedMessages": 995,
+        "budget": {
+          "freeP95Ms": 35,
+          "fusedP95Ms": 40,
+          "oldFailed": true,
+          "newPassed": true
+        }
+      },
+      "nativeTouchStress": {
+        "input": "CDP native touch dispatch, 72 moves per phase",
+        "pageCpuSlowdown": 4,
+        "messages": 1000,
+        "before": [
+          {
+            "phase": "free",
+            "events": 72,
+            "frames": 67,
+            "mean": 43.91194029850747,
+            "p95": 54.20000000000073,
+            "max": 87.59999999999854,
+            "eventQueueP95": 71.3999999994412,
+            "released": true,
+            "studioOpen": false
+          },
+          {
+            "phase": "fused",
+            "events": 72,
+            "frames": 67,
+            "mean": 58.156716417910445,
+            "p95": 91.70000000000073,
+            "max": 100.10000000000218,
+            "eventQueueP95": 78.40000000037253,
+            "released": true,
+            "studioOpen": false
+          }
+        ],
+        "after": [
+          {
+            "phase": "free",
+            "events": 72,
+            "frames": 67,
+            "mean": 31.03731343283582,
+            "p95": 37.400000000001455,
+            "max": 37.60000000000218,
+            "eventQueueP95": 50.90000000037253,
+            "released": true,
+            "studioOpen": false
+          },
+          {
+            "phase": "fused",
+            "events": 72,
+            "frames": 67,
+            "mean": 38.750746268656705,
+            "p95": 54.20000000000073,
+            "max": 62.599999999998545,
+            "eventQueueP95": 52,
+            "released": true,
+            "studioOpen": false
+          }
+        ]
+      },
+      "checks": {
+        "offlineRegressions": 16,
+        "renderManagement": {
+          "passed": true,
+          "messages": 243,
+          "initialCulled": 234,
+          "exactInitialHeight": true,
+          "naturalHeightChecks": 12,
+          "offscreenEdit": true,
+          "characterDataEdit": true,
+          "containerResize": true,
+          "fontChanges": true,
+          "richAndIframeExclusion": true,
+          "lateFixedPopup": true,
+          "nativeFind": true,
+          "newReplyLifecycle": true,
+          "translatedScaleGeometry": true,
+          "cleanup": true,
+          "unsupportedFallback": true,
+          "domPreserved": true,
+          "errors": []
+        },
+        "fullHostFloors": [
+          {
+            "floors": 4,
+            "autoMessages": 0,
+            "lifecycle": {
+              "enteringViewport": true,
+              "radiusRestored": true,
+              "blurDisabled": true,
+              "blurRestored": true,
+              "plainModeClean": true,
+              "bubbleModeRestored": true,
+              "insertedTracked": true,
+              "removedClean": true,
+              "disabledClean": true,
+              "renderingDisabledClean": true,
+              "enabledRestored": true
+            }
+          },
+          {
+            "floors": 80,
+            "autoMessages": 73,
+            "lifecycle": {
+              "enteringViewport": true,
+              "radiusRestored": true,
+              "blurDisabled": true,
+              "blurRestored": true,
+              "plainModeClean": true,
+              "bubbleModeRestored": true,
+              "insertedTracked": true,
+              "removedClean": true,
+              "disabledClean": true,
+              "renderingDisabledClean": true,
+              "enabledRestored": true
+            }
+          },
+          {
+            "floors": 240,
+            "autoMessages": 233,
+            "lifecycle": {
+              "enteringViewport": true,
+              "radiusRestored": true,
+              "blurDisabled": true,
+              "blurRestored": true,
+              "plainModeClean": true,
+              "bubbleModeRestored": true,
+              "insertedTracked": true,
+              "removedClean": true,
+              "disabledClean": true,
+              "renderingDisabledClean": true,
+              "enabledRestored": true
+            }
+          }
+        ],
+        "workerRawCases": 110,
+        "workerPNGComparisons": 418,
+        "workerFallbackAndLifecycle": {
+          "passed": true,
+          "rasterCases": 110,
+          "decodedPNGComparisons": 418,
+          "staleResultIgnored": true,
+          "latestResultApplied": true,
+          "removalTerminates": true,
+          "syncFallback": true,
+          "backgroundPause": true,
+          "pageLifecycle": true,
+          "arrayBufferEncoder": true,
+          "noCanvasProbe": true,
+          "cspFallback": true
+        },
+        "presetTransitions": 44,
+        "dragPaths": 12,
+        "mainThreadPNGsDuringDrag": 0,
+        "actualTouchFusionReleaseTapAndRotation": true,
+        "nativeDrawerQRAndIME": [
+          [
+            320,
+            740
+          ],
+          [
+            844,
+            390
+          ]
+        ],
+        "presetValuesUnchanged": true
+      },
+      "sourceHashes": {
+        "index.js": "94d6cba630ac4af6d8c86b90e65fc288a34f1e9281e35cef92f8b00eedcdd715",
+        "style.css": "c460ee036a0236c9175ef2a39f4e3cf92d6ad0541d9f8aecfd6cf77c29cf2fda",
+        "ball-glass.js": "e8f84f99d17296bdb660e72e2e041eef5500945bbdd685fdd7e5413226ff86f2",
+        "fixed-position.js": "9cc8a2ab2b1680c41497c1af3f5fe987621929f916a809bb62e712169663eead",
+        "message-rendering.js": "1ba63094d56b81c086f7cccbbbbcad3a917dc327d889083b354c66b496db87e1"
+      },
+      "limitations": [
+        "Synthetic ordinary text in a desktop browser; frame intervals are not real-phone FPS or INP",
+        "Conservative eligibility leaves custom/iframe-heavy cards on their existing render path; their cost is not removed",
+        "Long-tail pauses remain observable in the throttled synthetic run; no universal stutter-free or hardware boost claim",
+        "No physical phone battery, thermal or sustained refresh-rate measurement"
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "version": "1.4.5-test.21",
+      "scope": "Saved-on device-orientation lighting auto restore and toggle-only permission flow",
+      "automated": {
+        "passed": true,
+        "offlineRegressions": 17,
+        "browser": {
+          "passed": true,
+          "checks": [
+            "Real index restores saved-on lighting and accepts mocked sensor events",
+            "Reload restores granted sensor access without any button",
+            "First trusted page click synchronously requests activation-required access",
+            "Denied sensor access keeps enabled preference and reports browser restriction",
+            "Enabling the actual settings toggle performs authorization in that same gesture",
+            "Turning off the actual toggle stops lighting",
+            "Settings exposes calibration without a separate authorization step"
+          ],
+          "viewport": [
+            390,
+            844
+          ],
+          "permissionAPI": "Mocked granted / transient-activation / denied states; actual Edge trusted clicks",
+          "physicalPhone": false,
+          "blockedWrites": [
+            "POST /api/quick-replies/save",
+            "POST /api/settings/save"
+          ],
+          "expectedBlockedWriteErrors": 6,
+          "extensionErrors": []
+        }
+      },
+      "sourceHashes": {
+        "index.js": "034e2a8e9457e69203c36f7fd20f8ae9ff8e6a04b1c6d5e74be561fac6b5d86b",
+        "glass-lighting.js": "00bf9835ce8d8687612f774ad4a13658bacda03c47c6f27a0f713a493eb1f0f3",
+        "settings-panel.js": "02dfff4f36fb914b09ad34038e3a519150271742bcaabea7e175b91877455ff3"
+      },
+      "limitations": [
+        "Permission API and sensor delivery mocked in Edge; real native clicks and page reloads exercised",
+        "Browser-required native permission prompts are not bypassed; physical mobile confirmation remains unverified"
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "version": "1.4.5-test.22",
+      "guidance": {
+        "route": "sillytavern-extension-dev",
+        "snapshot": "2026-08-18",
+        "documents": [
+          "ST-A0",
+          "ST-D5",
+          "ST-E5"
+        ],
+        "design": "impeccable scoped refinement"
+      },
+      "scope": "Retire card backings, add one shared reading filter and adapt top icon/floor foreground while retaining transparent materials",
+      "automated": {
+        "passed": true,
+        "offlineRegressions": 18,
+        "readingViewports": [
+          {
+            "viewport": [
+              320,
+              740
+            ],
+            "checks": 10,
+            "errors": []
+          },
+          {
+            "viewport": [
+              844,
+              390
+            ],
+            "checks": 9,
+            "errors": []
+          }
+        ],
+        "topViewports": [
+          {
+            "viewport": [
+              320,
+              740
+            ],
+            "checks": 12,
+            "rasterReads": 6,
+            "errors": []
+          },
+          {
+            "viewport": [
+              844,
+              390
+            ],
+            "checks": 12,
+            "rasterReads": 6,
+            "errors": []
+          }
+        ],
+        "readingChecks": [
+          "Removed card background toggle and migrated its saved value",
+          "One noninteractive stationary layer behind scrolling chat; text ancestors remain unfiltered",
+          "Strength 0-100 changes without message-map replacement or scroll/height shifts",
+          "Transparent mode retains original wallpaper and remembers glass filter strength",
+          "Host no-blur preference disables background blur while retaining the reading tint",
+          "Authored gradients/iframe transparency preserved; fixed card overlays retain viewport positioning",
+          "Extension disable removes the veil and enable restores it",
+          "Home view keeps its wallpaper treatment",
+          "Native touch drag adjusts the new range from its thumb",
+          "Responsive settings have a labeled keyboard-operable range without horizontal overflow"
+        ],
+        "topChecks": [
+          "Bright local wallpaper uses dark top icons without changing the chosen page text tone",
+          "Dark wallpaper uses light icons and floor text while glass transparency stays identical",
+          "Separate left/right islands follow their own wallpaper region",
+          "Cover-cropped wallpaper top is sampled instead of using the whole-image average",
+          "Saturated green/magenta wallpapers use actual RGB contrast instead of gray brightness alone",
+          "Scrolling and revisiting cached wallpapers do not re-read image pixels",
+          "Rapid wallpaper switches cannot apply an obsolete light palette",
+          "Visible opaque card content retains priority over wallpaper fallback",
+          "Original no-blur fallback retains its page-tone icons without new opacity settings",
+          "Disable clears all owned top palette markers and enable restores them",
+          "Native top drawer clicks remain functional",
+          "Reading-filter changes resample local top contrast without decoding the wallpaper again"
+        ],
+        "modeledRGBCases": 12288,
+        "foregroundOnly": true
+      },
+      "performance": {
+        "environment": "Headless Edge 390x844; 4x CPU throttle; 1000 synthetic ordinary messages; same bundled landscape wallpaper",
+        "drag": {
+          "before": {
+            "free": {
+              "mean": 17.049999999992075,
+              "p95": 33.69999999925494,
+              "max": 119,
+              "png": 0,
+              "reads": 11,
+              "longCount": 1,
+              "longMax": 54,
+              "fused": false,
+              "perStep": {
+                "RecalcStyleDuration": 4.49765,
+                "LayoutDuration": 0.7199,
+                "ScriptDuration": 1.7221700000000002,
+                "TaskDuration": 20.921280000000003,
+                "LayoutCount": 0.15,
+                "RecalcStyleCount": 1.29
+              }
+            },
+            "fused": {
+              "mean": 26.65851063828202,
+              "p95": 35.69999999925494,
+              "max": 46.599999997764826,
+              "png": 0,
+              "reads": 9,
+              "longCount": 2,
+              "longMax": 95,
+              "fused": true,
+              "perStep": {
+                "RecalcStyleDuration": 10.00328,
+                "LayoutDuration": 3.1087700000000003,
+                "ScriptDuration": 3.4077699999999993,
+                "TaskDuration": 32.111650000000004,
+                "LayoutCount": 0.7,
+                "RecalcStyleCount": 1.34
+              }
+            }
+          },
+          "after": {
+            "free": {
+              "mean": 17.68297872343596,
+              "p95": 33.400000002235174,
+              "max": 116.69999999925494,
+              "png": 0,
+              "reads": 11,
+              "longCount": 1,
+              "longMax": 54,
+              "fused": false,
+              "perStep": {
+                "RecalcStyleDuration": 4.661040000000001,
+                "LayoutDuration": 0.70654,
+                "ScriptDuration": 1.81917,
+                "TaskDuration": 21.3962,
+                "LayoutCount": 0.15,
+                "RecalcStyleCount": 1.28
+              }
+            },
+            "fused": {
+              "mean": 29.088297872348353,
+              "p95": 40.899999998509884,
+              "max": 135.60000000149012,
+              "png": 0,
+              "reads": 10,
+              "longCount": 1,
+              "longMax": 60,
+              "fused": true,
+              "perStep": {
+                "RecalcStyleDuration": 10.31118,
+                "LayoutDuration": 3.20663,
+                "ScriptDuration": 3.46804,
+                "TaskDuration": 33.27614,
+                "LayoutCount": 0.71,
+                "RecalcStyleCount": 1.34
+              }
+            }
+          }
+        },
+        "scroll": {
+          "before": {
+            "frames": 170,
+            "mean": 62.85352941176472,
+            "p95": 137.60000000000036,
+            "max": 195.6999999999989,
+            "height": 190303,
+            "finalHeight": 190303,
+            "veil": "none",
+            "culled": 991
+          },
+          "after": {
+            "frames": 170,
+            "mean": 54.22470588235294,
+            "p95": 129.10000000000218,
+            "max": 204.1999999999989,
+            "height": 190303,
+            "finalHeight": 190303,
+            "veil": "\"\"",
+            "culled": 991
+          }
+        },
+        "physicalPhone": false
+      },
+      "sourceHashes": {
+        "index.js": "b846b3aea3f2bdd513fbf8d5eb6cf708381041dcadfc25e4fbeebf8ce2dff7b4",
+        "style.css": "fb29d611500d25bd8826fb3af4a8f229deda1dd824a554ed0250c92585371d17",
+        "settings-panel.js": "6e32579b92b3991f2293baa401d1fba8a3ef385cd6089c88e01f5adf2e7da104",
+        "appearance-bookmark.js": "03aeeda32c0def17af18d381296a487412f93f655c453b9872b298332c7ee281",
+        "wallpaper-sampling.js": "29b0238e5f9d331a9f88b5510f861c6393cc5a25e474a8c46bb52de254eee699"
+      },
+      "unchangedModules": [
+        "glass-lighting.js",
+        "glass2.js",
+        "control-material.js",
+        "ball-glass.js",
+        "ball-raster.js",
+        "glass-performance.js",
+        "glass-worker.js",
+        "glass-reflections.js",
+        "message-rendering.js",
+        "fixed-position.js",
+        "web-presets.js",
+        "optics-settings.js"
+      ],
+      "limitations": [
+        "Desktop synthetic timing is not physical phone FPS or INP; long-tail pauses remain",
+        "Pure RGB cases compare foreground choices and hysteresis; high transparency cannot guarantee fixed contrast against every arbitrary wallpaper pixel",
+        "Cross-origin/unavailable image pixels fall back to existing UI tone; authored iframe contents remain unchanged"
+      ]
+    },
+    {
+      "version": "1.4.5-test.23",
+      "date": "2026-11-11",
+      "scope": "Folded-only toolbar with up to two icon-selected shortcuts on the left; precision sliders; message-local reading filter",
+      "host": {
+        "version": "1.18.0",
+        "browser": "Microsoft Edge headless Chromium"
+      },
+      "automated": {
+        "passed": true,
+        "regressions": 19,
+        "renderCases": 72,
+        "manifest": true
+      },
+      "live": {
+        "passed": true,
+        "viewports": [
+          [
+            320,
+            740
+          ],
+          [
+            390,
+            844
+          ],
+          [
+            844,
+            390
+          ]
+        ],
+        "controlsViewports": [
+          [
+            390,
+            844
+          ],
+          [
+            1440,
+            900
+          ]
+        ],
+        "checks": [
+          "Legacy expanded toolbar migrates to folded mode; expanded-mode chooser removed",
+          "Reading blur and tint stay inside messages; strength updates retain glass-map identity and scroll position",
+          "Transparent mode and host no-blur preference remain effective",
+          "Card messages reuse an independent glass layer; fixed overlays and authored gradients/iframe remain intact",
+          "Light/dark tint and physical/legacy/CSS message paths retain the same reading scope",
+          "Zero/one/two native shortcuts display immediately; third selection is rejected",
+          "Both pinned controls open and close their original host drawers through native clicks",
+          "Unpin returns the entry to the menu; selected shortcuts do not repeat in the menu; toolbar remains aligned",
+          "Dynamic plugin entries become selectable; unavailable choices retain their saved identity",
+          "Icon-only palette uses two selection badges, live left preview, native clicks and Space without losing focus",
+          "Touch taps select and deselect graphic shortcuts",
+          "Redesigned ranges have native keyboard/touch input, 36px hit area and progress synchronized in the workbench",
+          "Live appearance save/restore includes both shortcuts",
+          "Disable restores native toolbar; re-enable restores shortcuts and message-only reading",
+          "Host AI settings sliders use the same ivory thumb and warm progress; native keyboard updates remain synchronized",
+          "Icon palette and live preview fit dark and light workbench on mobile/desktop",
+          "Foreign dialog controls retain their original appearance and receive no progress writes"
+        ],
+        "topForegroundChecks": [
+          320,
+          390
+        ],
+        "writes": "Blocked during all browser checks"
+      },
+      "performance": {
+        "scenario": "1000 synthetic ordinary messages, 390x844, CPU4x, 170 measured frames; same-machine test.22 backup vs test.23",
+        "before": {
+          "frames": 170,
+          "mean": 58.31823529411765,
+          "p95": 129.20000000000073,
+          "max": 212.60000000000036,
+          "height": 190303,
+          "finalHeight": 190303,
+          "veil": "\"\"",
+          "culled": 991
+        },
+        "after": {
+          "frames": 170,
+          "mean": 56.18529411764707,
+          "p95": 129.1999999999971,
+          "max": 216.70000000000073,
+          "height": 190303,
+          "finalHeight": 190303,
+          "veil": "none",
+          "culled": 991
+        },
+        "physicalPhone": false
+      },
+      "sourceHashes": {
+        "index.js": "f039cafe0d15c71530af64271c2a8873853d88e4d9a5e20d4ed82a5d81b970d3",
+        "style.css": "2d766d8a09a11e7ef74d8e0c2b2753e36710903976a87da1a1cf4efd00fe8ef7",
+        "settings-panel.js": "09a171b427d4a8aaa08fe8d95089619d0afa929c0bf5e58343fcde69e25174b1",
+        "settings-panel.css": "67e04f0226c46e7e6facd830ee9407d3842f141f79966c7116cd3cdd17f2a3d0"
+      },
+      "unchangedModules": [
+        "glass-lighting.js",
+        "glass2.js",
+        "control-material.js",
+        "ball-glass.js",
+        "ball-raster.js",
+        "glass-performance.js",
+        "glass-worker.js",
+        "glass-reflections.js",
+        "message-rendering.js",
+        "fixed-position.js",
+        "web-presets.js",
+        "optics-settings.js",
+        "appearance-bookmark.js",
+        "wallpaper-sampling.js"
+      ],
+      "limitations": [
+        "Touch and viewport checks run on desktop Edge; physical iOS/Android/TT acceptance remains open.",
+        "Host mutation requests were blocked. Appearance save/restore was exercised in memory; no user settings, chats or API data were saved.",
+        "One same-machine 1000-message CPU4x comparison is not phone FPS or INP; long-tail pauses remain."
+      ]
+    },
+    {
+      "version": "1.4.5-test.24",
+      "date": "2026-11-11",
+      "scope": "Capsule sliders with scale marks, grip handles, thumb focus halos and one shared value label",
+      "host": {
+        "version": "1.18.0",
+        "browser": "Microsoft Edge headless Chromium"
+      },
+      "automated": {
+        "passed": true,
+        "regressions": 20,
+        "valueLabelGeometryCases": 48
+      },
+      "live": {
+        "passed": true,
+        "controlsViewports": [
+          [
+            390,
+            844
+          ],
+          [
+            1440,
+            900
+          ]
+        ],
+        "touchViewports": [
+          [
+            320,
+            844
+          ],
+          [
+            844,
+            390
+          ]
+        ],
+        "integrationViewport": [
+          390,
+          844
+        ],
+        "checks": [
+          "Value label follows keyboard changes without layout reads; focus uses a thumb halo and blur hides the shared label",
+          "Host AI settings sliders use the same ivory thumb and warm progress; native keyboard updates remain synchronized",
+          "Icon palette and live preview fit dark and light workbench on mobile/desktop",
+          "Foreign dialog controls retain their original appearance and receive no progress writes",
+          "Workbench value label appears above the modal top layer and stays within the viewport",
+          "Native touch drag updates the shared label with zero input geometry reads; releasing dismisses it",
+          "Coarse-pointer track taps retain the original accidental-touch protection",
+          "Relevant scrolling and extension disable dismiss the label; keyboard input restores it",
+          "Browsers without the Popover API receive a correctly positioned label inside the modal"
+        ],
+        "layoutReadsDuringLabelDrag": 0,
+        "writes": "Blocked during all browser checks"
+      },
+      "sourceHashes": {
+        "index.js": "f6c8af0246e160e37a693a86ce6ab6438d5900b24d2dd5f680bd6b7fc812d370",
+        "style.css": "9b968414c840d6d7de80066fe93ddce4ad3810eba5cd46185b0704d792479009",
+        "settings-panel.css": "080b318beb37e6a5c927919e4cd0168986c15b4b42dcf8de0837a843be3d8ef1"
+      },
+      "unchangedModules": [
+        "settings-panel.js",
+        "glass-lighting.js",
+        "glass2.js",
+        "control-material.js",
+        "ball-glass.js",
+        "ball-raster.js",
+        "glass-performance.js",
+        "glass-worker.js",
+        "glass-reflections.js",
+        "message-rendering.js",
+        "fixed-position.js",
+        "web-presets.js",
+        "optics-settings.js",
+        "appearance-bookmark.js",
+        "wallpaper-sampling.js"
+      ],
+      "unchangedComparison": "Normalized historical line endings and final newline against test.23",
+      "limitations": [
+        "Desktop Edge emulation, native injected touch, and API fallback fixtures are not physical iOS/Android/TT acceptance.",
+        "All host mutation requests were blocked; no user settings, chats or API data were saved.",
+        "Zero input geometry reads refers to value-label updates during the measured drag; host glass work still has its own cost."
+      ]
+    },
+    {
+      "version": "1.4.5-test.25",
+      "date": "2026-11-11",
+      "scope": "Yufeng performance and Lengguang refraction naming; owned input overlays and native preset adapter rendering",
+      "engines": {
+        "performance": "御风性能引擎",
+        "refraction": "棱光折射引擎",
+        "storedValues": [
+          "physical",
+          "legacy"
+        ]
+      },
+      "host": {
+        "version": "1.18.0",
+        "browser": "Microsoft Edge headless Chromium"
+      },
+      "automated": {
+        "passed": true,
+        "regressions": 23,
+        "fontRangeCases": 16,
+        "reflectionRawCases": 52,
+        "actualWorkerDecodedPixelCases": 4,
+        "decodedPixelExact": true,
+        "workerLifecycle": [
+          "startup",
+          "deduplication",
+          "stale size",
+          "released and disconnected clients",
+          "disable late result",
+          "queued DPR fallback"
+        ],
+        "readBeforeWriteGeometry": true,
+        "streamingDeferralPreserved": true
+      },
+      "live": {
+        "passed": true,
+        "hostStateChecks": 27,
+        "unrelatedInputMutations": 100,
+        "chatMutations": 100,
+        "membershipQueries": 0,
+        "qr": {
+          "filterRetained": true,
+          "replyExecuted": true,
+          "expander": true,
+          "hiddenNoBlur": true,
+          "hiddenEngineChange": true,
+          "disableReenable": true,
+          "foldingOff": true,
+          "replacement": true,
+          "removal": true
+        },
+        "preset": {
+          "synthetic": true,
+          "nativeRegisteredPopup": true,
+          "controls": 20,
+          "tabChanges": 6,
+          "filterAndImageNodesRetained": true,
+          "cleanup": true
+        },
+        "namingViewports": [
+          [
+            320,
+            844
+          ],
+          [
+            844,
+            390
+          ],
+          [
+            1440,
+            900
+          ]
+        ],
+        "previousRangeShortcutsAndReadingChecks": true,
+        "writes": "All mutation requests blocked; save failures from the intentional block excluded from extension error checks"
+      },
+      "performance": {
+        "viewport": [
+          390,
+          844
+        ],
+        "floors": 240,
+        "cpuThrottle": 4,
+        "metric": "Two requestAnimationFrame opportunities after a toggle; not INP or device FPS",
+        "menus": [
+          {
+            "button": "options_button",
+            "beforeColdMs": 305.3,
+            "afterColdMs": 269.3,
+            "coldReductionPct": 11.8,
+            "warmMaxMs": 57.7,
+            "pngBefore": 9,
+            "pngAfter": 8
+          },
+          {
+            "button": "extensionsMenuButton",
+            "beforeColdMs": 516.5,
+            "afterColdMs": 156.1,
+            "coldReductionPct": 69.8,
+            "warmMaxMs": 49.1,
+            "pngBefore": 1,
+            "pngAfter": 0
+          }
+        ],
+        "quickReplies": {
+          "beforeWarmMeanMs": 50.56,
+          "afterWarmMeanMs": 36.9,
+          "reductionPct": 27
+        },
+        "warmBudgetMs": 80,
+        "warmBudgetMet": true,
+        "cold80msMet": false,
+        "workerOnlyTrial": "Reduced main-thread PNG encodes but did not materially reduce cold latency; CJK subset invalidation fixed the dominant wand stall"
+      },
+      "sourceHashes": {
+        "index.js": "e64c52828c3a7387019eec2f0f7a1f6517c343cb8a04a21706680c3ee9ffff5c",
+        "reflection-raster.js": "2c240ed640ba90893e778210c1ea0ee8d41acd2ba55014592836a318a036f153",
+        "glass-worker.js": "5500e779a9f8572d9931c209718ffb1c24ab5a841b30ad5799a337f08e8a1515",
+        "glass-reflections.js": "d86a404a4e7030b5d564e3d3a5693810e30887a76c7d38cbe02c3ee5d4880555",
+        "host-interaction-state.js": "0a82e6d326256a2f7c5f65f842a494041a90b37da3090281dd934094a55f27d3",
+        "message-rendering.js": "511e9667b56412f2144c0d2c076eab0d6ac65af4aed456c7f28b2e11cd11b89a",
+        "settings-panel.js": "fd6b5411f4f84aeeb84c147a730b163c21537b083b5101e48b47030f122b1253"
+      },
+      "limitations": [
+        "Desktop throttling and browser emulation are not physical iOS, Android or TT acceptance.",
+        "First open remains above 80ms; host animation, style, layout and glass rendering retain measurable cost.",
+        "Preset acceptance uses a synthetic supported content root in a registered native Popup, not the third-party preset script.",
+        "Measurements are bounded same-machine before/after samples; no hardware performance access or global host scheduling patches."
+      ]
     }
   ],
-  "limitations": [
-    "Desktop Edge and Android user-agent emulation are not full TT device or performance acceptance.",
-    "iOS SVG refraction remains an opt-in experiment with no new iOS device acceptance.",
-    "Historical TT home recent-list issue is not claimed resolved.",
-    "Not all card combinations, touch feel, model generation or long-term device performance were tested."
-  ]
+  "formalRelease": {
+    "displayVersion": "2.0",
+    "manifestVersion": "2.0.0",
+    "date": "2026-11-11",
+    "officialRepository": "jjing8235-afk/NVWA-Liquid-Glass",
+    "previousOfficial": "b9aa19d815ac633eda9f27970c418be42858a370",
+    "testedBaseline": {
+      "repository": "jjing8235-afk/test",
+      "version": "1.4.5-test.25",
+      "sha": "7e779dfd79b6a620926c91e211a6e1e31a15016c"
+    },
+    "scope": "Promote tested runtime with formal product version, publication docs and preserved installer assets",
+    "checks": {
+      "manifest": true,
+      "offlineRegressions": 23,
+      "rootJavaScriptSyntaxFiles": 23,
+      "otherBaselineFilesCompared": 195,
+      "runtimeDifference": "Only BUILD_VERSION changes; historical line endings in control-material.js are normalized without code changes",
+      "protectedInstallerFiles": 4,
+      "liveSmoke": {
+        "browser": "Microsoft Edge headless Chromium",
+        "host": "SillyTavern 1.18.0",
+        "viewport": [
+          390,
+          844
+        ],
+        "workbenchVersion": "2.0",
+        "enginesNamed": true,
+        "nativeMenus": [
+          "options",
+          "extensionsMenu"
+        ],
+        "overflow": false,
+        "extensionErrors": []
+      },
+      "formattingOnlyFiles": [
+        "control-material.js",
+        "dev/verify/appearance-browser.mjs"
+      ]
+    },
+    "preserved": {
+      "settingsNamespace": "iosLiquidGlass",
+      "settingsVersion": 9,
+      "materialStoredValues": true,
+      "originalInstallerAndTheme": true,
+      "physicalLegacyValues": true
+    },
+    "sourceHashes": {
+      "appearance-bookmark.js": "03aeeda32c0def17af18d381296a487412f93f655c453b9872b298332c7ee281",
+      "ball-glass.js": "e8f84f99d17296bdb660e72e2e041eef5500945bbdd685fdd7e5413226ff86f2",
+      "ball-raster.js": "5d4873340a5afa9e3ba6a7099e0b70933e3538d724e01fbf3c47852f6bfe8fc8",
+      "card-clarity.js": "8c84011aa74d37898411f8e8088b6cf707dc765ee7995acf381f5eb9ae8358be",
+      "control-material.js": "e14b197e590c530677ef31a9d02ae2dd46c7b14388198e50dfd8a1c9ce385efd",
+      "fixed-position.js": "9cc8a2ab2b1680c41497c1af3f5fe987621929f916a809bb62e712169663eead",
+      "glass-lighting.js": "00bf9835ce8d8687612f774ad4a13658bacda03c47c6f27a0f713a493eb1f0f3",
+      "glass-performance.js": "68b93eb4fd5b03e31c9f559da8cf1fd1685179826707c124b67d58fe15773484",
+      "glass-reflections.js": "20b82d183c98692d0db7bf9818e5f36219e44d489840dfcf3c6871e598765b64",
+      "glass-worker.js": "f26ef77efa25bf668aaaf340e608886dcd7234cb2e48bf9bf6f253ef32828456",
+      "glass2.js": "6cc1ecd2244eb003dd0e75a8644b4450b49fc5278a3326ae577547490732f98b",
+      "host-interaction-state.js": "0a82e6d326256a2f7c5f65f842a494041a90b37da3090281dd934094a55f27d3",
+      "index.js": "3440cc97eb32f6ff9f3dc4b01e9e330170cc4a02c13afd2187f4566ebdac9c0d",
+      "liquid-glass-web.js": "9a13aae6fd8de099bd6e09bfe6e97c070e8858480ef95ef97517d96d416bdb58",
+      "mes-icons.js": "b5e9223c70d014f91267bd443c45bf5508f710208c11e22e68bc9bade56fb8b9",
+      "message-rendering.js": "75acfd4d881af5b7859fe63aad00a183beacd8652d5168f544da329b44c4bd1d",
+      "optics-settings.js": "c2ea4b338eed590e31e14f9efceca0dfad28c462d9c96f03e19faa4ac7d19e1e",
+      "orb.js": "75bee096898163cf426766ad0949f454201b61d34fc4690357d04223383daf0c",
+      "reflection-raster.js": "2c240ed640ba90893e778210c1ea0ee8d41acd2ba55014592836a318a036f153",
+      "settings-panel.js": "fd6b5411f4f84aeeb84c147a730b163c21537b083b5101e48b47030f122b1253",
+      "viewport.js": "e1574ee74f1c939b132a982fcc076d12537fa13298fd120cffdd3de8fac58ef8",
+      "wallpaper-sampling.js": "29b0238e5f9d331a9f88b5510f861c6393cc5a25e474a8c46bb52de254eee699",
+      "web-presets.js": "c51b9d2c67e451faa3a17c76c212bdc7957017e4f85be78bb1b230418b99c04f",
+      "style.css": "9b968414c840d6d7de80066fe93ddce4ad3810eba5cd46185b0704d792479009",
+      "settings-panel.css": "080b318beb37e6a5c927919e4cd0168986c15b4b42dcf8de0837a843be3d8ef1"
+    },
+    "limitations": [
+      "Performance numbers are inherited from the identical test.25 runtime; the promotion smoke was rerun against formal sources.",
+      "Desktop emulation does not establish physical iOS/Android/TT FPS or long-term acceptance.",
+      "Preset adapter baseline used synthetic content in a registered native Popup; actual third-party preset scripts were not exercised."
+    ]
+  }
 }

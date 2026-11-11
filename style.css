@@ -1,6 +1,8 @@
+@import url('./settings-panel.css');
 /* iOS 液态玻璃 · 所有规则都挂在 html.ilg 下，关掉扩展开关即全部失效 */
 html.ilg {
     --ilg-radius: 22px;
+    --ilg-reading-dark: 1;
     --ilg-tint: rgba(255, 255, 255, 0.08);
     --ilg-hl: 0.55;
     --ilg-gap: 8px;
@@ -260,9 +262,6 @@ html.ilg:not(.ilg-light) body :where(#top-bar, #top-settings-holder, #form_sheld
     --SmartThemeBlurTintColor: rgba(18, 16, 28, 0.42);
     --SmartThemeShadowColor: rgba(0, 0, 0, 0.75);
 }
-html.ilg:not(.ilg-light) body #chat .mes_text {
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), 0 0 8px rgba(0, 0, 0, 0.35);
-}
 
 /* ---------- 弹窗背后不虚化：壁纸保持清晰，只压一层淡淡的暗色 ---------- */
 
@@ -331,9 +330,6 @@ html.ilg body:not(.movingUI) :where(#top-bar, #top-bar *, #top-settings-holder, 
 html.ilg.ilg-light body:not(.movingUI) :where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-scrollbar-thumb:vertical { background-color: rgba(0, 0, 0, 0.22); }
 html.ilg body :where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-scrollbar-track:hover { background-color: transparent; }
 
-/* 输入框光标和选中文字用系统蓝 */
-html.ilg body #send_textarea { caret-color: #0a84ff; }
-html.ilg body :where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::selection { background: rgba(10, 132, 255, 0.35); }
 
 /* 弹窗出现：轻轻放大 + 回弹，像 iOS 的卡片弹出 */
 @keyframes ilg-pop-in {
@@ -694,7 +690,7 @@ html.ilg.ilg-fold body #top-settings-holder > .drawer.ilg-fold-keep { flex: 0 0 
 html.ilg.ilg-fold body #top-settings-holder > .drawer.ilg-fold-keep.ilg-group-start,
 html.ilg.ilg-fold.ilg-islands body #top-settings-holder > .drawer.ilg-fold-keep.ilg-group-start { margin-left: auto; }
 /* 留在右边的第一个图标（切换键、人设或角色卡，看哪个开着）把整组推到右边 */
-html.ilg.ilg-fold body #top-settings-holder > .ilg-fold-keep:not(.ilg-fold-keep ~ .ilg-fold-keep) { margin-left: auto; }
+html.ilg.ilg-fold body #top-settings-holder > .ilg-fold-shortcut { margin-left: 0; }
 
 /* ---------- 白 / 黑壁纸切换键：当前是瓷白显示太阳，墨黑显示月亮 ---------- */
 html.ilg body {
@@ -743,6 +739,8 @@ html.ilg body.reduced-motion #ilg-tone-button .ilg-tone-icon::before { transitio
 html.ilg.ilg-fold body #ilg-fold-button {
     display: flex;
     align-items: center;
+    justify-content: center;
+    align-self: center;
     flex: 0 0 auto;
 }
 html.ilg.ilg-fold body #ilg-fold-button .ilg-fold-icon {
@@ -842,7 +840,6 @@ html.ilg body #ilg-fold-menu .ilg-fold-tile {
     cursor: pointer;
     transition: background-color .15s, transform .25s cubic-bezier(.3, 1.6, .5, 1);
 }
-html.ilg:not(.ilg-light) body #ilg-fold-menu .ilg-fold-tile { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
 html.ilg body #ilg-fold-menu .ilg-fold-tile:hover { background-color: rgba(255, 255, 255, 0.12); }
 html.ilg.ilg-light body #ilg-fold-menu .ilg-fold-tile:hover { background-color: rgba(0, 0, 0, 0.06); }
 html.ilg body #ilg-fold-menu .ilg-fold-tile:active { transform: scale(0.94); }
@@ -894,7 +891,7 @@ html.ilg.ilg-qrfold body #ilg-qr-toggle {
     transition: background-color .2s, color .2s, transform .3s cubic-bezier(.3, 1.6, .5, 1);
 }
 /* 没有任何快捷回复时不显示这个按钮 */
-html.ilg.ilg-qrfold body:not(:has(#qr--bar .qr--button)) #ilg-qr-toggle { display: none; }
+html.ilg.ilg-qrfold body #ilg-qr-toggle.ilg-qr-empty { display: none; }
 html.ilg.ilg-qrfold body #ilg-qr-toggle::before {
     content: "";
     width: 20px;
@@ -991,18 +988,11 @@ html.ilg body #ilg-home .ilg-home-logo {
 html.ilg body #ilg-home .ilg-home-title {
     margin: 0;
     font-family: inherit;
-    font-size: clamp(24px, 1.4vw + 16px, 34px);
-    font-weight: 300;
-    line-height: 1.3;
-    letter-spacing: 0.04em;
     color: inherit;
     animation: ilg-home-in .7s .1s cubic-bezier(.2, .8, .2, 1) both;
 }
 html.ilg body #ilg-home .ilg-home-sub {
     margin: 0;
-    font-size: clamp(14px, 0.4vw + 12px, 17px);
-    line-height: 1.6;
-    letter-spacing: 0.06em;
     color: color-mix(in srgb, currentColor 75%, transparent);
     animation: ilg-home-in .7s .2s cubic-bezier(.2, .8, .2, 1) both;
 }
@@ -1020,17 +1010,13 @@ html.ilg body #ilg-home .ilg-home-recent {
     padding: 0 26px 0 22px;
     border: 0;
     border-radius: 999px;
-    color: #fff;
     font: inherit;
     font-size: 16px;
     font-weight: 600;
     letter-spacing: 0.04em;
-    background-color: rgba(10, 132, 255, 0.88);
-    box-shadow: 0 10px 28px rgba(10, 132, 255, 0.32), 0 2px 6px rgba(0, 0, 0, 0.2);
     cursor: pointer;
     animation: ilg-home-in .7s .3s cubic-bezier(.2, .8, .2, 1) both;
 }
-html.ilg body #ilg-home .ilg-home-recent:hover { background-color: rgba(30, 144, 255, 0.96); }
 html.ilg body #ilg-home .ilg-home-recent:active { transform: scale(.96); }
 html.ilg body #ilg-home .ilg-home-recent:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 html.ilg body #ilg-home .ilg-home-recent-icon {
@@ -1285,6 +1271,8 @@ html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-
 /* 手机：所有抽屉都是同一张页，夹在顶栏和输入框中间 */
 @media screen and (max-width: 1000px) {
     html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-content {
+        /* Clip the backdrop filter and scrolling content to the same outline. */
+        clip-path: inset(0 round 24px);
         --ilg-sheet-top: calc(var(--topBarBlockSize) + var(--ilg-gap) * 2);
         position: fixed;
         top: var(--ilg-sheet-top) !important;
@@ -1301,6 +1289,13 @@ html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-
     html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > :is(.fillLeft, .fillRight).openDrawer {
         height: calc(100dvh - var(--ilg-sheet-top) - var(--ilg-form-h) - var(--ilg-gap) * 3);
     }
+}
+
+/* Absolute decorative rims scroll with drawer content and leave a second outline mid-panel.
+   Keep the actual glass backdrop; mobile drawers use the clipped shell as their only contour. */
+@media screen and (max-width: 1000px) {
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-content::before,
+    html.ilg.ilg-float body:not(.movingUI) #top-settings-holder > .drawer > .drawer-content::after { display: none; }
 }
 
 /* 吸顶标题栏：‹ 菜单 | 名字 | ×。下面滚过的内容在标题栏后面模糊掉（外层玻璃是“背景根”，这里只模糊抽屉自己的内容） */
@@ -1388,7 +1383,6 @@ html.ilg body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-heade
 }
 html.ilg.ilg-light body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-header, #extensions_settings2 .inline-drawer-toggle.inline-drawer-header, #user-settings-block h4, .standoutHeader) {
     background-image: none;
-    background-color: rgba(255, 255, 255, 0.55);
 }
 html.ilg body :is(#extensions_settings .inline-drawer-toggle.inline-drawer-header, #extensions_settings2 .inline-drawer-toggle.inline-drawer-header, .standoutHeader.inline-drawer-header):hover {
     filter: none;
@@ -1401,7 +1395,6 @@ html.ilg body .standoutHeader ~ .inline-drawer-content:where(#top-bar, #top-bar 
     padding: 10px;
     background-color: rgba(0, 0, 0, 0.16);
 }
-html.ilg.ilg-light body .standoutHeader ~ .inline-drawer-content:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { background-color: rgba(255, 255, 255, 0.3); }
 /* 折叠条右边的大圆圈箭头换成一个细箭头 */
 html.ilg body .inline-drawer-icon:is(.fa-circle-chevron-down, .fa-circle-chevron-up):where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
     font-size: 13px;
@@ -1502,44 +1495,35 @@ html.ilg body .menu_button:not(.disabled):not([disabled]):not(.redWarningBG):is(
     background-color: var(--ilg-btn-hover);
 }
 
-/* 滑块：细轨道 + 白圆点；左边是填色，右边是灰轨道 */
+/* Precision sliders: capsule track, quiet scale marks and an ivory grip. */
+html.ilg { --ilg-range-accent:#cda16c; --ilg-range-fill-end:#edc997; --ilg-range-track:rgba(150,155,165,.18); --ilg-range-knob:#faf7f1; --ilg-range-rim:#c8ab85; --ilg-range-tick:rgba(50,40,25,.35); }
+html.ilg.ilg-light { --ilg-range-accent:#c88d59; --ilg-range-fill-end:#dfa66e; --ilg-range-track:rgba(70,55,40,.12); --ilg-range-rim:#c28a59; --ilg-range-tick:rgba(80,55,30,.3); }
 html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)),
-html.ilg body .neo-range-slider:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
-    background: linear-gradient(var(--ilg-accent), var(--ilg-accent)) 0 0 / var(--ilg-fill, 0%) 100% no-repeat, var(--ilg-track) !important;
-    box-shadow: none !important;
-    filter: none !important;
-    height: 4px;
+#ilg-studio input[type="range"] {
+    appearance:none;-webkit-appearance:none;box-sizing:border-box;width:100%;height:40px;min-height:40px;margin:0;padding:0;border:0;border-radius:10px;
+    background:transparent !important;box-shadow:none !important;filter:none !important;transition:none !important;cursor:pointer;
 }
-html.ilg body .neo-range-slider:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { border-radius: 4px !important; }
-html.ilg body input[type="range"]:hover:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { filter: none; }
-html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-slider-thumb {
-    width: 20px;
-    height: 20px;
-    background: #fff;
-    border: 0.5px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.14);
+html.ilg body .neo-range-slider:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {height:8px;border-radius:999px;background:radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) 10px center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) calc(25% + 5px) center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) 50% center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) calc(75% - 5px) center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) calc(100% - 10px) center/2.7px 2.7px no-repeat,linear-gradient(90deg,var(--ilg-range-accent),var(--ilg-range-fill-end)) left center/var(--ilg-fill,0%) 100% no-repeat,var(--ilg-range-track);box-shadow:inset 0 1px 2px rgba(0,0,0,.13);filter:none !important;}
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-slider-runnable-track,
+#ilg-studio input[type="range"]::-webkit-slider-runnable-track {height:8px;border:0;border-radius:999px;background:radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) 10px center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) calc(25% + 5px) center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) 50% center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) calc(75% - 5px) center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) calc(100% - 10px) center/2.7px 2.7px no-repeat,linear-gradient(90deg,var(--ilg-range-accent),var(--ilg-range-fill-end)) left center/var(--ilg-fill,0%) 100% no-repeat,var(--ilg-range-track);box-shadow:inset 0 1px 1.5px rgba(0,0,0,.12),inset 0 -1px 0 rgba(255,255,255,.05);}
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-slider-thumb,
+#ilg-studio input[type="range"]::-webkit-slider-thumb {
+    appearance:none;-webkit-appearance:none;box-sizing:border-box;width:20px;height:28px;margin-top:-10px;border-radius:9px;
+    background:linear-gradient(var(--ilg-range-rim),var(--ilg-range-rim)) center/2px 10px no-repeat,linear-gradient(155deg,#fff,var(--ilg-range-knob));
+    border:1px solid var(--ilg-range-rim);box-shadow:0 1px 1px rgba(0,0,0,.15),0 3px 7px rgba(0,0,0,.16);transition:box-shadow .15s;
 }
-html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: #fff;
-    border: 0.5px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), 0 3px 8px rgba(0, 0, 0, 0.14);
-}
-
-/* 我自己的设置面板：把滑块命中区抬起来，视觉轨道仍然只有 4px。
-   原来 input 整个盒子就是 4px 高，手机上要精确压在那一条上才拖得动，摸偏一点就点到别处；
-   现在盒子 28px、两条 4px 的色带用 background-position: center 居中，看到的样子没变，手指能压住的地方变大了。
-   touch-action: pan-y 让竖着划屏幕时浏览器继续滚抽屉，只有横向拖才改值，减少滚动时误改。 */
-html.ilg body .ilg-settings input[type="range"] {
-    height: 28px;
-    margin: 0;
-    background:
-        linear-gradient(var(--ilg-accent), var(--ilg-accent)) 0 center / var(--ilg-fill, 0%) 4px no-repeat,
-        linear-gradient(var(--ilg-track), var(--ilg-track)) 0 center / 100% 4px no-repeat !important;
-    border-radius: 999px;
-    touch-action: pan-y;
-}
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-moz-range-track,
+#ilg-studio input[type="range"]::-moz-range-track {height:8px;border:0;border-radius:999px;background:radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) 10px center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) calc(25% + 5px) center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) 50% center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) calc(75% - 5px) center/2.7px 2.7px no-repeat,radial-gradient(circle,var(--ilg-range-tick) 1px,transparent 1.35px) calc(100% - 10px) center/2.7px 2.7px no-repeat,linear-gradient(90deg,var(--ilg-range-accent),var(--ilg-range-fill-end)) left center/var(--ilg-fill,0%) 100% no-repeat,var(--ilg-range-track);box-shadow:inset 0 1px 1.5px rgba(0,0,0,.12);}
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-moz-range-progress,
+#ilg-studio input[type="range"]::-moz-range-progress {height:8px;background:transparent;}
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-moz-range-thumb,
+#ilg-studio input[type="range"]::-moz-range-thumb {box-sizing:border-box;width:20px;height:28px;border-radius:9px;background:linear-gradient(var(--ilg-range-rim),var(--ilg-range-rim)) center/2px 10px no-repeat,linear-gradient(155deg,#fff,var(--ilg-range-knob));border:1px solid var(--ilg-range-rim);box-shadow:0 1px 1px rgba(0,0,0,.15),0 3px 7px rgba(0,0,0,.16);transition:box-shadow .15s;}
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)):is(:active,:focus-visible)::-webkit-slider-thumb,
+#ilg-studio input[type="range"]:is(:active,:focus-visible)::-webkit-slider-thumb {box-shadow:0 0 0 4px var(--ilg-range-halo,rgba(223,173,114,.15)),0 3px 7px rgba(0,0,0,.18);}
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)):is(:active,:focus-visible)::-moz-range-thumb,
+#ilg-studio input[type="range"]:is(:active,:focus-visible)::-moz-range-thumb {box-shadow:0 0 0 4px var(--ilg-range-halo,rgba(223,173,114,.15)),0 3px 7px rgba(0,0,0,.18);}
+html.ilg body .ilg-settings input[type="range"],#ilg-studio input[type="range"] {height:40px;min-height:40px;touch-action:pan-y;}
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)):disabled,#ilg-studio input[type="range"]:disabled {opacity:.4;cursor:default;}
 
 /* 勾选框：没勾是空心方框，勾上是蓝底白勾。原来浅色下不管勾没勾都是一个黑方块 */
 html.ilg body input[type="checkbox"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
@@ -1612,7 +1596,7 @@ html.ilg.ilg-light body #ilg-home .ilg-home-recent:hover { background-color: rgb
 html.ilg.ilg-light body #ilg-home .ilg-home-recent:focus-visible { outline-color: var(--ilg-accent); }
 /* 手机上二级页盖住首页时，首页问候先淡出，不然会透过玻璃页糊成一团 */
 @media screen and (max-width: 1000px) {
-    html.ilg body:has(#top-settings-holder > .drawer > .drawer-content.openDrawer) #ilg-home { opacity: 0; }
+    html.ilg body #ilg-home.ilg-home-covered { opacity: 0; }
 }
 
 /* ---------- 聊天正文：叙述退后一步，台词往前一步 ----------
@@ -1785,7 +1769,8 @@ html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes:not(.smallSysMes)
 }
 /* 自己的气泡：头像在右上角，名字和时间贴着头像 */
 html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .mesAvatarWrapper { left: auto; right: 14px; align-items: flex-end; }
-html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .mesAvatarWrapper > :not(.avatar) { display: none; }
+/* 只藏酒馆自己的楼层号 / 计时 / 字数；以前写的是 :not(.avatar)，会把插件塞进头像区的东西一起藏掉 */
+html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .mesAvatarWrapper > :is(.mesIDDisplay, .mes_timer, .tokenCounterDisplay) { display: none; }
 html.ilg.ilg-avline body.bubblechat:not(.waifuMode) #chat .mes[is_user="true"] .ch_name {
     flex-direction: row-reverse;
     padding-left: 0;
@@ -2071,12 +2056,10 @@ html.ilg body #top-bar > #ilg-floor {
     border-radius: 999px;
     font: 600 11.5px/1 var(--ilg-ui-font);
     letter-spacing: 0.02em;
-    color: var(--SmartThemeBodyColor);
     white-space: nowrap;
     cursor: pointer;
     user-select: none;
     /* 染色与输入框一致；滤镜交给 bar 材质，CSS 不覆盖 backdrop-filter。 */
-    background-color: var(--ilg-tint);
     opacity: 0;
     scale: 0.94;
     pointer-events: none;
@@ -2089,14 +2072,9 @@ html.ilg body #top-bar > #ilg-floor.is-on {
     pointer-events: auto;
 }
 
-html.ilg body #top-bar > #ilg-floor:hover { background-color: var(--ilg-tint); }
 
 html.ilg body #top-bar > #ilg-floor:active { scale: 0.94; }
 html.ilg body #top-bar > #ilg-floor[hidden] { display: none; }
-/* 特别窄的屏，中间没剩多少地方，先让出来 */
-@media screen and (max-width: 340px) {
-    html.ilg body #top-bar > #ilg-floor { display: none; }
-}
 /* ---------- 手机排版 ----------
    这一段的每一条都能在 380×872 下量出来（dev/verify/mob2.mjs）。
    注意：不挂在 body.bubblechat 上——手机上聊天样式不一定开着气泡，挂上去就会漏。 */
@@ -2165,15 +2143,6 @@ html.ilg.ilg-justify body #chat .mes .mes_text > li {
     text-justify: inter-character;
 }
 
-/* 正文里自带底色的卡片（角色卡的状态栏、模板面板）：它们的底色多半是半透明紫 / 半透明黑，
-   叠在亮壁纸上就「透」了，同一张卡上半实、下半虚。tagCard() 把卡片自己的颜色算出来写进
-   --ilg-card-solid，这里铺一层实色在它自己的渐变下面，壁纸就不再透上来。
-   设置里的「卡片都用不透明底」可以关掉，关掉后恢复原样。 */
-html.ilg body #chat .mes_text .ilg-card-surface.ilg-solid {
-    /* 卡片模板大多把底色写在 style 属性里，行内样式优先级比样式表高，这里必须 !important 才盖得住 */
-    background-color: var(--ilg-card-solid) !important;
-}
-
 /* 3) 预设自带的时间栏（「凝嘤嘤」：两侧一串像素爱心）。大爱心故意画在 SVG 框外
    （.nvt-side svg 是 overflow: visible），但 .mes_block 是 overflow-x: hidden，外侧那颗就被切了。
    只放开带时间栏的那条消息，别动别的消息的裁切。 */
@@ -2209,8 +2178,8 @@ html.ilg body #chat .mes:has(.nvt-bar) .mes_block {
     html.ilg body #chat .mes .mes_text { font-size: 16px; }
     html.ilg body #chat .mes .name_text { font-size: 16px; }
 }
-/* 只缩进普通正文的直接段落；不向容器继承，避开有样式或交互内容的段落。 */
-html.ilg.ilg-indent body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > p:not([class]):not([style]):not(:has(img, iframe, video, audio, svg, canvas, button, input, select, textarea, table, details, div, [role="button"])) {
+/* 只缩进普通正文的直接段落；不向容器继承，避开有样式或交互内容的段落。判断在 index.js 的 markProse（.ilg-indentable），不再用 :has()。 */
+html.ilg.ilg-indent body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > p.ilg-indentable {
     text-indent: 2em;
 }
 
@@ -2461,7 +2430,6 @@ html.ilg body #world_popup_entries_list .world_entry .killSwitch {
     opacity: 0.85;
 }
 html.ilg body #world_popup_entries_list .world_entry textarea[name="comment"] {
-    width: 100%;
     height: 26px;
     padding: 0;
     border: 0;
@@ -2540,14 +2508,6 @@ html.ilg body #world_popup_entries_list .world_entry_form_control :is(.text_pole
     font-size: 12.5px;
 }
 html.ilg body #world_popup_entries_list .world_entry_form_control input[type="number"] { text-align: center; }
-/* 展开后的内容（正文、关键词、备忘录）垫一块淡底，和标题分开 */
-html.ilg body #world_popup_entries_list .world_entry .inline-drawer-content {
-    margin: 6px -4px 0;
-    padding: 8px;
-    border: 0;
-    border-radius: 14px;
-    background-color: rgba(0, 0, 0, 0.05);
-}
 html.ilg.ilg-light body #world_popup_entries_list .world_entry .inline-drawer-content { background-color: rgba(255, 255, 255, 0.35); }
 
 /* 抽屉上方：创建 / 选择 / 导入导出的那一堆按钮，统一成一排胶囊 */
@@ -2555,10 +2515,7 @@ html.ilg body #world_popup > .flex-container { gap: 6px; margin-bottom: 6px; ali
 html.ilg body #world_popup > hr { display: none; }
 html.ilg body #world_popup .menu_button {
     flex: 0 0 auto;
-    min-width: 32px;
-    height: 32px;
     margin: 0;
-    padding: 0 10px;
     border: 0;
     border-radius: 999px;
     background-color: rgba(255, 255, 255, 0.55);
@@ -2577,7 +2534,6 @@ html.ilg body #world_popup :is(#world_info_search, #world_info_sort_order, #worl
     border-radius: 999px;
     font-size: 12.5px;
 }
-html.ilg body #world_popup .select2-container .select2-selection--single { height: 32px; border-radius: 999px; display: flex; align-items: center; }
 
 /* 条目卡片里的行内布局：酒馆把折叠箭头、开关、标题、四个字段塞进同一个 flex 容器（默认 wrap），
    箭头和开关会被 vertical-center 到整块中间、标题被挤窄。这里改成「标题一行 + 一格元信息条」。 */
@@ -2877,26 +2833,9 @@ html.ilg:not(.ilg-light) body #WorldInfo .select2-container .select2-selection--
 html.ilg body #WorldInfo .select2-container .select2-selection__rendered { line-height: 32px; padding-left: 12px; }
 html.ilg body #WorldInfo .select2-container .select2-selection--multiple .select2-selection__rendered { padding: 2px 8px; }
 html.ilg body #WorldInfo .select2-container .select2-selection__arrow { height: 32px; right: 8px; }
-html.ilg body #WorldInfo .select2-selection__choice {
-    margin: 3px 4px 3px 0;
-    padding: 0 8px;
-    border: 0;
-    border-radius: 999px;
-    background-color: rgba(120, 120, 128, 0.18);
-    font-size: 11.5px;
-}
 html.ilg body #WorldInfo .standoutHeader { font-size: 13px; }
 html.ilg body #WorldInfo .standoutHeader b { font-weight: 600; }
 
-/* select2 的「已启用的世界书」里那个内联搜索框会把整颗胶囊撑高，占位文字掉到底下；
-   给它定高、让容器用 flex 垂直居中 */
-html.ilg body #WorldInfo .select2-selection--multiple .select2-selection__rendered {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 2px;
-    padding: 4px 10px;
-}
 
 html.ilg body #WorldInfo .select2-selection--multiple .select2-selection__placeholder { line-height: 30px; }
 /* 「创建 或 [选一个]」那行：下拉给足宽度，不然开出来的列表会被挤成一列字 */
@@ -2922,7 +2861,7 @@ html.ilg:not(.ilg-light) body #world_popup .select2-container .select2-selection
 html.ilg body #world_popup .select2-container .select2-selection__rendered { padding-left: 12px; line-height: 30px; }
 
 /* 占位文字右对齐 + 被裁：酒馆给 select2 的 placeholder 加了 auto margin，这里拉回左边 */
-html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-selection__placeholder {
+html.ilg body #WorldInfo .select2-selection--multiple.ilg-wi-empty .select2-selection__placeholder {
     margin: 0 !important;
     width: 100%;
     text-align: left;
@@ -2939,14 +2878,8 @@ html.ilg body #world_popup #world_popup_delete { margin-left: auto !important; }
 
 /* 那个占位文字其实是 select2 内联搜索框的 placeholder（不是 __placeholder 那个 li），
    它带着酒馆给的右对齐和窄宽度，所以看着像被裁了一半 */
-html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search--inline {
+html.ilg body #WorldInfo .select2-selection--multiple.ilg-wi-empty .select2-search--inline {
     flex: 1 1 100%;
-    width: 100%;
-}
-html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search__field {
-    width: 100% !important;
-    text-align: left !important;
-    font-size: 13px;
 }
 html.ilg body #WorldInfo .select2-search__field::placeholder { opacity: 0.55; }
 
@@ -2967,7 +2900,6 @@ html.ilg:not(.ilg-light) body .select2-container--open .select2-dropdown:where(#
     box-shadow: 0 22px 44px -20px rgba(0, 0, 0, 0.85), 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 html.ilg body .select2-results__option:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) {
-    padding: 8px 12px;
     font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
@@ -2999,19 +2931,19 @@ html.ilg body #PersonaManagement #persona_delete_button.red_button:is(:hover, :a
 
 /* 空着的「已启用世界书」：select2 把占位内容拆成「一个空 ul（上下各 15px margin）+ 一个搜索框」两块，
    所以胶囊空着也 63px 高、字掉到底下。没选中任何世界书时把 ul 收掉、让搜索框整行撑满胶囊 */
-html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) {
+html.ilg body #WorldInfo .select2-selection--multiple.ilg-wi-empty {
     height: 38px;
     min-height: 38px;
     padding: 0;
 }
-html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-selection__rendered {
+html.ilg body #WorldInfo .select2-selection--multiple.ilg-wi-empty .select2-selection__rendered {
     display: none;
 }
-html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search--inline {
+html.ilg body #WorldInfo .select2-selection--multiple.ilg-wi-empty .select2-search--inline {
     display: block;
     width: 100%;
 }
-html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search__field {
+html.ilg body #WorldInfo .select2-selection--multiple.ilg-wi-empty .select2-search__field {
     width: 100% !important;
     height: 36px;
     margin: 0 !important;
@@ -3022,7 +2954,7 @@ html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selectio
     font-size: 13px;
     text-align: left !important;
 }
-html.ilg body #WorldInfo .select2-selection--multiple:not(:has(.select2-selection__choice)) .select2-search__field::placeholder { opacity: 0.5; }
+html.ilg body #WorldInfo .select2-selection--multiple.ilg-wi-empty .select2-search__field::placeholder { opacity: 0.5; }
 
 /* 选项左边那格勾选框是酒馆自己画的（padding-left: 30px + ::before），别把整行的左内边距压掉，不然勾会压在字上 */
 html.ilg body .select2-results__option:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)) { padding: 6px 12px 6px 30px; }
@@ -3122,18 +3054,9 @@ html.ilg body #WorldInfo .select2-selection__choice__remove {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 14px;
-    height: 14px;
-    margin: 0;
     padding: 0;
-    border: 0;
     border-radius: 999px;
-    color: inherit;
-    opacity: 0.55;
-    font-size: 12px;
-    line-height: 1;
 }
-html.ilg body #WorldInfo .select2-selection__choice__remove:hover { opacity: 1; }
 /* 酒馆的 clickable_buttonstyle 给名称本身加了黑底，清外层 chip 不会清掉它。 */
 html.ilg body #WorldInfo .select2-selection__choice__display {
     min-width: 0;
@@ -3297,7 +3220,6 @@ html.ilg body #world_popup_entries_list .world_entry_edit :is(.range-block, .fle
     html.ilg body #world_popup_entries_list .world_entry_edit [name="keywordsAndLogicBlock"] { grid-template-columns: minmax(0, 1fr); }
     html.ilg body #world_popup_entries_list .world_entry_edit [name="perEntryOverridesBlock"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-    html.ilg body #world_popup_entries_list .world_entry_edit textarea.text_pole[id^="world_entry_content_"] { height: 200px; min-height: 200px; }
 }
 
 /* 手机上的展开区：内容那行的勾选換到标题下面横排；组 / 绑定这几排一列两个 */
@@ -3575,3 +3497,1168 @@ html.ilg body .ilg-settings #ilg-card-report-copy {
     justify-content: center;
     white-space: normal;
 }
+
+/* Local appearance controls: stable wallpaper palette and a compact native-control popover. */
+html.ilg {
+    --ilg-ink: #25282d;
+    --ilg-pearl: #e6e9ee;
+    --ilg-reading-muted: #b9c0cb;
+    --ilg-surface: rgba(25, 29, 35, .97);
+    --ilg-control-line: rgba(233, 229, 220, .14);
+    --ilg-control-hover: rgba(233, 229, 220, .08);
+    --ilg-accent: #a4c5e6;
+}
+html.ilg.ilg-light {
+    --ilg-reading-muted: #555d68;
+    --ilg-surface: rgba(248, 249, 251, .97);
+    --ilg-control-line: rgba(43, 52, 58, .13);
+    --ilg-control-hover: rgba(43, 52, 58, .055);
+    --ilg-accent: #2f638e;
+}
+html.ilg body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
+    --SmartThemeBodyColor: var(--ilg-pearl);
+    --SmartThemeEmColor: #b9c0cb;
+    --SmartThemeQuoteColor: #c6cfda;
+    --SmartThemeUnderlineColor: #a4c5e6;
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg.ilg-light body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
+    --SmartThemeBodyColor: var(--ilg-ink);
+    --SmartThemeEmColor: #555d68;
+    --SmartThemeQuoteColor: #42678a;
+    --SmartThemeUnderlineColor: #2563a6;
+}
+html.ilg.ilg-light body #chat .mes_text { text-shadow: 0 1px 1px rgba(255, 253, 248, .22); }
+html.ilg body #send_textarea { caret-color: var(--SmartThemeBodyColor); }
+html.ilg body #send_textarea::placeholder { color: var(--ilg-reading-muted); opacity: 1; }
+/* The old scrims ended at the chat column, forming rectangular dark edges on a photograph. */
+html.ilg.ilg-float.ilg-custom-wallpaper body .ilg-scrim { display: none; }
+html.ilg.ilg-custom-wallpaper body #nonQRFormItems:not(.ilg-web-glass) { background-color: var(--ilg-tint); }
+html.ilg.ilg-custom-wallpaper.ilg-light body #nonQRFormItems:not(.ilg-web-glass) { background-color: var(--ilg-tint); }
+html.ilg body #ilg-tone-button .ilg-tone-icon { border: 0; background: transparent; font: inherit; cursor: pointer; }
+html.ilg body #ilg-tone-button .ilg-tone-icon::before { display: none; }
+html.ilg body #ilg-tone-button .ilg-tone-icon > svg { display: block; width: 21px; height: 21px; }
+html.ilg body #ilg-appearance-panel {
+    --ilg-panel-fg: #f0ede8;
+    --ilg-panel-muted: #b7b0a8;
+    --ilg-panel-bg: rgba(30, 29, 29, .98);
+    --ilg-panel-well: #282625;
+    --ilg-panel-selected: #47413b;
+    --ilg-panel-line: rgba(234, 222, 207, .12);
+    --ilg-panel-accent: #edc39b;
+    --ilg-preview-bg: #19191b;
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 10020;
+    padding: 22px;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 0;
+    border-radius: 24px;
+    background: var(--ilg-panel-bg);
+    color: var(--ilg-panel-fg);
+    box-shadow: 0 18px 64px rgba(10, 12, 16, .28);
+    backdrop-filter: blur(24px) saturate(1.1);
+    -webkit-backdrop-filter: blur(24px) saturate(1.1);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+    text-shadow: none;
+    animation: ilg-appearance-enter .2s cubic-bezier(.16, 1, .3, 1);
+    scrollbar-width: thin;
+    scrollbar-color: var(--ilg-panel-line) transparent;
+    color-scheme: dark;
+}
+html.ilg.ilg-light body #ilg-appearance-panel {
+    --ilg-panel-fg: #2c2926;
+    --ilg-panel-muted: #68615b;
+    --ilg-panel-bg: rgba(250, 249, 246, .98);
+    --ilg-panel-well: #eeece7;
+    --ilg-panel-selected: #fffefa;
+    --ilg-panel-line: rgba(65, 48, 34, .13);
+    --ilg-panel-accent: #8b5029;
+    --ilg-preview-bg: #f3f0e9;
+    color-scheme: light;
+}
+html.ilg body #ilg-appearance-panel[hidden],
+html.ilg body #ilg-appearance-panel [hidden] { display: none; }
+html.ilg body #ilg-appearance-panel * { box-sizing: border-box; text-shadow: none; }
+html.ilg body #ilg-appearance-panel button { font: inherit; color: inherit; cursor: pointer; text-shadow: none; }
+html.ilg body #ilg-appearance-panel svg { width: 22px; height: 22px; flex-shrink: 0; }
+html.ilg body #ilg-appearance-panel .ilg-appearance-heading {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin: -4px -6px 20px 0;
+}
+html.ilg body #ilg-appearance-panel .ilg-appearance-heading strong { color: var(--ilg-panel-fg); font-size: 20px; font-weight: 600; letter-spacing: -.025em; }
+html.ilg body #ilg-appearance-panel .ilg-appearance-heading p { margin: 3px 0 0; font-size: 12px; color: var(--ilg-panel-muted); }
+html.ilg body #ilg-appearance-panel .ilg-appearance-close {
+    display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
+    border: 0; border-radius: 50%; background: transparent; color: var(--ilg-panel-muted);
+}
+html.ilg body #ilg-appearance-panel .ilg-appearance-close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+html.ilg body #ilg-appearance-panel .ilg-appearance-close:hover { background: var(--ilg-panel-well); color: var(--ilg-panel-fg); }
+html.ilg body #ilg-appearance-panel fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+html.ilg body #ilg-appearance-panel legend { margin: 0 0 10px; padding: 0; color: var(--ilg-panel-fg); font-size: 13px; font-weight: 600; }
+html.ilg body #ilg-appearance-panel .ilg-appearance-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: var(--ilg-panel-well); border-radius: 16px; }
+html.ilg body #ilg-appearance-panel label { position: relative; display: block; margin: 0; color: inherit; cursor: pointer; }
+html.ilg body #ilg-appearance-panel label input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+html.ilg body #ilg-appearance-panel .ilg-appearance-modes label > span {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+    min-height: 72px; padding: 10px 4px; border-radius: 12px;
+    background: transparent; color: var(--ilg-panel-muted); font-size: 13px;
+}
+html.ilg body #ilg-appearance-panel .ilg-appearance-modes input:checked + span { background: var(--ilg-panel-selected); color: var(--ilg-panel-fg); font-weight: 600; }
+html.ilg body #ilg-appearance-panel .ilg-appearance-modes input:checked + span > svg { color: var(--ilg-panel-accent); }
+html.ilg body #ilg-appearance-panel label:hover > span { color: var(--ilg-panel-fg); }
+html.ilg body #ilg-appearance-panel :is(input:focus-visible + span, button:focus-visible) { outline: 2px solid var(--ilg-panel-accent); outline-offset: 2px; }
+html.ilg body #ilg-appearance-panel .ilg-reading-section { margin-top: 24px; }
+html.ilg body #ilg-appearance-panel .ilg-reading-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; background: var(--ilg-panel-well); border-radius: 14px; }
+html.ilg body #ilg-appearance-panel .ilg-reading-choice label > span { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-height: 64px; padding: 9px 10px; border-radius: 10px; }
+html.ilg body #ilg-appearance-panel .ilg-reading-choice input:checked + span { background: var(--ilg-panel-selected); }
+html.ilg body #ilg-appearance-panel .ilg-style-name { display: flex; align-items: center; gap: 6px; color: var(--ilg-panel-fg); font-size: 14px; font-weight: 500; }
+html.ilg body #ilg-appearance-panel .ilg-reading-choice input:checked + span .ilg-style-name { color: var(--ilg-panel-accent); font-weight: 600; }
+html.ilg body #ilg-appearance-panel .ilg-style-name small { padding: 1px 4px; border-radius: 4px; background: var(--ilg-panel-well); color: var(--ilg-panel-muted); font-size: 10px; font-weight: 500; line-height: 1.5; }
+html.ilg body #ilg-appearance-panel .ilg-style-detail { color: var(--ilg-panel-muted); font-size: 11px; line-height: 1.6; }
+html.ilg body #ilg-appearance-panel .ilg-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 8px; color: var(--ilg-panel-muted); font-size: 11px; }
+html.ilg body #ilg-appearance-panel .ilg-preview-tone { color: var(--ilg-panel-accent); }
+html.ilg body #ilg-appearance-panel .ilg-reading-preview { padding: 15px 16px; border-radius: 12px; background: var(--ilg-preview-bg); color: var(--ilg-prose-text); font-size: 14px; font-weight: 400; letter-spacing: var(--ilg-prose-tracking); }
+html.ilg body #ilg-appearance-panel .ilg-reading-preview p { margin: 0 0 6px; padding: 0; }
+html.ilg body #ilg-appearance-panel .ilg-reading-preview p:last-child { margin-bottom: 0; }
+html.ilg body #ilg-appearance-panel .ilg-reading-preview strong { color: var(--ilg-prose-strong); font-weight: 600; }
+html.ilg body #ilg-appearance-panel .ilg-reading-preview em { color: var(--ilg-prose-muted); font-style: var(--ilg-prose-em-style); }
+html.ilg body #ilg-appearance-panel .ilg-reading-preview q { color: var(--ilg-prose-quote); font-weight: var(--ilg-prose-quote-weight); background: var(--ilg-prose-quote-fill); padding: var(--ilg-prose-quote-pad, 0); border-radius: var(--ilg-prose-quote-radius, 0); text-decoration: var(--ilg-prose-quote-decoration); text-decoration-color: var(--ilg-prose-quote-line); text-decoration-thickness: 1px; text-underline-offset: .23em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+html.ilg body #ilg-appearance-panel .ilg-reading-preview q::before,
+html.ilg body #ilg-appearance-panel .ilg-reading-preview q::after { content: none; }
+html.ilg body #ilg-appearance-panel .ilg-appearance-custom { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--ilg-panel-line); }
+html.ilg body #ilg-appearance-panel .ilg-text-choice { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; padding: 3px; background: var(--ilg-panel-well); border-radius: 12px; }
+html.ilg body #ilg-appearance-panel .ilg-text-choice label > span { display: grid; place-items: center; min-height: 44px; border-radius: 9px; color: var(--ilg-panel-muted); font-size: 13px; }
+html.ilg body #ilg-appearance-panel .ilg-text-choice input:checked + span { background: var(--ilg-panel-selected); color: var(--ilg-panel-fg); font-weight: 600; }
+html.ilg body #ilg-appearance-panel .ilg-appearance-hint { margin: 9px 0 10px; color: var(--ilg-panel-muted); font-size: 11px; }
+html.ilg body #ilg-appearance-panel .ilg-choose-wallpaper { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 6px 0; border: 0; border-radius: 0; background: transparent; font-size: 13px; }
+html.ilg body #ilg-appearance-panel .ilg-choose-wallpaper > span { display: flex; align-items: center; gap: 10px; }
+html.ilg body #ilg-appearance-panel .ilg-choose-wallpaper svg { width: 18px; height: 18px; color: var(--ilg-panel-accent); }
+html.ilg body #ilg-appearance-panel .ilg-choose-wallpaper .ilg-wallpaper-arrow { width: 16px; height: 16px; color: var(--ilg-panel-muted); }
+html.ilg body #ilg-appearance-panel .ilg-choose-wallpaper:hover { color: var(--ilg-panel-accent); }
+html.ilg body #ilg-appearance-panel .ilg-appearance-status { margin: 14px 0 0; padding-top: 13px; border-top: 1px solid var(--ilg-panel-line); color: var(--ilg-panel-muted); font-size: 11px; text-align: center; }
+html.ilg body .ilg-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+html.ilg body #ilg-appearance-panel ::selection { background: color-mix(in srgb, var(--ilg-panel-accent) 26%, transparent); }
+@keyframes ilg-appearance-enter { from { opacity: .7; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { html.ilg body #ilg-appearance-panel { animation: none; } }
+html.ilg body.reduced-motion #ilg-appearance-panel { animation: none; }
+
+/* Typography palettes affect eligible native prose; all chat surfaces stay host-owned.
+   默认款“青瓷”（设置值仍叫 warm，旧存档不用迁移）：与栖暖各有自己的节奏，
+   对白是青瓷绿 + 一层很淡的圆角底（不是荧光笔条、也不是下划线），心声是偏冷的灰蓝正体，行距更松。 */
+html.ilg {
+    --ilg-prose-text: #e4e7e5;
+    --ilg-prose-muted: #9fadb5;
+    --ilg-prose-quote: #8fd3bf;
+    --ilg-prose-link: #9ec3e6;
+    --ilg-prose-strong: #f4faf7;
+    --ilg-prose-leading: 2;
+    --ilg-prose-tracking: .02em;
+    --ilg-prose-quote-weight: 450;
+    --ilg-prose-gap: .82em;
+    --ilg-prose-rule: rgba(143,211,191,.25);
+    --ilg-preview-bg: rgba(15,28,27,.6);
+    --ilg-prose-em-style: normal;
+    --ilg-prose-quote-decoration: none;
+    --ilg-prose-quote-line: transparent;
+    --ilg-prose-quote-fill: rgba(143, 211, 191, .075);
+    --ilg-prose-quote-pad: .06em .3em;
+    --ilg-prose-quote-radius: .3em;
+}
+html.ilg.ilg-light {
+    --ilg-prose-text: #262b2a;
+    --ilg-prose-muted: #5f6d75;
+    --ilg-prose-quote: #1f6f5c;
+    --ilg-prose-link: #2c5f8f;
+    --ilg-prose-strong: #17201d;
+    --ilg-prose-leading: 1.96;
+    --ilg-prose-quote-fill: rgba(31, 111, 92, .065);
+    --ilg-prose-rule: rgba(31,111,92,.2);
+    --ilg-preview-bg: rgba(246,252,249,.76);
+}
+/* 栖暖 keeps the classic storage key and the warmth of the original orange palette. */
+html.ilg[data-ilg-reading-style="classic"] {
+    --ilg-prose-text:#e9e3db;--ilg-prose-muted:#bdada0;--ilg-prose-quote:#edc196;
+    --ilg-prose-link:#b8cbe1;--ilg-prose-strong:#faf2e8;
+    --ilg-prose-leading:1.9;--ilg-prose-tracking:.015em;--ilg-prose-gap:.76em;
+    --ilg-prose-quote-weight:400;--ilg-prose-em-style:normal;
+    --ilg-prose-quote-decoration:none;--ilg-prose-quote-pad:0 .08em;--ilg-prose-quote-radius:.12em;
+    --ilg-prose-quote-fill:linear-gradient(transparent 68%,rgba(237,193,150,.13) 68%,rgba(237,193,150,.13) 93%,transparent 93%);
+    --ilg-prose-rule:rgba(237,193,150,.28);--ilg-preview-bg:rgba(33,24,18,.64);
+}
+html.ilg.ilg-light[data-ilg-reading-style="classic"] {
+    --ilg-prose-text:#302b27;--ilg-prose-muted:#6d5e52;--ilg-prose-quote:#9a4f23;
+    --ilg-prose-link:#4b6485;--ilg-prose-strong:#211d19;
+    --ilg-prose-quote-fill:linear-gradient(transparent 68%,rgba(213,145,82,.14) 68%,rgba(213,145,82,.14) 93%,transparent 93%);
+    --ilg-prose-rule:rgba(154,79,35,.22);--ilg-preview-bg:rgba(255,248,237,.8);
+}
+/* Optional reading presets: local typefaces, no remote font request. */
+html.ilg[data-ilg-reading-style="moon"] {
+    --ilg-prose-font:"Songti SC","STSong","Noto Serif CJK SC","Noto Serif SC","SimSun","宋体",serif;
+    --ilg-prose-text:#e9e3d8;--ilg-prose-muted:#b8ada1;--ilg-prose-quote:#c4b4e4;
+    --ilg-prose-link:#adc8e8;--ilg-prose-strong:#f9f0df;
+    --ilg-prose-leading:2.08;--ilg-prose-tracking:.035em;--ilg-prose-gap:.95em;
+    --ilg-prose-quote-weight:400;--ilg-prose-em-style:normal;
+    --ilg-prose-quote-decoration:none;--ilg-prose-quote-fill:none;
+    --ilg-prose-quote-pad:0;--ilg-prose-quote-radius:0;
+    --ilg-preview-bg:rgba(16,20,31,.64);--ilg-prose-rule:rgba(196,180,228,.25);
+}
+html.ilg.ilg-light[data-ilg-reading-style="moon"] {
+    --ilg-prose-text:#342d2a;--ilg-prose-muted:#71635a;--ilg-prose-quote:#635084;
+    --ilg-prose-link:#3a5c85;--ilg-prose-strong:#251e1b;--ilg-preview-bg:rgba(255,251,241,.76);--ilg-prose-rule:rgba(99,80,132,.22);
+}
+html.ilg[data-ilg-reading-style="sunny"] {
+    --ilg-prose-font:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC Variable","Microsoft YaHei",sans-serif;
+    --ilg-prose-text:#e0eaf4;--ilg-prose-muted:#a6b9cd;--ilg-prose-quote:#9dc8ff;
+    --ilg-prose-link:#9cd8df;--ilg-prose-strong:#f6faff;
+    --ilg-prose-leading:1.86;--ilg-prose-tracking:.015em;--ilg-prose-gap:.66em;
+    --ilg-prose-quote-weight:450;--ilg-prose-em-style:normal;
+    --ilg-prose-quote-decoration:none;--ilg-prose-quote-fill:rgba(157,200,255,.08);
+    --ilg-prose-quote-pad:.04em .22em;--ilg-prose-quote-radius:.25em;
+    --ilg-preview-bg:rgba(15,27,39,.64);--ilg-prose-rule:rgba(157,200,255,.25);
+}
+html.ilg.ilg-light[data-ilg-reading-style="sunny"] {
+    --ilg-prose-text:#263b4f;--ilg-prose-muted:#5d7084;--ilg-prose-quote:#205d95;
+    --ilg-prose-link:#226d77;--ilg-prose-strong:#172b3e;
+    --ilg-prose-quote-fill:rgba(32,93,149,.06);--ilg-preview-bg:rgba(242,248,253,.8);--ilg-prose-rule:rgba(32,93,149,.2);
+}
+html.ilg:is([data-ilg-reading-style="moon"],[data-ilg-reading-style="sunny"]) body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose {
+    margin-block:0 var(--ilg-prose-gap);
+}
+html.ilg body #ilg-home .ilg-home-caption { position: relative; display: grid; gap: 10px; isolation: isolate; }
+html.ilg body #ilg-home .ilg-home-title {
+    font-size: clamp(27px, 1.8vw + 14px, 36px);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: .015em;
+}
+html.ilg body #ilg-home .ilg-home-sub { font-size: clamp(14px, .4vw + 12px, 16px); font-weight: 400; line-height: 1.6; letter-spacing: .015em; }
+html.ilg.ilg-custom-wallpaper body #ilg-home { color: #f5f5f7; --SmartThemeBodyColor: #f5f5f7; }
+html.ilg.ilg-custom-wallpaper body #ilg-home .ilg-home-logo { background-color: #f5f5f7; filter: drop-shadow(0 2px 5px rgba(9, 16, 25, .25)); }
+html.ilg.ilg-custom-wallpaper body #ilg-home .ilg-home-caption::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -62px -84px;
+    pointer-events: none;
+    background: radial-gradient(ellipse closest-side, rgba(9, 16, 25, .5) 8%, rgba(9, 16, 25, .24) 58%, transparent 100%);
+    filter: blur(15px);
+}
+html.ilg.ilg-custom-wallpaper body #ilg-home .ilg-home-title { color: #f5f5f7; text-shadow: 0 2px 5px rgba(9, 16, 25, .34); }
+html.ilg.ilg-custom-wallpaper body #ilg-home .ilg-home-sub { color: #e1e5eb; text-shadow: 0 1px 4px rgba(9, 16, 25, .42); }
+html.ilg.ilg-custom-wallpaper body #ilg-home .ilg-home-recent {
+    color: #f5f5f7;
+    background-color: rgba(255, 255, 255, .18);
+    text-shadow: 0 1px 2px rgba(9, 16, 25, .28);
+    font-weight: 500;
+}
+html.ilg.ilg-custom-wallpaper body #ilg-home .ilg-home-recent:hover { background-color: rgba(255, 255, 255, .28); }
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose {
+    --SmartThemeBodyColor: var(--ilg-prose-text) !important;
+    --SmartThemeEmColor: var(--ilg-prose-muted) !important;
+    --SmartThemeQuoteColor: var(--ilg-prose-quote) !important;
+    --SmartThemeUnderlineColor: var(--ilg-prose-link) !important;
+    color: var(--ilg-prose-text) !important;
+    text-shadow: none;
+    font-weight: 400;
+    font-family: var(--ilg-prose-font, inherit);
+    letter-spacing: var(--ilg-prose-tracking);
+    text-wrap: pretty;
+    hanging-punctuation: first last;
+}
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose :is(q,em,i,strong,b,a) { text-shadow: none; }
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose :is(strong,b) { color: var(--ilg-prose-strong); font-weight: 600; }
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose :is(em,i) { color: var(--ilg-prose-muted) !important; font-style: var(--ilg-prose-em-style); }
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose q {
+    color: var(--ilg-prose-quote) !important;
+    font-weight: var(--ilg-prose-quote-weight);
+    background: var(--ilg-prose-quote-fill);
+    padding: var(--ilg-prose-quote-pad, 0);
+    border-radius: var(--ilg-prose-quote-radius, 0);
+    box-shadow: none;
+    border: 0;
+    text-decoration: var(--ilg-prose-quote-decoration);
+    text-decoration-color: var(--ilg-prose-quote-line);
+    text-decoration-thickness: 1px;
+    text-underline-offset: .23em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose q :is(strong,b,em,i) { color: inherit !important; }
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose a { color: var(--ilg-prose-link) !important; text-decoration-thickness: 1px; }
+/* Quiet reading details stay on the eligible native-prose boundary. */
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > p.ilg-prose {
+    margin-block:0 var(--ilg-prose-gap,.82em);font-kerning:normal;line-break:strict;
+}
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > blockquote.ilg-prose {
+    margin-block:.4em var(--ilg-prose-gap,.82em);padding:.12em .85em;
+    border:0;border-inline-start:1px solid var(--ilg-prose-rule);border-radius:0;background:none;
+    color:var(--ilg-prose-muted) !important;font-style:normal;
+}
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose a {
+    text-decoration-line:underline;text-decoration-skip-ink:auto;
+    text-decoration-color:var(--ilg-prose-rule);text-underline-offset:.22em;
+}
+/* 2026-11-09 字体细修：只加在既有 .ilg-prose 边界上，不用 :has()，不加远程字体。
+   1) 中文排版：行首全角标点收紧、中西文之间自动留一点空（浏览器不支持就忽略）。
+   2) 浅色下心声提亮一档对比（灰壁纸最坏情况从 ~4.0 提到 4.5 以上）。
+   3) 笺月的心声用楷体，像旁白里的手写批注；没有楷体就退回宋体。
+   4) 窄屏一行字少，行距和字距各收一点，读起来不散。 */
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose {
+    text-spacing-trim: trim-start;
+    text-autospace: normal;
+}
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose :is(em,i) { font-family: var(--ilg-prose-em-font, inherit); }
+html.ilg body #ilg-appearance-panel .ilg-reading-preview em { font-family: var(--ilg-prose-em-font, inherit); }
+html.ilg.ilg-light { --ilg-prose-muted: #56646c; }
+html.ilg.ilg-light[data-ilg-reading-style="classic"] { --ilg-prose-muted: #655649; }
+html.ilg.ilg-light[data-ilg-reading-style="moon"] { --ilg-prose-muted: #675a51; }
+html.ilg.ilg-light[data-ilg-reading-style="sunny"] { --ilg-prose-muted: #52657a; }
+html.ilg[data-ilg-reading-style="moon"] {
+    --ilg-prose-font:"Songti SC","STSong","Noto Serif CJK SC","Noto Serif SC","SimSun","宋体",serif;
+    --ilg-prose-em-font:"Kaiti SC","STKaiti","KaiTi","楷体","LXGW WenKai","霞鹜文楷",var(--ilg-prose-font);
+}
+html.ilg[data-ilg-reading-style="moon"] body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose :is(strong,b) { font-weight: 700; }
+@media (max-width: 600px) {
+    html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose {
+        letter-spacing: calc(var(--ilg-prose-tracking) * .6);
+    }
+}
+html.ilg body #send_textarea::selection { background: color-mix(in srgb, var(--ilg-accent) 23%, transparent); }
+
+@media (max-width: 600px) {
+    html.ilg body #ilg-home .ilg-home-caption { gap: 9px; }
+    html.ilg.ilg-custom-wallpaper body #ilg-home .ilg-home-caption::before { inset: -50px -42px; }
+}
+
+/* iOS compatibility material: CSS light and system blur, not SVG background displacement.
+   Only the extension's compact host controls are admitted. Message/card surfaces stay untouched. */
+html.ilg.ilg-ios-material body {
+    --ilg-ios-edge-light: rgba(255, 255, 255, .72);
+    --ilg-ios-edge-soft: rgba(234, 243, 255, .22);
+    --ilg-ios-edge-shade: rgba(5, 16, 29, .25);
+    --ilg-ios-veil: rgba(237, 245, 255, .12);
+    --ilg-ios-contact: rgba(0, 8, 20, .15);
+    --ilg-ios-lift: rgba(0, 8, 20, .19);
+}
+html.ilg.ilg-light.ilg-ios-material body {
+    --ilg-ios-edge-light: rgba(255, 255, 255, .96);
+    --ilg-ios-edge-soft: rgba(255, 255, 255, .32);
+    --ilg-ios-edge-shade: rgba(27, 46, 67, .18);
+    --ilg-ios-veil: rgba(255, 255, 255, .2);
+    --ilg-ios-contact: rgba(35, 50, 74, .1);
+    --ilg-ios-lift: rgba(35, 50, 74, .13);
+}
+html.ilg.ilg-ios-material body:not(.no-blur) .ilg-glass:is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island) {
+    box-shadow:
+        inset 0 -1px 1.5px var(--ilg-ios-edge-shade),
+        0 2px 5px var(--ilg-ios-contact),
+        0 10px 26px var(--ilg-ios-lift);
+}
+html.ilg.ilg-ios-material body:not(.no-blur) .ilg-glass:is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island)::before {
+    content: "";
+    display: block;
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: .82;
+    background: linear-gradient(138deg,
+        var(--ilg-ios-edge-light) 0%,
+        var(--ilg-ios-edge-soft) 20%,
+        transparent 38%,
+        var(--ilg-ios-edge-shade) 56%,
+        transparent 70%,
+        var(--ilg-ios-edge-soft) 86%,
+        var(--ilg-ios-edge-light) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+}
+html.ilg.ilg-ios-material body:not(.no-blur) .ilg-glass:is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island)::after {
+    content: "";
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: .72;
+    background: radial-gradient(120% 150% at 5% -20%, var(--ilg-ios-veil), transparent 64%);
+}
+html.ilg.ilg-ios-material body:not(.no-blur) #nonQRFormItems.ilg-glass:focus-within::before,
+html.ilg.ilg-ios-material body:not(.no-blur) .ilg-island.ilg-glass:active::before { opacity: 1; }
+html.ilg.ilg-ios-material body:not(.no-blur) #nonQRFormItems.ilg-glass:focus-within::after { opacity: 1; }
+html.ilg.ilg-ios-material body:not(.no-blur) .ilg-glass.ilg-over-light {
+    --ilg-ios-edge-shade: rgba(22, 37, 54, .24);
+    --ilg-ios-contact: rgba(20, 35, 55, .16);
+}
+html.ilg.ilg-ios-material body.noShadows .ilg-glass:is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island) { box-shadow: none; }
+
+/* Optional Liquid Glass Web material: upstream white tint and shadow. No rim, sheen or press glow (see the no-highlight block at the end). */
+html.ilg.ilg-liquid-web body:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass {
+    --ilg-web-base: rgba(255, 255, 255, var(--ilg-web-tint, .08));
+    background-color: var(--ilg-web-base);
+    background-image: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, .22), inset 0 -8px 20px rgba(0, 0, 0, .14);
+}
+html.ilg.ilg-liquid-web body:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass.ilg-over-light { --ilg-web-base: rgba(11, 19, 30, .32); }
+html.ilg.ilg-liquid-web.ilg-light body:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass.ilg-over-dark { --ilg-web-base: rgba(255, 255, 255, .34); }
+/* Upstream jelly squash while held; release spring runs in liquid-glass-web.js. Only top-bar islands deform. */
+html.ilg.ilg-liquid-web body:not(.no-blur) .ilg-island:is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass.ilg-web-pressed {
+    transform: scale(1.1, .955);
+}
+html.ilg.ilg-liquid-web body.noShadows:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass { box-shadow: none; }
+html.ilg body #ilg-appearance-panel .ilg-glass-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 20px; }
+html.ilg body #ilg-appearance-panel .ilg-glass-choice legend { margin-bottom: 9px; padding: 0; color: var(--ilg-panel-muted); font-size: 12px; }
+html.ilg body #ilg-appearance-panel .ilg-glass-choice label > span { display: grid; align-content: center; gap: 4px; min-height: 66px; padding: 10px; border-radius: 12px; background: var(--ilg-panel-well); color: var(--ilg-panel-muted); }
+html.ilg body #ilg-appearance-panel .ilg-glass-choice strong { font-size: 12px; font-weight: 500; color: inherit; }
+html.ilg body #ilg-appearance-panel .ilg-glass-choice small { font-size: 10px; line-height: 1.5; color: var(--ilg-panel-muted); }
+html.ilg body #ilg-appearance-panel .ilg-glass-choice input:checked + span { background: var(--ilg-panel-selected); color: var(--ilg-panel-fg); box-shadow: inset 0 0 0 1px var(--ilg-panel-accent); }
+html.ilg body #ilg-appearance-panel .ilg-web-style-hint { margin: 8px 0 0; font-size: 11px; line-height: 1.6; color: var(--ilg-panel-muted); }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg.ilg-liquid-web body:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass,
+    html.ilg.ilg-liquid-web body:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass::before,
+    html.ilg.ilg-liquid-web body:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass::after { transition: none; transform: none; }
+}
+html.ilg.ilg-liquid-web body.reduced-motion:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass,
+html.ilg.ilg-liquid-web body.reduced-motion:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass::before,
+html.ilg.ilg-liquid-web body.reduced-motion:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass::after { transition: none; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg.ilg-liquid-web body:not(.no-blur) .ilg-island:is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass.ilg-web-pressed { transform: none !important; }
+}
+html.ilg.ilg-liquid-web body.reduced-motion:not(.no-blur) .ilg-island:is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-web-glass.ilg-web-pressed { transform: none !important; }
+
+/* Clear optics: preserve the approved low-tint Web material; align original glass and directional light. */
+html.ilg.ilg-clear-optics body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
+    --SmartThemeBlurTintColor: rgba(18, 20, 30, .13);
+}
+html.ilg.ilg-clear-optics.ilg-light body :where(#top-bar, #top-settings-holder, #form_sheld, #chat, #ilg-home, #options, #extensionsMenu, #toast-container, #ilg-fold-menu, dialog.popup.ilg-glass) {
+    --SmartThemeBlurTintColor: rgba(248, 249, 252, .16);
+    --SmartThemeBotMesBlurTintColor: rgba(255, 255, 255, var(--ilg-mes-a, .12));
+    --SmartThemeUserMesBlurTintColor: rgba(231, 240, 255, calc(var(--ilg-mes-a, .12) + .02));
+}
+html.ilg.ilg-clear-optics body dialog.popup.ilg-glass:not(.ilg-adapted) { background-color: var(--SmartThemeBlurTintColor); }
+html.ilg.ilg-clear-optics:where(:not(.ilg-ios-experiment), .ilg-ios-material, .ilg-liquid-web) body:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island, .drawer-content, dialog.popup, #options, #extensionsMenu, #ilg-fold-menu).ilg-glass:where(:not(.ilg-phys)) {
+    box-shadow: inset 0 -1px 1px rgba(0, 8, 20, .1), 0 3px 8px rgba(0, 8, 20, .14), 0 10px 26px -10px rgba(0, 8, 20, .12);
+}
+html.ilg.ilg-clear-optics:where(:not(.ilg-ios-experiment)) body:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island).ilg-glass.ilg-phys::before,
+html.ilg.ilg-clear-optics:where(:not(.ilg-ios-experiment), .ilg-ios-material, .ilg-liquid-web) body:not(.no-blur) :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island, .drawer-content, dialog.popup, #options, #extensionsMenu, #ilg-fold-menu).ilg-glass:where(:not(.ilg-phys))::before {
+    content: "";
+    display: block;
+    inset: 0;
+    padding: .75px;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: .78;
+    background: conic-gradient(from var(--ilg-light-angle, 135deg) at 50% 50%, rgba(255,255,255,.06) 0deg, rgba(255,255,255,.62) 34deg, rgba(255,255,255,.12) 68deg, transparent 110deg, rgba(8,20,36,.1) 180deg, transparent 238deg, rgba(255,255,255,.2) 285deg, rgba(255,255,255,.06) 360deg);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+}
+html.ilg.ilg-clear-optics body:not(.no-blur) .ilg-glass.ilg-sheen:not(.mes):not(.ilg-web-glass)::after {
+    background: radial-gradient(ellipse at var(--ilg-light-x, 30%) var(--ilg-light-y, -5%), rgba(255,255,255,calc(.3 * var(--ilg-sheen-k, .03))), transparent 62%);
+}
+html.ilg.ilg-clear-optics body.noShadows :is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island, .drawer-content, dialog.popup, #options, #extensionsMenu, #ilg-fold-menu).ilg-glass { box-shadow: none; }
+html.ilg body #ilg-appearance-panel .ilg-tilt-controls { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--ilg-panel-line); }
+html.ilg body #ilg-appearance-panel .ilg-tilt-controls .checkbox_label { display: flex; align-items: center; gap: 9px; color: var(--ilg-panel-fg); font-size: 12px; }
+html.ilg body #ilg-appearance-panel .ilg-tilt-controls input { position: static; width: 16px; height: 16px; opacity: 1; accent-color: var(--ilg-panel-accent); }
+html.ilg body #ilg-appearance-panel #ilg-tilt-calibrate { min-height: 44px; width: 100%; margin-top: 7px; border: 0; border-radius: 10px; background: var(--ilg-panel-well); font-size: 12px; }
+html.ilg body #ilg-appearance-panel #ilg-tilt-state { font-size: 11px; line-height: 1.6; margin: 8px 0 0; color: var(--ilg-panel-muted); }
+
+/* The original material stays optically clear; local contrast adjusts foreground instead of painting a solid backing. */
+html.ilg.ilg-clear-optics.ilg-custom-wallpaper body #nonQRFormItems.ilg-over-light:not(.ilg-web-glass) {
+    --SmartThemeBodyColor: #242b32;
+    --ilg-reading-muted: #444d57;
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg.ilg-clear-optics.ilg-custom-wallpaper body #nonQRFormItems.ilg-over-dark:not(.ilg-web-glass) {
+    --SmartThemeBodyColor: #f2f4f8;
+    --ilg-reading-muted: #cbd1d9;
+    color: var(--SmartThemeBodyColor);
+}
+/* Reduced motion suppresses springs/transitions; direct light-direction feedback remains available. */
+html.ilg.ilg-clear-optics body.reduced-motion :is(#nonQRFormItems, #top-bar, #ilg-floor, .ilg-island).ilg-glass::before,
+html.ilg.ilg-clear-optics body.reduced-motion :is(#nonQRFormItems, #top-bar, #ilg-floor, .ilg-island).ilg-glass::after { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg.ilg-clear-optics body :is(#nonQRFormItems, #top-bar, #ilg-floor, .ilg-island).ilg-glass::before,
+    html.ilg.ilg-clear-optics body :is(#nonQRFormItems, #top-bar, #ilg-floor, .ilg-island).ilg-glass::after { transition: none; }
+}
+
+/* Legacy lighting reset. A single shared reflection treatment is defined below.
+   Keep message ::before intact: the physical renderer uses it for its tint mask. */
+html.ilg body {
+    --ilg-hl: 0 !important;
+    --ilg-sheen-k: 0 !important;
+}
+html.ilg body .ilg-glass:not(.mes)::before,
+html.ilg body .ilg-glass:not(.mes)::after,
+html.ilg body .ilg-glass:not(.mes):focus-within::before,
+html.ilg body .ilg-glass:not(.mes):focus-within::after,
+html.ilg body .ilg-glass.ilg-web-pressed:not(.mes)::after,
+html.ilg body #chat .mes.ilg-glass::after,
+html.ilg body.bubblechat #chat .mes.ilg-glass:not(.ilg-phys)::before {
+    content: none !important;
+    background: none !important;
+    opacity: 0 !important;
+}
+/* 透明消息卡片：物理版的边缘弧度已经能看出轮廓，不再叠白色描边 */
+html.ilg.ilg-chat-transparent body.bubblechat #chat .mes.ilg-glass.ilg-phys {
+    outline: none;
+}
+
+/* ---------- 悬浮小球：点一下打开玻璃设置（index.js 的 applyBall） ----------
+   正圆玻璃，材质跟输入框同一套（bar）。融合时的高光沿距离场法线绘制；
+   图标是真实子元素（.ilg-glass 的 ::before/::after 在上面那段被统一关掉了）。 */
+html.ilg body > #ilg-ball {
+    position: fixed;
+    z-index: 2990;
+    width: 52px;
+    height: 52px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: rgba(255, 255, 255, .92);
+    background-color: var(--ilg-tint);
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 2px 6px rgba(var(--ilg-drop-rgb), .18), 0 12px 30px rgba(var(--ilg-drop-rgb), .22);
+    transition: translate .32s cubic-bezier(.2, .9, .25, 1.15), left .32s cubic-bezier(.2, .9, .25, 1.15), top .32s cubic-bezier(.2, .9, .25, 1.15), scale .18s ease, background-color .3s;
+}
+html.ilg body > #ilg-ball.ilg-ball-drag { transition: scale .18s ease; scale: 1.08; cursor: grabbing; }
+html.ilg body > #ilg-ball:active:not(.ilg-ball-drag) { scale: .92; }
+html.ilg body > #ilg-ball:focus-visible { outline: 2px solid #0a84ff; outline-offset: 3px; }
+html.ilg body > #ilg-ball .ilg-ball-glyph { display: block; pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .35)); }
+html.ilg.ilg-light body > #ilg-ball { color: rgba(28, 32, 38, .72); }
+html.ilg.ilg-light body > #ilg-ball .ilg-ball-glyph { filter: none; }
+html.ilg body > #ilg-ball .ilg-ball-glyph > span {
+    display: block;
+    width: 22px;
+    height: 22px;
+    background-color: currentColor;
+    -webkit-mask: var(--ilg-icon) center / contain no-repeat;
+    mask: var(--ilg-icon) center / contain no-repeat;
+}
+/* Web 材质：沿用上游的白色底和阴影，按下压扁、松手果冻回弹（回弹在 liquid-glass-web.js） */
+html.ilg.ilg-liquid-web body:not(.no-blur) > #ilg-ball.ilg-glass.ilg-web-glass {
+    background-color: rgba(255, 255, 255, var(--ilg-web-tint, .08));
+    box-shadow: 0 4px 8px rgba(0, 0, 0, .22), inset 0 -8px 20px rgba(0, 0, 0, .14);
+}
+html.ilg.ilg-liquid-web body:not(.no-blur) > #ilg-ball.ilg-glass.ilg-web-glass.ilg-web-pressed { transform: scale(1.1, .955); }
+html.ilg body.noShadows > #ilg-ball { box-shadow: none !important; }
+@media (max-width: 600px) {
+    html.ilg body > #ilg-ball { width: 48px; height: 48px; }
+    html.ilg body > #ilg-ball .ilg-ball-glyph > span { width: 20px; height: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    html.ilg body > #ilg-ball { transition: none; }
+    html.ilg body > #ilg-ball.ilg-web-pressed { transform: none !important; }
+}
+html.ilg body.reduced-motion > #ilg-ball { transition: none; }
+html.ilg body.reduced-motion > #ilg-ball.ilg-web-pressed { transform: none !important; }
+/* 小球和旁边玻璃之间的液体颈部（index.js 的 updateFuse）：只盖两块玻璃之间那段，不和两边重叠。
+   底色取小球当时的底色，模糊和饱和度与 bar 材质一致；下面的 #ilg-ball-shade 是同形状的柔影，把两边投影连成一片。没有高光。 */
+html.ilg body > #ilg-ball-bridge {
+    position: fixed;
+    z-index: 2989;
+    pointer-events: none;
+    /* 颈部没有折射圈帮它勾出轮廓，底色比小球略实一点，才看得出是连着的 */
+    background-image: linear-gradient(rgba(255, 255, 255, .07), rgba(255, 255, 255, .07));
+    -webkit-backdrop-filter: blur(1.75px) saturate(1.15) brightness(1.06);
+    backdrop-filter: blur(1.75px) saturate(1.15) brightness(1.06);
+    opacity: calc(.6 + .4 * var(--ilg-neck-k, 1));
+}
+html.ilg.ilg-light body > #ilg-ball-bridge { background-image: linear-gradient(rgba(255, 255, 255, .12), rgba(255, 255, 255, .12)); }
+html.ilg body > #ilg-ball-bridge[hidden] { display: none; }
+html.ilg body > #ilg-ball-shade {
+    position: fixed;
+    z-index: 2988;
+    pointer-events: none;
+    overflow: visible;
+    filter: blur(7px);
+    opacity: .5;
+}
+html.ilg body > #ilg-ball-shade path { fill: rgba(var(--ilg-drop-rgb, 20, 30, 50), .32); transform: translateY(4px); }
+html.ilg body.noShadows > #ilg-ball-shade { display: none !important; }
+body.no-blur > #ilg-ball-bridge { -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* 一整块融合玻璃（ball-glass.js）：小球按钮本身透明，只管点击和图标；玻璃和影子是下面两层，
+   形状 = 小球 ∪ 颈部（不含挨着的那块玻璃，它自己画自己），影子只画在整个融合形状外面。 */
+html.ilg body > #ilg-ball.ilg-ball-sdf,
+html.ilg.ilg-liquid-web body:not(.no-blur) > #ilg-ball.ilg-ball-sdf {
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
+}
+html.ilg body > #ilg-ball-glass {
+    position: fixed;
+    z-index: 2989;
+    pointer-events: none;
+    background-color: var(--ilg-tint);
+    -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+html.ilg body > #ilg-ball-glass[data-kind="web"] { background-color: rgba(255, 255, 255, var(--ilg-web-tint, .08)); }
+html.ilg body > #ilg-ball-glass-shade {
+    position: fixed;
+    z-index: 2988;
+    pointer-events: none;
+    -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+html.ilg body > #ilg-ball-glass-shade > div { position: absolute; inset: 0; filter: blur(9px); transform: translateY(6px); }
+html.ilg body > #ilg-ball-glass-shade > div > div {
+    position: absolute;
+    background-color: rgba(var(--ilg-drop-rgb), calc(.34 * var(--ilg-shadow-k, .34) * var(--ilg-sh-light, 1)));
+    -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+html.ilg body > #ilg-ball-glass-shade[data-kind="web"] > div > div { background-color: rgba(0, 0, 0, .3); }
+html.ilg body > #ilg-ball-glass-shade[data-kind="web"] > div { filter: blur(5px); transform: translateY(4px); }
+html.ilg body.noShadows > #ilg-ball-glass-shade { display: none !important; }
+
+/* ---------- 面板加厚（panelRead）：抽屉、弹窗、提示词编辑窗的可读性 ----------
+   清透那套（上面 clear-optics）是给顶栏和输入框调的：底色 13%~16%。面板里是大段文字和表单，
+   在花壁纸上会和背景搅在一起，所以面板单独用更实的底；模糊在 index.js 的 KIND.panel 里抬到至少 10px。顶栏和输入框不变。 */
+html.ilg.ilg-panel-read body :is(#top-settings-holder > .drawer > .drawer-content, #character_popup, #world_popup, #options .options-content, #extensionsMenu, dialog.popup.ilg-glass:not(.ilg-adapted)) {
+    --SmartThemeBlurTintColor: rgba(24, 25, 32, .74);
+}
+html.ilg.ilg-panel-read.ilg-light body :is(#top-settings-holder > .drawer > .drawer-content, #character_popup, #world_popup, #options .options-content, #extensionsMenu, dialog.popup.ilg-glass:not(.ilg-adapted)) {
+    --SmartThemeBlurTintColor: rgba(248, 247, 244, .76);
+}
+/* 面板里的说明小字：原来是 0.5 左右的灰，加厚后底色变实，再提一点对比 */
+html.ilg.ilg-panel-read body #top-settings-holder > .drawer > .drawer-content :is(small, .notes-link, .toggle-description, .range-block-counter) { opacity: .82; }
+
+/* 提示词编辑窗：直接挂在 body 下，原来沿用主题的深色半透明底和黑色输入框，不跟我们的明暗。改成和面板同一套底色、输入框和字色 */
+html.ilg body #completion_prompt_manager_popup {
+    --SmartThemeBodyColor: #f2f1ee;
+    --SmartThemeEmColor: rgba(242, 241, 238, .62);
+    --SmartThemeBlurTintColor: rgba(24, 25, 32, .9);
+    --SmartThemeBorderColor: rgba(255, 255, 255, .08);
+    color: var(--SmartThemeBodyColor);
+    background-color: var(--SmartThemeBlurTintColor);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    backdrop-filter: blur(24px) saturate(1.2);
+    border: 0;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .32), 0 4px 12px rgba(0, 0, 0, .18);
+    text-shadow: none;
+}
+html.ilg.ilg-light body #completion_prompt_manager_popup {
+    --SmartThemeBodyColor: #1f1e1c;
+    --SmartThemeEmColor: rgba(31, 30, 28, .6);
+    --SmartThemeBlurTintColor: rgba(250, 249, 246, .92);
+    --SmartThemeBorderColor: rgba(0, 0, 0, .07);
+    --SmartThemeCheckboxTickColor: #fff;
+    box-shadow: 0 18px 48px rgba(40, 30, 20, .16), 0 4px 12px rgba(40, 30, 20, .08);
+}
+html.ilg body #completion_prompt_manager_popup :is(.text_pole, textarea, select) {
+    background-color: var(--ilg-field);
+    color: var(--SmartThemeBodyColor);
+    border: 1px solid var(--ilg-field-line);
+    border-radius: 10px;
+    box-shadow: none;
+}
+html.ilg body #completion_prompt_manager_popup textarea { line-height: 1.6; padding: 10px 12px; }
+html.ilg body #completion_prompt_manager_popup :is(.text_pole, textarea, select):focus { border-color: var(--ilg-accent); outline: none; }
+html.ilg body #completion_prompt_manager_popup :is(h3, label, .completion_prompt_manager_popup_entry_form_label) { color: var(--SmartThemeBodyColor); }
+html.ilg body #completion_prompt_manager_popup :is(small, .text_muted) { color: var(--SmartThemeEmColor); opacity: 1; }
+html.ilg body #completion_prompt_manager_popup .menu_button {
+    background-color: var(--ilg-btn);
+    border: 1px solid var(--ilg-btn-line);
+    border-radius: 10px;
+    color: var(--SmartThemeBodyColor);
+    filter: none;
+}
+html.ilg body #completion_prompt_manager_popup .menu_button:hover { background-color: var(--ilg-btn-hover); }
+/* 触发器是 select2 多选框：外框用我们的输入框样式，里面的搜索框不要再叠一层底色和内边距（之前占位字被裁掉一半） */
+html.ilg body #completion_prompt_manager_popup .select2-container .select2-selection {
+    min-height: 34px;
+    background-color: var(--ilg-field);
+    border: 1px solid var(--ilg-field-line);
+    border-radius: 10px;
+    box-shadow: none;
+}
+html.ilg body #completion_prompt_manager_popup .select2-container .select2-search--inline .select2-search__field {
+    height: 30px;
+    margin: 0;
+    padding: 0 8px;
+    line-height: 30px;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg body #completion_prompt_manager_popup .select2-container .select2-search--inline .select2-search__field::placeholder { color: var(--SmartThemeEmColor); }
+
+/* ---------- 消息按钮栏 ----------
+   酒馆原来是一行不换行、溢出直接裁掉（overflow-x: hidden），按钮一多，最先塞进来的插件按钮就被挤出去看不见了
+   （柏宝绘这类插件反馈“用了美化不显示”）。现在放不下就换到第二行，靠右对齐。
+   每个按钮一样大（28px 圆角小块），悬停时垫一层浅玻璃。第三方按钮不换图标，只统一尺寸、颜色和悬停。
+   图标本身在 mes-icons.js（跟“简洁图标”开关走）。 */
+html.ilg body #chat .mes :is(.mes_buttons, .extraMesButtons) {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    column-gap: 2px;
+    overflow: visible;
+    align-items: center;
+}
+html.ilg body #chat .mes :is(.mes_buttons, .extraMesButtons) > :is(.mes_button, div, span, button, a) {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 5px;
+    border-radius: 9px;
+    box-sizing: border-box;
+    line-height: 28px;
+    text-align: center;
+    filter: none;
+    opacity: .5;
+    transition: opacity .15s ease, background-color .15s ease;
+}
+html.ilg body #chat .mes :is(.mes_buttons, .extraMesButtons) > :is(.mes_button, div, span, button, a):hover { opacity: 1; background-color: rgba(127, 127, 127, .14); }
+html.ilg body #chat .mes :is(.mes_buttons, .extraMesButtons) > :is(.mes_button, div, span, button, a):active { scale: .9; }
+/* 插件按钮里的图片 / svg：居中，不超出小块 */
+html.ilg body #chat .mes :is(.mes_buttons, .extraMesButtons) > * > :is(img, svg) { vertical-align: middle; max-width: 18px; max-height: 18px; }
+/* extraMesButtons 是嵌在 mes_buttons 里的一组，换行时它自己也是一整块，不单独加底 */
+html.ilg body #chat .mes .mes_buttons > .extraMesButtons { min-width: 0; height: auto; padding: 0; opacity: 1; background: none; }
+
+/* ---------- 顶栏“全部铺开”：轻分组工具栏与独立楼层 ---------- */
+html.ilg.ilg-dock body #top-settings-holder {
+    --ilg-dock-slot: clamp(24px, calc((100dvw - 68px) / var(--ilg-dock-count, 10)), 38px);
+    justify-content: center;
+}
+html.ilg.ilg-dock body #top-settings-holder > .drawer,
+html.ilg.ilg-dock body #top-settings-holder > .drawer.ilg-group-start { margin-left: 0; }
+html.ilg.ilg-dock body #top-settings-holder > .ilg-dock-sep { margin-left: 8px; }
+html.ilg.ilg-dock.ilg-islands body #top-bar > .ilg-island.ilg-glass {
+    border-radius: 16px;
+}
+html.ilg.ilg-dock.ilg-islands body #top-settings-holder .drawer-icon {
+    width: var(--ilg-dock-slot);
+    filter: none;
+    border-radius: 10px;
+    background-color: transparent;
+    transition: background-color .16s ease, color .16s ease;
+}
+html.ilg.ilg-dock.ilg-islands.ilg-icons body #top-settings-holder .drawer-icon::before { width: 20px; height: 20px; }
+@media (hover: hover) {
+    html.ilg.ilg-dock.ilg-islands body #top-settings-holder .drawer-icon:hover { background-color: rgba(127, 127, 127, .1); }
+}
+html.ilg.ilg-dock.ilg-islands body #top-settings-holder > .ilg-dock-active .drawer-icon {
+    color: #82baff;
+    background-color: rgba(84, 153, 232, .14);
+}
+html.ilg.ilg-dock.ilg-islands.ilg-light body #top-settings-holder > .ilg-dock-active .drawer-icon {
+    color: #175d9f;
+    background-color: rgba(23, 93, 159, .09);
+}
+html.ilg.ilg-dock body #top-settings-holder .drawer-icon:focus-visible { outline: 2px solid var(--ilg-accent); outline-offset: -2px; }
+/* 楼层离开图标行；有消息时预留整行，显隐不引起聊天跳动。 */
+html.ilg.ilg-dock body #top-bar > #ilg-floor {
+    display: block;
+    top: calc(100% + 6px);
+    translate: -50% 0;
+    min-height: 24px;
+    min-width: 64px;
+    box-sizing: border-box;
+    padding: 6px 12px;
+    font-weight: 500;
+    line-height: 12px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: none;
+}
+html.ilg.ilg-dock.ilg-dock-floor.ilg-float body #chat {
+    padding-top: calc(var(--topBarBlockSize) + var(--ilg-gap) * 2 + 30px);
+    scroll-padding-top: calc(var(--topBarBlockSize) + var(--ilg-gap) * 2 + 30px);
+}
+html.ilg.ilg-dock.ilg-dock-floor:not(.ilg-float) body #chat { padding-top: 34px; scroll-padding-top: 34px; }
+html.ilg body #top-bar > #ilg-floor:focus-visible { outline: 2px solid var(--ilg-accent); outline-offset: 3px; opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg.ilg-dock body #top-settings-holder .drawer-icon { transition: none; }
+}
+html.ilg body.reduced-motion #top-settings-holder .drawer-icon { transition: none; }
+/* 控件材质：原版与 Web 共用清透底色、轻投影与局部前景对比；中心柔化由 SVG 遮罩管理。
+   边缘保留原材质的折射，表面反光由末尾的统一反射层管理。 */
+html.ilg.ilg-clear-optics body:not(.no-blur) :is(#nonQRFormItems, .ilg-island, #ilg-floor).ilg-glass.ilg-control-surface {
+    --SmartThemeBodyColor: #eef2f7;
+    --ilg-reading-muted: #b7c1cf;
+    background-color: rgba(18, 26, 38, var(--ilg-input-a, var(--ilg-web-tint, var(--ilg-control-a, .06))));
+    background-image: none;
+    box-shadow: 0 1px 2px rgba(0, 10, 24, .12), 0 8px 22px -10px rgba(0, 10, 24, .24);
+    color: var(--SmartThemeBodyColor);
+}
+html.ilg.ilg-clear-optics.ilg-light body:not(.no-blur) :is(#nonQRFormItems, .ilg-island, #ilg-floor).ilg-glass.ilg-control-surface {
+    --SmartThemeBodyColor: #252c35;
+    --ilg-reading-muted: #3d4957;
+    background-color: rgba(255, 255, 255, var(--ilg-input-a, var(--ilg-web-tint, var(--ilg-control-a, .06))));
+    box-shadow: 0 1px 2px rgba(18, 29, 42, .08), 0 8px 22px -10px rgba(18, 29, 42, .2);
+}
+/* 浅色聊天内容滚到深色工具栏下面时直接提高前景对比，保持玻璃底色轻。 */
+html.ilg.ilg-clear-optics:not(.ilg-light) body:not(.no-blur) :is(#nonQRFormItems, .ilg-island, #ilg-floor).ilg-control-surface.ilg-over-light {
+    --SmartThemeBodyColor: #252c35;
+    --ilg-reading-muted: #596675;
+    background-color: rgba(255, 255, 255, .12);
+}
+html.ilg.ilg-clear-optics.ilg-light body:not(.no-blur) :is(#nonQRFormItems, .ilg-island, #ilg-floor).ilg-control-surface.ilg-over-dark {
+    --SmartThemeBodyColor: #eef2f7;
+    --ilg-reading-muted: #c3ccd8;
+    background-color: rgba(18, 26, 38, .12);
+}
+html.ilg.ilg-clear-optics:not(.ilg-light).ilg-icons body #top-settings-holder > .ilg-icon-over-light .drawer-icon { color: #252c35; filter: none; }
+html.ilg.ilg-clear-optics body.noShadows:not(.no-blur) :is(#nonQRFormItems, .ilg-island, #ilg-floor).ilg-glass.ilg-control-surface { box-shadow: none; }
+/* 前景和楼层不依赖厚阴影保可读性，避免折叠与展开两套图标看起来像不同材质。 */
+html.ilg.ilg-clear-optics.ilg-icons body #top-settings-holder .drawer-icon { filter: none; }
+html.ilg.ilg-clear-optics body #top-bar > #ilg-floor.ilg-glass { text-shadow: none; font-weight: 500; }
+html.ilg.ilg-clear-optics body.no-blur :is(#nonQRFormItems, .ilg-island, #ilg-floor).ilg-control-surface { background-color: rgba(18, 26, 38, .86); }
+html.ilg.ilg-clear-optics.ilg-light body.no-blur :is(#nonQRFormItems, .ilg-island, #ilg-floor).ilg-control-surface { background-color: rgba(250, 249, 246, .9); }
+
+/* 输入区：聚焦本身不加厚；实际文字 / IME 预编辑内容存在时才提高底色浓度。 */
+html.ilg body #nonQRFormItems.ilg-control-readable { --ilg-input-a: .11; }
+html.ilg body #nonQRFormItems.ilg-control-surface { transition: background-color .18s ease; }
+@media (prefers-reduced-motion: reduce) { html.ilg body #nonQRFormItems.ilg-control-surface { transition: none; } }
+html.ilg body.reduced-motion #nonQRFormItems.ilg-control-surface { transition: none; }
+
+/* 折叠栏中间的空位交给楼层按钮；抽屉和插件入口仍接收原来的指针事件。 */
+html.ilg.ilg-fold body #top-settings-holder { pointer-events: none; }
+html.ilg.ilg-fold body #top-settings-holder > * { pointer-events: auto; }
+/* Directional reflections shared by original and Web glass. Light arrives from the
+   upper left; the opposite edge catches a quieter return. The centre stays clear. */
+html.ilg body :is(.ilg-glass, #ilg-floor)::after,
+html.ilg body #chat .mes.ilg-glass::after {
+    content: "" !important;
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    border: 0;
+    border-radius: inherit;
+    padding: .85px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: .78 !important;
+    background: conic-gradient(from 0deg at 50% 50%,
+        rgba(247, 252, 255, .58), rgba(247, 252, 255, .08) 58deg,
+        rgba(16, 30, 48, .16) 110deg, rgba(236, 247, 255, .28) 145deg,
+        rgba(242, 250, 255, .12) 185deg, rgba(16, 30, 48, .08) 225deg,
+        rgba(249, 253, 255, .72) 306deg, rgba(247, 252, 255, .58)) !important;
+    -webkit-mask-image: radial-gradient(circle at var(--ilg-fuse-light-x, -100px) var(--ilg-fuse-light-y, -100px), transparent max(0px, calc(var(--ilg-fuse-light-r, 0px) - 3px)), #000 var(--ilg-fuse-light-r, 0px)), linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+    mask-image: radial-gradient(circle at var(--ilg-fuse-light-x, -100px) var(--ilg-fuse-light-y, -100px), transparent max(0px, calc(var(--ilg-fuse-light-r, 0px) - 3px)), #000 var(--ilg-fuse-light-r, 0px)), linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+    -webkit-mask-clip: border-box, content-box, border-box;
+    mask-clip: border-box, content-box, border-box;
+    -webkit-mask-composite: source-in, xor, source-over;
+    mask-composite: intersect, exclude, add;
+    transform: none;
+    filter: none;
+    mix-blend-mode: normal;
+    transition: none;
+}
+html.ilg.ilg-light body :is(.ilg-glass, #ilg-floor)::after { opacity: .9 !important; }
+html.ilg body :is(.ilg-glass, #ilg-floor):not(.mes)::before {
+    content: "" !important;
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    border: 0;
+    border-radius: inherit;
+    padding: 0 !important;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 1 !important;
+    background: radial-gradient(ellipse at 18% -15%, rgba(249, 253, 255, .085), transparent 56%),
+        radial-gradient(ellipse at 94% 115%, rgba(225, 242, 255, .035), transparent 44%) !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+    transform: none;
+    filter: none;
+    mix-blend-mode: normal;
+    transition: none;
+}
+/* The SDF layer owns the ball contour, including its neck. Its hit target stays clear. */
+html.ilg body > #ilg-ball.ilg-ball-sdf::before,
+html.ilg body > #ilg-ball.ilg-ball-sdf::after,
+html.ilg body.no-blur :is(.ilg-glass, #ilg-floor):not(.mes)::before,
+html.ilg body.no-blur :is(.ilg-glass, #ilg-floor)::after,
+html.ilg body.no-blur #chat .mes.ilg-glass::after { content: none !important; }
+
+/* Island layout uses the top bar only as an invisible positioning container. */
+html.ilg.ilg-islands body #top-bar.ilg-glass::before,
+html.ilg.ilg-islands body #top-bar.ilg-glass::after { content: none !important; }
+
+/* Input actions follow the pixels beneath each button, independently of the
+   capsule's centre. Keep semantic send/stop colours and native disabled states. */
+html.ilg body #nonQRFormItems [data-ilg-input-tone="light"] {
+    --ilg-button-ink: #eef2f7;
+    --ilg-send-ink: #75baff;
+    --SmartThemeBodyColor: #eef2f7;
+    --ilg-chip: rgba(255, 255, 255, .12);
+    --ilg-chip-hover: rgba(255, 255, 255, .18);
+}
+html.ilg body #nonQRFormItems [data-ilg-input-tone="dark"] {
+    --ilg-button-ink: #252c35;
+    --ilg-send-ink: #0655ae;
+    --SmartThemeBodyColor: #252c35;
+    --ilg-chip: rgba(0, 0, 0, .06);
+    --ilg-chip-hover: rgba(0, 0, 0, .1);
+}
+html.ilg body #nonQRFormItems :is(#leftSendForm, #rightSendForm) > [data-ilg-input-tone]:not(#send_but) {
+    color: var(--ilg-button-ink);
+}
+html.ilg body #nonQRFormItems #send_but[data-ilg-input-tone] { color: var(--ilg-send-ink); }
+
+/* Contour-derived reflection: one fine crest, a softer shoulder and a cool return.
+   The PNG is transparent through the centre, with no uniform bright frame. */
+html.ilg body .ilg-glass.ilg-reflection:is(.ilg-glass, #ilg-floor)::after,
+html.ilg body #chat .mes.ilg-glass.ilg-reflection::after {
+    padding: 0;
+    opacity: .98 !important;
+    background: var(--ilg-reflection-map) 0 0 / 100% 100% no-repeat !important;
+    -webkit-mask-image: radial-gradient(circle at var(--ilg-fuse-light-x, -100px) var(--ilg-fuse-light-y, -100px), transparent max(0px, calc(var(--ilg-fuse-light-r, 0px) - 3px)), #000 var(--ilg-fuse-light-r, 0px));
+    mask-image: radial-gradient(circle at var(--ilg-fuse-light-x, -100px) var(--ilg-fuse-light-y, -100px), transparent max(0px, calc(var(--ilg-fuse-light-r, 0px) - 3px)), #000 var(--ilg-fuse-light-r, 0px));
+    -webkit-mask-clip: border-box;
+    mask-clip: border-box;
+    -webkit-mask-composite: source-over;
+    mask-composite: add;
+}
+/* Touch/keyboard acknowledgment only. Neither typing nor cursor motion moves light. */
+html.ilg body .ilg-glass.ilg-reflection:is(.ilg-glass, #ilg-floor):not(.mes)::before {
+    opacity: 0 !important;
+    background: radial-gradient(ellipse 90px 34px at var(--ilg-reflection-x, 25%) var(--ilg-reflection-y, 10%), rgba(251, 254, 255, .72), transparent 80%) !important;
+    -webkit-mask-image: var(--ilg-reflection-map) !important;
+    mask-image: var(--ilg-reflection-map) !important;
+    -webkit-mask-size: 100% 100% !important;
+    mask-size: 100% 100% !important;
+    -webkit-mask-repeat: no-repeat !important;
+    mask-repeat: no-repeat !important;
+    transition: opacity .18s cubic-bezier(.16, 1, .3, 1);
+}
+html.ilg body .ilg-glass.ilg-reflection.ilg-reflection-pressed:is(.ilg-glass, #ilg-floor):not(.mes)::before { opacity: .55 !important; }
+html.ilg body.reduced-motion .ilg-glass.ilg-reflection:is(.ilg-glass, #ilg-floor):not(.mes)::before { opacity: 0 !important; transition: none; }
+@media (prefers-reduced-motion: reduce) {
+    html.ilg body .ilg-glass.ilg-reflection:is(.ilg-glass, #ilg-floor):not(.mes)::before { opacity: 0 !important; transition: none; }
+}
+
+/* Opt-in pose light owns a neutral contour, independent of the fixed light map.
+   This lets the bright segment travel to either side without rasterising new images. */
+html.ilg.ilg-tilt-light {
+    --ilg-pose-rim: radial-gradient(ellipse 32% 120% at calc(50% + var(--ilg-tilt-x, 0) * 60%) calc(32% + var(--ilg-tilt-y, 0) * 80%), rgba(255,255,255,.72), rgba(238,249,255,.32) 42%, transparent 78%);
+}
+/* On a pale backdrop, a cool refracted shoulder provides contrast for the white glint. */
+html.ilg.ilg-tilt-light.ilg-light {
+    --ilg-pose-rim: radial-gradient(ellipse 32% 120% at calc(50% + var(--ilg-tilt-x, 0) * 60%) calc(32% + var(--ilg-tilt-y, 0) * 80%), rgba(255,255,255,.85), rgba(42,69,96,.55) 42%, transparent 78%);
+}
+html.ilg.ilg-tilt-light body:not(.no-blur):not(.reduced-motion) .ilg-glass.ilg-reflection:is(.ilg-glass, #ilg-floor):not(.mes)::before {
+    --ilg-touch-light-a: 0;
+    opacity: 1 !important;
+    z-index: 3;
+    background: radial-gradient(ellipse 90px 34px at var(--ilg-reflection-x, 25%) var(--ilg-reflection-y, 10%), rgba(251,254,255,var(--ilg-touch-light-a)), transparent 80%), var(--ilg-pose-rim) !important;
+    padding: 1.5px !important;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0) !important;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0) !important;
+    -webkit-mask-composite: xor !important;
+    mask-composite: exclude !important;
+}
+/* Leave a quiet fixed rim underneath the travelling light instead of a competing bright crest. */
+html.ilg.ilg-tilt-light body:not(.no-blur):not(.reduced-motion) .ilg-glass.ilg-reflection:is(#top-bar, #nonQRFormItems, #ilg-floor, .ilg-island, #ilg-ball)::after { opacity: .42 !important; }
+html.ilg.ilg-tilt-light body:not(.no-blur):not(.reduced-motion) .ilg-glass.ilg-reflection.ilg-reflection-pressed:is(.ilg-glass, #ilg-floor):not(.mes)::before { --ilg-touch-light-a: .4; }
+/* The fused ball keeps its cached SDF contour; a CSS rounded rectangle would cut the neck. */
+html.ilg.ilg-tilt-light body:not(.no-blur):not(.reduced-motion) > #ilg-ball-glass::before {
+    content: "";
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background: var(--ilg-pose-rim);
+    -webkit-mask: var(--ilg-reflection-map) 0 0 / 100% 100% no-repeat;
+    mask: var(--ilg-reflection-map) 0 0 / 100% 100% no-repeat;
+}
+@media (prefers-reduced-motion: reduce) {
+    html.ilg.ilg-tilt-light body .ilg-glass.ilg-reflection:is(.ilg-glass, #ilg-floor):not(.mes)::before { opacity: 0 !important; }
+    html.ilg.ilg-tilt-light body > #ilg-ball-glass::before { content: none; }
+}
+
+/* Reading hierarchy: quiet message contours, crisp chrome. The fallback
+   text shadow is lighter; plain prose and authored card declarations keep their own style. */
+html.ilg body #chat .mes.ilg-glass.ilg-reflection::after { opacity: .36 !important; }
+html.ilg:not(.ilg-light) body #chat .mes_text { text-shadow: 0 1px 1px rgba(8, 14, 22, .26); }
+html.ilg:not(.ilg-light) body #chat .mes :is(.name_text, .timestamp) { text-shadow: 0 1px 1px rgba(8, 14, 22, .22); }
+/* Keep action buttons by the last line as the textarea grows. Single-line geometry stays the same. */
+html.ilg body #nonQRFormItems :is(#leftSendForm, #rightSendForm) { align-self: flex-end; }
+
+/* Universal CSS glass: no displacement, generated textures, raster masks or animated filters.
+   Surface classes are owned by paint()/untrack(); authored card contents stay untouched. */
+html.ilg.ilg-css-glass {
+    --ilg-css-crest:rgba(252,254,255,.64);
+    --ilg-css-return:rgba(205,228,247,.2);
+    --ilg-css-shade:rgba(7,18,31,.2);
+    --ilg-css-drop:rgba(2,12,26,.3);
+    --ilg-css-glaze:.055;
+}
+html.ilg.ilg-css-glass.ilg-light {
+    --ilg-css-crest:rgba(255,255,255,.9);
+    --ilg-css-return:rgba(255,255,255,.4);
+    --ilg-css-shade:rgba(35,53,76,.15);
+    --ilg-css-drop:rgba(22,38,60,.2);
+    --ilg-css-glaze:.075;
+}
+html.ilg.ilg-css-glass body:not(.no-blur) :is(.ilg-css-surface, #chat .mes.ilg-css-surface) {
+    box-shadow:0 1px 2px rgba(12,24,42,.08),0 9px 22px -12px var(--ilg-css-drop);
+}
+html.ilg.ilg-css-glass body:not(.no-blur) :is(.ilg-css-surface, #chat .mes.ilg-css-surface)::after {
+    content:"" !important;
+    position:absolute;inset:0;width:auto;height:auto;padding:0 !important;
+    border:0;border-radius:inherit;pointer-events:none;z-index:2;
+    background:none !important;
+    -webkit-mask:none !important;mask:none !important;
+    filter:none !important;transform:none;mix-blend-mode:normal;
+    box-shadow:inset 1px 1px 0 var(--ilg-css-crest),inset -1px -1px 0 var(--ilg-css-return),inset 0 -2px 3px -2px var(--ilg-css-shade);
+    opacity:.9 !important;transition:none;
+}
+html.ilg.ilg-css-glass body:not(.no-blur) :is(.ilg-css-surface, #chat .mes.ilg-css-surface):not(.mes)::before {
+    content:"" !important;position:absolute;inset:0;width:auto;height:auto;
+    border:0;border-radius:inherit;padding:0 !important;pointer-events:none;z-index:1;
+    background:radial-gradient(ellipse at calc(18% + var(--ilg-tilt-x,0) * 8%) calc(-10% + var(--ilg-tilt-y,0) * 8%),rgba(250,253,255,var(--ilg-css-glaze)),transparent 64%),linear-gradient(145deg,rgba(240,249,255,.025),transparent 42%,rgba(180,219,247,.025)) !important;
+    -webkit-mask:none !important;mask:none !important;filter:none !important;
+    box-shadow:none;opacity:1 !important;transform:none;mix-blend-mode:normal;transition:none;
+}
+/* The lightweight material uses the same travelling CSS rim, with no raster mask. */
+html.ilg.ilg-css-glass.ilg-tilt-light body:not(.no-blur):not(.reduced-motion) :is(.ilg-css-surface, #chat .mes.ilg-css-surface):not(.mes)::before {
+    background: var(--ilg-pose-rim) !important;
+    z-index: 3;
+    padding: 1.5px !important;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0) !important;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0) !important;
+    -webkit-mask-composite: xor !important;
+    mask-composite: exclude !important;
+}
+html.ilg.ilg-css-glass.ilg-tilt-light body:not(.no-blur):not(.reduced-motion) :is(.ilg-css-surface, #chat .mes.ilg-css-surface):not(.mes)::after { opacity: .42 !important; }
+/* Keep the large-card shadow on the same shallow elevation as the light chrome. */
+html.ilg.ilg-css-glass body.bubblechat:not(.no-blur):not(.noShadows) #chat .mes.ilg-css-surface:not(.smallSysMes) {
+    box-shadow:0 1px 2px rgba(12,24,42,.06),0 6px 16px -10px var(--ilg-css-drop);
+}
+/* Long-form reading uses a quieter rim than the compact chrome. */
+html.ilg.ilg-css-glass body:not(.no-blur) #chat .mes.ilg-css-surface::after {opacity:.28 !important;}
+html.ilg.ilg-css-glass body.noShadows:not(.no-blur) :is(.ilg-css-surface, #chat .mes.ilg-css-surface) {box-shadow:none;}
+html.ilg.ilg-css-glass.ilg-islands body #top-bar.ilg-css-surface::before,
+html.ilg.ilg-css-glass.ilg-islands body #top-bar.ilg-css-surface::after {content:none !important;}
+
+/* Opening settings also stays on the lightweight blur path. */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+ html.ilg.ilg-css-glass body:not(.no-blur) #ilg-studio {--s-sheet:rgba(22,23,26,.9);-webkit-backdrop-filter:blur(10px) saturate(1.15);backdrop-filter:blur(10px) saturate(1.15);}
+ html.ilg.ilg-css-glass body:not(.no-blur) #ilg-studio[data-tone=light] {--s-sheet:rgba(250,248,244,.91);}
+}
+
+/* 2026-11-09 手机键盘：只有浏览器没有自己让出键盘高度时（iOS Safari、旧 WebView），viewport.js 才会写 --ilg-kb。
+   安卓 Chrome 遵守酒馆 meta 的 interactive-widget=resizes-content，100dvh 已经缩了，--ilg-kb 始终是 0。 */
+html.ilg.ilg-float.ilg-kb-open body #form_sheld {
+    bottom: calc(var(--ilg-kb) + var(--ilg-gap));
+}
+html.ilg.ilg-float.ilg-kb-open body #chat {
+    padding-bottom: calc(var(--ilg-form-h) + var(--ilg-gap) * 2 + var(--ilg-kb));
+    scroll-padding-bottom: calc(var(--ilg-form-h) + var(--ilg-gap) * 2 + var(--ilg-kb));
+}
+/* 键盘开着时首页问候、悬浮小球让开输入区 */
+html.ilg.ilg-kb-open body #ilg-ball { visibility: hidden; }
+
+/* 2026-11-09 手机触摸区域：输入区和顶栏的 40px 按钮外圈多给 2px 的透明点击范围，凑够 44px，图标大小不变。 */
+@media (pointer: coarse) {
+    html.ilg body #form_sheld :is(#options_button, #extensionsMenuButton, #ilg-qr-toggle, #send_but, #mes_continue, #mes_impersonate) { position: relative; }
+    html.ilg body #form_sheld :is(#options_button, #extensionsMenuButton, #ilg-qr-toggle)::after {
+        content: ""; position: absolute; inset: -2px; border-radius: inherit;
+    }
+    /* The interactive icon expands around the existing toolbar centre; its visible pill stays 30px high. */
+    html.ilg body #ilg-fold-button { min-width: 44px; min-height: 44px; }
+    html.ilg.ilg-fold body #ilg-fold-button .ilg-fold-icon {
+        min-width: 44px;
+        min-height: 44px;
+        box-sizing: border-box;
+        padding-block: 7px;
+        background-clip: content-box;
+    }
+    html.ilg.ilg-fold body #ilg-fold-button.ilg-alert .ilg-fold-icon::after { top: 10px; }
+    /* Hide native touch scrollbars without removing scrollability, including nested host scroll areas. */
+    html.ilg body #top-settings-holder > .drawer > .drawer-content,
+    html.ilg body #top-settings-holder > .drawer > .drawer-content * { scrollbar-width: none; }
+    html.ilg body #top-settings-holder > .drawer > .drawer-content::-webkit-scrollbar,
+    html.ilg body #top-settings-holder > .drawer > .drawer-content *::-webkit-scrollbar { display: none; }
+}
+
+/* 2026-11-09 阅读页的行距 / 左右留白滑杆：没设置时变量不存在，沿用风格自己的值（含窄屏 −.1）。 */
+html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose {
+    line-height: var(--ilg-prose-leading-user, var(--ilg-prose-leading-eff, var(--ilg-prose-leading)));
+}
+/* 留白只在用户拖过滑杆后才加（html.ilg-prose-inset-on），叠加在段落原有内边距上，引文的 .85em 不丢 */
+html.ilg.ilg-prose-inset-on body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol).ilg-prose { padding-inline: var(--ilg-prose-inset); }
+html.ilg.ilg-prose-inset-on body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > blockquote.ilg-prose { margin-inline: var(--ilg-prose-inset); }
+@media (max-width: 600px) {
+    html.ilg { --ilg-prose-leading-eff: calc(var(--ilg-prose-leading) - .1); }
+}
+html.ilg body #ilg-appearance-panel .ilg-reading-preview { line-height: var(--ilg-prose-leading-user, var(--ilg-prose-leading)); }
+
+/* Plain messages outside the existing 200px visibility margin keep their measured
+   content height. Flex items must not shrink when their contents are skipped.
+   Visible messages and custom/iframe renderers retain their normal overflow. */
+html.ilg body #chat > .mes.ilg-render-away:not(.last_mes):not(.ilg-content-overlay):not(.ilg-card-renderer) {
+    flex-shrink: 0;
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto var(--ilg-message-height);
+}
+
+/* Small, bounded overlay layers stay ready for direct manipulation. */
+html.ilg body > :is(#ilg-ball, #ilg-ball-glass, #ilg-ball-glass-shade, #ilg-ball-bridge, #ilg-ball-shade) { will-change: transform; }
+
+/* Only icon/text ink adapts at the top. Glass tint, refraction and transparency
+   continue to use the selected material and preset. Drawer content keeps its own palette. */
+html.ilg body [data-ilg-top-tone="dark"] { --ilg-top-ink:#27313d; }
+html.ilg body [data-ilg-top-tone="light"] { --ilg-top-ink:#f1f4f8; }
+html.ilg.ilg-clear-optics body #top-settings-holder > [data-ilg-top-tone]:not(.ilg-open):not(.ilg-dock-active) > .drawer-toggle > .drawer-icon:not(.openIcon),
+html.ilg.ilg-clear-optics body #top-settings-holder > [data-ilg-top-tone]:not(.ilg-open):not(.ilg-dock-active) > .drawer-icon:not(.openIcon),
+html.ilg.ilg-clear-optics body #top-bar > #ilg-floor[data-ilg-top-tone] {
+    color:var(--ilg-top-ink);
+    filter:none;
+}
+
+/* Reading treatment belongs to each message surface; gaps and chrome retain the wallpaper. */
+html.ilg.ilg-chat-reading:not(.ilg-light) body.bubblechat #chat .mes.ilg-glass {
+    --ilg-reading-alpha: calc(1 - (1 - var(--ilg-mes-a, .12)) * (1 - var(--ilg-reading-level, .45) * .95));
+    --SmartThemeBotMesBlurTintColor: rgba(18, 21, 28, var(--ilg-reading-alpha));
+    --SmartThemeUserMesBlurTintColor: rgba(22, 36, 57, var(--ilg-reading-alpha));
+}
+html.ilg.ilg-chat-reading.ilg-light body.bubblechat #chat .mes.ilg-glass {
+    --ilg-reading-alpha: clamp(0, calc(1 - (1 - var(--ilg-mes-a, .12)) * (1 - var(--ilg-reading-level, .45) * 1.1)), 1);
+    --SmartThemeBotMesBlurTintColor: rgba(247, 245, 240, var(--ilg-reading-alpha));
+    --SmartThemeUserMesBlurTintColor: rgba(231, 240, 255, var(--ilg-reading-alpha));
+}
+
+html.ilg.ilg-light { --ilg-reading-dark: 0; }
+/* Keep selected native controls next to the menu without moving host drawer nodes. */
+html.ilg.ilg-fold body #top-settings-holder > #ilg-fold-button { order: 0; }
+html.ilg.ilg-fold body #top-settings-holder > .ilg-fold-shortcut { order: 1; }
+html.ilg.ilg-fold body #top-settings-holder > .ilg-fold-shortcut.ilg-fold-second { order: 2; }
+html.ilg.ilg-fold body #top-settings-holder > .ilg-fold-keep:not(.ilg-fold-shortcut) { order: 3; }
+
+html.ilg.ilg-fold body #top-settings-holder > .ilg-fold-keep.ilg-group-start:not(.ilg-fold-shortcut) { margin-left: auto; }
+
+/* A thumb halo carries keyboard focus without a large rectangle around the track. */
+html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)):focus-visible,#ilg-studio input[type="range"]:focus-visible {outline:none;box-shadow:none !important;}
+#ilg-range-value {display:block;text-shadow:none !important;position:fixed;inset:auto;margin:0;min-width:52px;max-width:128px;padding:7px 11px;border:1px solid rgba(255,255,255,.11);border-radius:11px;background:#f3ddbd;color:#302418;box-shadow:0 4px 14px rgba(0,0,0,.18);font:600 12px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.01em;white-space:nowrap;text-align:center;pointer-events:none;transform:translate(-50%,-100%);overflow:visible;z-index:2147483600;}
+#ilg-range-value::after {content:'';position:absolute;bottom:-4px;left:calc(50% - 4px);width:8px;height:8px;background:inherit;transform:rotate(45deg);border-radius:1px;}
+#ilg-range-value[data-side=bottom] {transform:translate(-50%,0);}
+#ilg-range-value[data-side=bottom]::after {top:-4px;bottom:auto;}
+#ilg-range-value[data-tone=light] {background:#fff7ea;color:#7d4825;border-color:rgba(150,105,65,.18);box-shadow:0 3px 12px rgba(70,45,20,.13);}
+#ilg-range-value[hidden],html:not(.ilg) #ilg-range-value {display:none;}
+@media(prefers-reduced-motion:reduce) {html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-webkit-slider-thumb,#ilg-studio input[type="range"]::-webkit-slider-thumb {transition:none;} html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *))::-moz-range-thumb,#ilg-studio input[type="range"]::-moz-range-thumb {transition:none;}}
+@media(forced-colors:active) {html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)),#ilg-studio input[type="range"] {forced-color-adjust:auto;outline-offset:3px;} html.ilg body input[type="range"]:where(#top-bar, #top-bar *, #top-settings-holder, #top-settings-holder *, #sheld, #sheld *, #options, #options *, #extensionsMenu, #extensionsMenu *, #toast-container, #toast-container *, #ilg-fold-menu, #ilg-fold-menu *, dialog.popup.ilg-glass, dialog.popup.ilg-glass > .popup-body > .popup-controls *):where(:not(.popup:not(.ilg-glass), .popup:not(.ilg-glass) *, dialog:not(.ilg-glass), dialog:not(.ilg-glass) *, [role="dialog"]:not(.ilg-recent):not(.ilg-glass), [role="dialog"]:not(.ilg-recent):not(.ilg-glass) *, .popup-content, .popup-content *)):focus-visible,#ilg-studio input[type="range"]:focus-visible {outline:2px solid Highlight;}}

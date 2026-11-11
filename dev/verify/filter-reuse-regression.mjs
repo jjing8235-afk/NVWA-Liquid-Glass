@@ -4,7 +4,10 @@ import vm from 'node:vm';
 
 const root = new URL('../../', import.meta.url);
 const source = fs.readFileSync(new URL('index.js', root), 'utf8').replace(/\r\n/g, '\n');
-const engine = fs.readFileSync(new URL('glass2.js', root), 'utf8').replace(/\r\n/g, '\n');
+// glass2.js 用 ES import 引入 control-material.js；vm 不支持 import，这里把依赖内联进去（不改产品代码）
+const inlineImports = code => code.replace(/^import \{[^}]+\} from '\.\/control-material\.js';\n?/m,
+    fs.readFileSync(new URL('control-material.js', root), 'utf8').replace(/\r\n/g, '\n').replace(/^export /gm, '') + '\n');
+const engine = inlineImports(fs.readFileSync(new URL('glass2.js', root), 'utf8').replace(/\r\n/g, '\n'));
 const passed = [];
 const api = vm.runInNewContext(engine.replace(/^export /gm, '') + '\n({physicalFilter,resizePhysicalFilter})');
 const options = { profile: 'lens', strength: 1, magnify: 3, blur: 8, saturate: 1.15,
@@ -40,7 +43,10 @@ const settings = { profile: 'lens', pIor: 1.5, pMagnify: 3, pBezel: 40, pThickne
 let lightWrites = 0;
 const lights = [{ dataset: { light: '1' }, setAttribute() { lightWrites++; } }];
 const it = { kind: 'panel' };
-const build = vm.runInNewContext('(function(it,el,w,h,r){' + body + '})', {
+const surfaceBlur = source.match(/function surfaceBlur\(it, el\) \{[\s\S]*?\n\}/)[0];
+const build = vm.runInNewContext(surfaceBlur + '\n(function(it,el,w,h,r){' + body + '})', {
+    controlReadable: () => false, foldedMenuSurface: () => false,
+    ARC_ONLY: { specular: 0, sharp: 4, edgeShade: 0, fresnel: 0, caustic: 0 },
     S: settings, KIND: { panel: { blur: () => 8, k: 0.7, bezelK: 1.1, thickK: 1.5 } },
     getMaps: () => currentMap, lightAngle: () => angle, lightRow: () => 'matrix',
     physicalFilter() { builds++; return '<filter/>'; },
@@ -53,12 +59,10 @@ build(it, {}, 374, 717, 20);
 assert.equal(builds, 1); assert.equal(sizes, 0); assert.equal(bounds, 1);
 build(it, {}, 374, 600, 20);
 assert.equal(builds, 1); assert.equal(sizes, 1); assert.equal(bounds, 2); assert.equal(it.filter, filter);
-it.lights = null;
-build(it, {}, 374, 600, 20);
-assert.equal(it.lights, lights); assert.equal(builds, 1);
+// 1.4.4-local.8 以后滤镜只保留弧度（ARC_ONLY），没有光照节点；换光源角度不应重建
 angle = 90;
 build(it, {}, 374, 600, 20);
-assert.equal(lightWrites, 1); assert.equal(it.angle, 90); assert.equal(builds, 1);
+assert.equal(builds, 1, 'Arc-only filters must not rebuild on a light-angle change');
 settings.pAberration = 0;
 build(it, {}, 374, 600, 20);
 assert.equal(builds, 2);
@@ -68,14 +72,17 @@ assert.equal(builds, 3);
 it.physical = null;
 build(it, {}, 374, 600, 20);
 assert.equal(builds, 4);
-passed.push('Unchanged material reuses nodes; resize only patches bounds; parameter, map and engine changes rebuild; lighting survives reuse');
+passed.push('Unchanged material reuses nodes; resize only patches bounds; parameter, map and engine changes rebuild; arc-only light changes do not rebuild');
 
-const paintBody = source.match(/function paint\(el\) \{([\s\S]*?)\n\}/)?.[1];
+const paintBody = source.match(/function paint\(el, geo\) \{([\s\S]*?)\n\}/)?.[1];
 let painted = 0;
 const element = { isConnected: true, offsetWidth: 0, offsetHeight: 0, style: {}, classList: { toggle() {} } };
 const hiddenItem = { kind: 'bar' };
-vm.runInNewContext('(function(el){' + paintBody + '})(el)', {
-    el: element, items: new Map([[element, hiddenItem]]), trackable: () => true,
+vm.runInNewContext('(function(el, geo){' + paintBody + '})(el)', {
+    measure: e => ({ w: e.offsetWidth, h: e.offsetHeight, r: 0 }), messageSurface: e => e,
+    controlSurface: () => false, controlReadable: () => false, cssGlassActive: () => false, webStyleEnabled: () => false,
+    webGlass: { release() {} }, reflections: { release() {} }, surfaceBlur: () => 1,
+    el: element, visibleItems: new Set([element]), items: new Map([[element, hiddenItem]]), trackable: () => true,
     document: { body: { classList: { contains: () => false } } },
     KIND: { bar: { blur: () => 1 } }, S: { saturate: 1, brightness: 1 },
     setPhys() { painted++; },
@@ -84,7 +91,7 @@ assert.equal(painted, 0); assert.deepEqual(element.style, {});
 assert(source.includes('it.physical = null;'), 'Legacy path must invalidate the physical-node cache');
 passed.push('Zero-size hidden surfaces keep their valid filter untouched; legacy path invalidates physical cache');
 
-const observerBody = source.match(/new MutationObserver\(muts => \{\n    if \(!S.enabled \|\| !S.fold\) return;([\s\S]*?)\n\}\)\.observe\(holder,/)?.[1];
+const observerBody = source.match(/new MutationObserver\(muts => \{\n    if \(!S.enabled \|\| !S.fold \|\| dockOn\(\)\) return;([\s\S]*?)\n\}\)\.observe\(holder,/)?.[1];
 assert(observerBody);
 let folds = 0, layouts = 0, syncs = 0;
 const holder = {};

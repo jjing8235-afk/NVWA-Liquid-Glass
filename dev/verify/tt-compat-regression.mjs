@@ -50,7 +50,7 @@ for(const[changes,kind,visible,noBlur,allowed]of [[{},'bar',true,false,true],[{e
 }
 passed.push('Enabled, no-blur, message preference and message visibility still gate refraction');
 const status=source.match(/function statusText\(\) \{([\s\S]*?)\n\}/)[1];
-for(const mode of ['auto','blur']){const e=env({settings:{compatibilityMode:mode}});const text=vm.runInNewContext(cap+'\n(function(){'+status+'})()', {...e.sandbox,lightBg:false,document:{body:{classList:{contains:n=>n==='bubblechat'}}}});assert(text.includes(mode==='auto'?'已请求折射':'仅模糊'));assert(!text.includes('完整折射已开启'))}
+for(const mode of ['auto','blur']){const e=env({settings:{compatibilityMode:mode}});const text=vm.runInNewContext(cap+'\n(function(){'+status+'})()', {...e.sandbox,lightBg:false,document:{body:{classList:{contains:n=>n==='bubblechat'}}}});assert(text.includes(mode==='auto'?'已请求折射':'通用仿液态玻璃'));assert(!text.includes('完整折射已开启'))}
 passed.push('Status distinguishes requested compatibility from claimed rendering success');
 const toggle=source.match(/TOGGLES\.forEach\(\(\[k\]\) => document.getElementById\(`ilg-opt-\$\{k\}`\).addEventListener\('change', e => \{([\s\S]*?)\n    \}\)\);/)[1];
 const modeHandler=source.match(/document.getElementById\('ilg-opt-compatibilityMode'\).addEventListener\('change', e => \{([\s\S]*?)\n    \}\);/)[1];

@@ -5,7 +5,10 @@ import { createHash } from 'node:crypto';
 
 const root = new URL('../../', import.meta.url);
 const source = fs.readFileSync(new URL('index.js', root), 'utf8').replace(/\r\n/g, '\n');
-const engine = fs.readFileSync(new URL('glass2.js', root), 'utf8').replace(/^export /gm, '');
+// glass2.js 用 ES import 引入 control-material.js；vm 不支持 import，这里把依赖内联进去（不改产品代码）
+const inlineImports = code => code.replace(/^import \{[^}]+\} from '\.\/control-material\.js';\n?/m,
+    fs.readFileSync(new URL('control-material.js', root), 'utf8').replace(/\r\n/g, '\n').replace(/^export /gm, '') + '\n');
+const engine = inlineImports(fs.readFileSync(new URL('glass2.js', root), 'utf8').replace(/\r\n/g, '\n')).replace(/^export /gm, '');
 const passed = [];
 
 // Exercise actual scheduling under a deterministic busy-scroll clock, including its final update.
@@ -22,7 +25,7 @@ function advance(end) {
 }
 function surface(name) {
     const classes = new Set();
-    return { name, hidden: false, icons: [], classes,
+    return { name, hidden: false, icons: [], classes, querySelectorAll: () => [],
         getBoundingClientRect() { events.push(['read', now]); return { top: 0, left: 0, width: 300, height: 40 }; },
         classList: { toggle(key, on) { events.push(['write', now]); if (on) classes.add(key); else classes.delete(key); } } };
 }
@@ -31,7 +34,8 @@ let luminance = 0.9;
 const adapt = source.slice(source.indexOf('function adaptBar(bar) {'), source.indexOf("chatEl.addEventListener('scroll', scheduleAdapt"));
 const adaptEnv = {
     S: settings, islands: [], PILL_SEL: '#pill', lightBg: false,
-    document: { getElementById: () => bar, querySelector: () => pill },
+    isTopSurface:()=>false,readWallpaperBackdrop:()=>null,wallpaperBackdrop:null,applyTopTone(){},topIconTones:()=>[],
+    document: { getElementById: id => id==='ilg-floor'?null:bar, querySelector: () => pill, body: { dataset: {} } },
     lumAt() { samples++; return luminance; }, performance: { now: () => now },
     requestAnimationFrame: fn => later(fn, 16), setTimeout: later,
 };
@@ -61,7 +65,7 @@ passed.push('100ms coalescing, trailing sample, disable/re-enable, islands, both
 // Compare real floor lookup with a linear oracle across a long chronological chat.
 let reads = 0, queries = 0;
 const messages = Array.from({ length: 2048 }, (_, id) => ({ id, nodeType: 1,
-    getAttribute() { return String(this.id); },
+    getAttribute() { return String(this.id); }, getClientRects() { return this.hidden ? [] : [{}]; },
     getBoundingClientRect() { reads++; return this.hidden ? { bottom: 0, width: 0, height: 0 } : { bottom: this.id * 80 + 75 - chat.scrollTop, width: 300, height: 75 }; },
 }));
 const chat = { scrollTop: 0, clientHeight: 800, scrollHeight: 2048 * 80,
@@ -69,11 +73,13 @@ const chat = { scrollTop: 0, clientHeight: 800, scrollHeight: 2048 * 80,
 let mutation;
 const floorStart = source.indexOf('let floorRaf = 0;');
 const floorCode = source.slice(floorStart, source.indexOf('function paintFloor() {', floorStart));
-const floorObserver = source.match(/new MutationObserver\(muts => \{\n    if \(muts.some\(m => m.target === chatEl[\s\S]*?\n\}\)\.observe\(chatEl, [^\n]+/)[0];
+// 楼层表现在由两个窄监听维护：只看 #chat 的直接增删和 mesid 属性变化（正文流式输出不再触发重建）。
+const floorObserver = source.slice(source.indexOf('const markFloors = '), source.indexOf("new MutationObserver(markFloors).observe(chatEl, { subtree: true")) +
+    "new MutationObserver(muts => { if (muts.some(m => m.target === chatEl || m.type === 'attributes' || [...m.addedNodes].some(n => n.nodeType === 1 && n.matches('.mes')))) markFloors(); }).observe(chatEl, {});";
 const lookup = vm.runInNewContext(floorCode + '\n' + floorObserver + ';visibleFloor', {
     chatEl: chat, document: { getElementById: id => id === 'chat' ? chat : { getBoundingClientRect: () => ({ bottom: 43 }) } },
     MutationObserver: class { constructor(fn) { mutation = fn; } observe() {} },
-    scheduleFloor() {},
+    scheduleFloor() {}, dockOn: () => false, floorChip: { hidden: true },
 });
 let maxReads = 0;
 for (let i = 0; i < 300; i++) {

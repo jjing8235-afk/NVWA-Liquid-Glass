@@ -24,6 +24,7 @@ for(const [enabled,preference,expected] of [[true,true,true],[true,false,false],
 assert.equal(saves,3);assert(!/applyRoot|repaintAll|clearAll/.test(handler));
 assert(source.includes("root.classList.toggle('ilg-indent', S.enabled && !!S.firstLineIndent)"));
 const rule=css.match(/(html\.ilg\.ilg-indent[^{}]+)\{\s*text-indent: 2em;\s*\}/);
-assert(rule&&rule[1].includes('.mes_text > p:not([class]):not([style])'));
-assert(rule[1].includes(':not(:has(')&&rule[1].includes(':not(.smallSysMes)'));
+assert(rule&&rule[1].includes('.mes_text > p.ilg-indentable'));
+assert(!rule[1].includes(':has(')&&rule[1].includes(':not(.smallSysMes)'));
+assert(source.includes("el.classList.toggle('ilg-indentable', indent)"),'markProse must stamp eligible paragraphs');
 console.log(JSON.stringify({passed:['New settings default off; old saved true/false and unrelated fields preserved','Preference toggle updates root and saves once without rebuilding glass','Enabled/disabled root gate and conservative paragraph-only CSS boundary present']},null,2));

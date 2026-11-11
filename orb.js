@@ -10,16 +10,25 @@ const PTS = Array.from({ length: N }, (_, i) => {
 });
 
 const live = new Set();
-let raf = 0;
-const still = () => document.body.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+let raf = 0, lastFrame = 0;
+const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+const still = () => document.body.classList.contains('reduced-motion') || motionQuery.matches;
+// 能不能看见交给 IntersectionObserver，循环里不再读 offsetParent：那一读会逼浏览器在
+// 流式输出的每一帧把整页样式和布局重算一遍，降速模拟里是手机卡顿的最大来源
+const seen = new WeakMap();
+const vis = typeof IntersectionObserver === 'function'
+    ? new IntersectionObserver(es => { for (const e of es) seen.set(e.target, e.isIntersecting); })
+    : null;
+// 小球只有二十来像素，每秒 30 帧肉眼看不出区别，画图的耗电减半
+const FRAME_MS = 33;
 
 function draw(c, t) {
     const dpr = Math.min(3, window.devicePixelRatio || 1);
-    const size = c.clientWidth || 20;
+    // 尺寸和颜色都会逼浏览器重算样式/布局，隔一阵读一次就够了（换深浅色、改字号时最多晚半秒跟上）
+    if (!c._size || (c._frame = (c._frame || 0) + 1) % 15 === 0) { c._size = c.clientWidth || 20; c._color = getComputedStyle(c).color; }
+    const size = c._size;
     const px = Math.round(size * dpr);
-    if (c.width !== px) { c.width = px; c.height = px; c._color = null; }
-    // 换深浅色时 color 会变，隔一阵重新读一次就够了
-    if (!c._color || (c._frame = (c._frame || 0) + 1) % 30 === 0) c._color = getComputedStyle(c).color;
+    if (c.width !== px) { c.width = px; c.height = px; }
     const g = c.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, size, size);
@@ -41,9 +50,11 @@ function draw(c, t) {
 
 function loop(t) {
     raf = 0;
+    const due = t - lastFrame >= FRAME_MS;
+    if (due) lastFrame = t;
     for (const c of live) {
-        if (!c.isConnected) { live.delete(c); continue; }
-        if (c.offsetParent) draw(c, t);
+        if (!c.isConnected) { live.delete(c); vis?.unobserve(c); continue; }
+        if (due && (vis ? seen.get(c) : c.offsetParent)) draw(c, t);
     }
     if (live.size && !still()) raf = requestAnimationFrame(loop);
 }
@@ -53,6 +64,7 @@ export function makeOrb() {
     c.className = 'ilg-orb';
     c.setAttribute('aria-hidden', 'true');
     live.add(c);
+    vis?.observe(c);
     // 先等它挂进页面拿到尺寸再画第一帧；减少动态效果时只画这一帧，球停在一个角度
     requestAnimationFrame(t => { draw(c, t); if (!raf && !still()) raf = requestAnimationFrame(loop); });
     return c;

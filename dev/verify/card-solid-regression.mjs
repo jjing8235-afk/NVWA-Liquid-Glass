@@ -35,6 +35,7 @@ const S = { cardSolid: true };
 const message = { classList: { contains: () => true, toggle() {} } };
 const api = vm.runInNewContext(parse + '\n' + block + '\n' + card + '\n({tagCard})', {
     S, root: { classList: { contains: () => false } }, getComputedStyle: computed, paint() {},
+    MutationObserver: class { observe() {} disconnect() {} }, chatEl: { querySelectorAll: () => [] },
 });
 const test = children => api.tagCard({ children, closest: () => message });
 const frame = node('iframe');
@@ -45,31 +46,22 @@ const gradient = node('section', { image: 'linear-gradient(rgb(74, 43, 94), rgba
 const pseudo = node('section', { pseudo: true });
 const opaque = node('section', { color: 'rgb(74, 43, 94)' });
 const all = [frame, oldFrame, image, oldImage, gradient, pseudo, opaque];
-for (let i = 0; i < 3; i++) {
+// The removed option must never replace an authored background, even in an old saved configuration.
+const colorBefore = all.map(el => ({color:el.style.backgroundColor,image:el.style.backgroundImage}));
+for (const savedValue of [true,false,true]) {
+    S.cardSolid = savedValue;
     test(all);
-    for (const el of [frame, oldFrame, image, oldImage]) {
-        assert.equal(el.classList.contains('ilg-solid'), false, 'Unknown color must not invent a backing');
-        assert.equal(el.style.getPropertyValue('--ilg-card-solid'), '');
-        assert.equal(computed(el).backgroundColor, 'rgba(0, 0, 0, 0)');
+    for (const [i,el] of all.entries()) {
+        assert.equal(el.classList.contains('ilg-solid'),false);
+        assert.equal(el.style.getPropertyValue('--ilg-card-solid'),'');
+        assert.equal(el.style.backgroundColor,colorBefore[i].color);
+        assert.equal(el.style.backgroundImage,colorBefore[i].image);
     }
-    for (const el of [gradient, pseudo]) {
-        assert.equal(el.style.getPropertyValue('--ilg-card-solid'), 'rgb(74, 43, 94)');
-        assert.equal(el.classList.contains('ilg-solid'), true);
-    }
-    assert.equal(opaque.classList.contains('ilg-solid'), false);
-    assert.equal(computed(opaque).backgroundColor, 'rgb(74, 43, 94)');
+    assert(gradient.classList.contains('ilg-card-surface') && pseudo.classList.contains('ilg-card-surface'),'Authored panels retain compatibility markers');
 }
-S.cardSolid = false;
-test(all);
-assert(all.every(el => !el.classList.contains('ilg-solid') && !el.style.getPropertyValue('--ilg-card-solid')));
-S.cardSolid = true;
-test(all);
-assert(gradient.classList.contains('ilg-solid') && pseudo.classList.contains('ilg-solid'));
-assert(!frame.classList.contains('ilg-solid') && !image.classList.contains('ilg-solid'));
-console.log(JSON.stringify({ passed: true, checks: [
-    'Transparent iframe and unknown image backgrounds keep authored transparency',
-    'Legacy neutral backings are removed instead of cached forever',
-    'Known gradients and pseudo-element colors remain opaque and stable',
-    'Opaque authored surfaces stay unchanged',
-    'Off/on restores only known-color surfaces without accessing frame contents',
-] }, null, 2));
+const migration=source.match(/if \(Object.hasOwn\(S, 'cardSolid'\)\) \{[^]*?\}/)[0];
+const old={cardSolid:true,chatBackground:'transparent',mesTint:.12};let saves=0;
+vm.runInNewContext(migration,{S:old,ctx:{saveSettingsDebounced(){saves++}}});
+assert.equal(Object.hasOwn(old,'cardSolid'),false);assert.equal(old.chatBackground,'transparent');assert.equal(old.mesTint,.12);assert.equal(saves,1);
+vm.runInNewContext(migration,{S:old,ctx:{saveSettingsDebounced(){saves++}}});assert.equal(saves,1);
+console.log(JSON.stringify({passed:true,checks:['Authored gradients, pseudo backgrounds and opaque colors remain unchanged','Transparent iframes and image surfaces keep authored transparency','Old generated backing markers are removed','Retired saved option is removed once without changing other appearance settings','Card compatibility markers remain and frame internals are never accessed']},null,2));

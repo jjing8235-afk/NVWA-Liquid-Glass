@@ -6,7 +6,7 @@ export function createCardTextClarity(chat) {
     const frames = new Map(), floating = new Set(), externalFrames = new Set();
     const doc = chat.ownerDocument;
     // Host shells already have their own styles. Inspect external mounts, not whole application trees.
-    const hostShells = '#top-bar, #top-settings-holder, #sheld, #chat, #form_sheld, #extensions_settings, #extensions_settings2, #extensionsMenu, #options, #toast-container, #character_popup, #world_popup, #ilg-home, #ilg-fold-menu';
+    const hostShells = '#top-bar, #top-settings-holder, #sheld, #chat, #form_sheld, #extensions_settings, #extensions_settings2, #extensionsMenu, #options, #toast-container, #character_popup, #world_popup, #ilg-home, #ilg-fold-menu, #ilg-studio, #ilg-ball, #ilg-ball-glass, #ilg-ball-glass-shade, #ilg-ball-bridge, #ilg-ball-shade';
     function findFloating() {
         const found = new Set();
         const walk = el => {

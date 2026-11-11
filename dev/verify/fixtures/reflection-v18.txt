@@ -1,0 +1,29 @@
+function roundedReflection(width, height, radius) {
+    const w = Math.max(1, Math.round(width)), h = Math.max(1, Math.round(height));
+    const r = clamp(radius, 0, Math.min(w, h) / 2);
+    const scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1), 1536 / w, 768 / h);
+    const key = [w, h, r, scale].join(':');
+    if (cache.has(key)) { const item = cache.get(key); cache.delete(key); cache.set(key, item); return item.url; }
+    const cw = Math.max(2, Math.round(w * scale)), ch = Math.max(2, Math.round(h * scale));
+    const canvas = document.createElement('canvas'); canvas.width = cw; canvas.height = ch;
+    const ctx = canvas.getContext('2d'); if (!ctx) return null;
+    const image = ctx.createImageData(cw, ch), data = image.data, out = [0, 0, 0, 0];
+    for (let y = 0, p = 0; y < ch; y++) for (let x = 0; x < cw; x++, p += 4) {
+        const px = (x + .5) * w / cw - w / 2, py = (y + .5) * h / ch - h / 2;
+        const qx = Math.abs(px) - w / 2 + r, qy = Math.abs(py) - h / 2 + r;
+        const ex = Math.max(qx, 0), ey = Math.max(qy, 0), length = Math.hypot(ex, ey);
+        const depth = r - length - Math.min(Math.max(qx, qy), 0);
+        if (depth < 0 || depth > 7) continue;
+        const nx = length ? Math.sign(px) * ex / length : qx > qy ? Math.sign(px) : 0;
+        const ny = length ? Math.sign(py) * ey / length : qy >= qx ? Math.sign(py) : 0;
+        reflectionPixel(depth, nx, ny, out);
+        for (let c = 0; c < 4; c++) data[p + c] = out[c];
+    }
+    ctx.putImageData(image, 0, 0);
+    const url = canvas.toDataURL('image/png'); canvas.width = canvas.height = 0;
+    while (cache.size && (cache.size >= 24 || pixels + cw * ch > 2097152)) {
+        const first = cache.keys().next().value; pixels -= cache.get(first).pixels; cache.delete(first);
+    }
+    cache.set(key, {url, pixels: cw * ch}); pixels += cw * ch;
+    return url;
+}
