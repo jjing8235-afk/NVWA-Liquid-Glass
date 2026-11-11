@@ -45,20 +45,23 @@ export function keyboardInset() {
  * 输入框是否聚焦也要算进去：iOS 关掉键盘后 visualViewport 有时晚一帧才恢复。
  */
 export function createKeyboard({ root, enabled, input }) {
-    let last = -1;
-    const apply = () => {
-        const focused = document.activeElement === input();
-        const kb = enabled() && focused ? keyboardInset() : 0;
-        if (kb === last) return;
-        last = kb;
-        root.style.setProperty('--ilg-kb', kb + 'px');
-        root.classList.toggle('ilg-kb-open', kb > 0);
+    let last=-1,pending=0,blurTimer=0,destroyed=false;
+    const apply=()=>{
+        if(destroyed)return;
+        if(pending){cancelAnimationFrame(pending);pending=0;}
+        const focused=document.activeElement===input();
+        const kb=enabled()&&focused?keyboardInset():0;
+        if(kb===last)return;
+        last=kb;root.style.setProperty('--ilg-kb',kb+'px');root.classList.toggle('ilg-kb-open',kb>0);
     };
-    onViewportChange(apply);
-    if (vv) vv.addEventListener('scroll', () => requestAnimationFrame(apply), { passive: true });
-    document.addEventListener('focusin', () => requestAnimationFrame(apply));
-    document.addEventListener('focusout', () => setTimeout(apply, 60));
-    return { refresh: apply, clear: () => { last = -1; root.style.removeProperty('--ilg-kb'); root.classList.remove('ilg-kb-open'); } };
+    const schedule=()=>{if(!destroyed&&!pending)pending=requestAnimationFrame(()=>{pending=0;apply();});};
+    const focusIn=()=>{clearTimeout(blurTimer);blurTimer=0;schedule();};
+    const focusOut=()=>{clearTimeout(blurTimer);blurTimer=setTimeout(()=>{blurTimer=0;schedule();},60);};
+    const unsubscribe=onViewportChange(apply);
+    vv?.addEventListener('scroll',schedule,{passive:true});
+    document.addEventListener('focusin',focusIn);document.addEventListener('focusout',focusOut);
+    const clear=()=>{if(pending)cancelAnimationFrame(pending);pending=0;clearTimeout(blurTimer);blurTimer=0;last=-1;root.style.removeProperty('--ilg-kb');root.classList.remove('ilg-kb-open');};
+    return{refresh:apply,clear,status:()=>({inset:Math.max(0,last),pending:!!pending}),destroy(){destroyed=true;unsubscribe();vv?.removeEventListener('scroll',schedule);document.removeEventListener('focusin',focusIn);document.removeEventListener('focusout',focusOut);clear();}};
 }
 
 /**

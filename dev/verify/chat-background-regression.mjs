@@ -80,7 +80,7 @@ for (const mode of ['glass', 'transparent']) {
                         document: { createElement: () => element(), body: { classList: { contains: () => noBlur } } },
                         items: new Map([[el, it]]), trackable: () => true,
                         KIND: { mes: { blur: () => 3 } }, refractAllowed: () => allowed,
-                        canRefract: () => allowed, isIOS: false, radiusOf: () => 22,
+                        canRefract: () => allowed, isIOS: false, androidWebView:false, devicePixelRatio:1,largeWebViewMessage:()=>false,iosMaterialActive:()=>false, radiusOf: () => 22,
                         setPhys(node, _item, on) { node.classList.toggle('ilg-phys', on); },
                         measure: () => ({ w: 300, h: 120, r: 22 }),
                         cssGlassActive: () => engine === 'css', webStyleEnabled: () => false, controlSurface: () => false, controlReadable: () => false,

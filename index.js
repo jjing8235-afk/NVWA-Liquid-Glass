@@ -3,6 +3,9 @@
    折射引擎有两套：新版物理折射（glass2.js，实验台 v2 移植）和旧版（本文件里的 makeMap / buildFilter） */
 import { getMaps, clearMaps, physicalFilter, resizePhysicalFilter } from './glass2.js';
 import { makeOrb } from './orb.js';
+import { createBundledWallpapers } from './bundled-wallpapers.js';
+import { largeWebViewMessage } from './surface-policy.js';
+import { createInteractionDiagnostics } from './interaction-diagnostics.js';
 import { positionFixed } from './fixed-position.js';
 import { createMessageRendering } from './message-rendering.js';
 import { createHostInteractionState } from './host-interaction-state.js';
@@ -25,7 +28,7 @@ window.__ilgLoaded = new URL('.', import.meta.url).pathname;
 
 let studioUI = null;
 const MODULE = 'iosLiquidGlass';
-const BUILD_VERSION = '2.0';
+const BUILD_VERSION = '2.0.1';
 const ENGINE_NAMES = Object.freeze({performance:'御风性能引擎',refraction:'棱光折射引擎'});
 const NS = 'http://www.w3.org/2000/svg';
 const ctx = SillyTavern.getContext();
@@ -1056,11 +1059,13 @@ function paint(el, geo) {
     const control = it.kind === 'bar' && controlSurface(el);
     el.classList.toggle('ilg-control-surface', control);
     el.classList.toggle('ilg-control-readable', control && controlReadable(el));
+    it.renderPath = 'pending'; it.fallbackReason = '';
     const cssMode = cssGlassActive();
     el.classList.toggle('ilg-css-surface', cssMode);
     const useWeb = it.kind === 'bar' && webStyleEnabled();
     if (!useWeb) webGlass.release(el);
     if (document.body.classList.contains('no-blur')) {
+        it.renderPath = 'no-blur';
         reflections.release(el);
         setPhys(el, it, false);
         surface.style.backdropFilter = 'none';
@@ -1074,6 +1079,7 @@ function paint(el, geo) {
     // A closed drawer has no pixels to update; retain its last valid filter for reopening.
     if (!w || !h) return;
     if (cssMode) {
+        it.renderPath = 'css';
         // CSS material owns its rim; skip displacement maps and canvas reflections.
         setPhys(el, it, false);
         let lightBlur;
@@ -1089,6 +1095,7 @@ function paint(el, geo) {
     if (it.kind === 'mes' && !it.visible) reflections.release(el);
     else reflections.paint(el, w, h, r);
     if (useWeb) {
+        it.renderPath = 'web-compatible';
         setPhys(el, it, false);
         webGlass.paint(el, it, { width: w, height: h,
             refract: S.refract && canRefract() && !isIOS,
@@ -1097,18 +1104,24 @@ function paint(el, geo) {
             bendY: el.id === 'nonQRFormItems' ? 1.5 : 1 });
         return;
     }
-    const phys = refractAllowed(it) && S.engine === 'physical';
+    it.largeWebView = largeWebViewMessage({webView:androidWebView,kind:it.kind,width:w,height:h,dpr:devicePixelRatio,previous:it.largeWebView});
+    const guarded = S.engine === 'physical' && it.largeWebView;
+    const phys = refractAllowed(it) && S.engine === 'physical' && !guarded;
+    if(guarded&&refractAllowed(it))it.fallbackReason='large-webview-message';
     setPhys(el, it, phys);
     if (canRefract() && !isIOS) surface.style.webkitBackdropFilter = '';
     if (phys) {
+        it.renderPath = 'physical';
         buildPhysical(it, el, w, h, r);
         surface.style.backdropFilter = `url(#${it.id})` + reading;
         if (isIOS) surface.style.webkitBackdropFilter = `url(#${it.id})` + reading;
     } else if (refractAllowed(it)) {
+        it.renderPath = 'legacy';
         buildFilter(it, w, h, r, el);
         surface.style.backdropFilter = `url(#${it.id}) ${tail}`;
         if (isIOS) surface.style.webkitBackdropFilter = `url(#${it.id}) ${tail}`;
     } else {
+        it.renderPath = iosMaterialActive() ? 'ios-compatible' : 'blur';
         const fallback = control && controlReadable(el) ? `blur(${Math.max(3.5, blur)}px) saturate(${S.saturate}) brightness(${S.brightness})` : tail;
         surface.style.backdropFilter = fallback;
         if (isIOS || !canRefract()) surface.style.webkitBackdropFilter = fallback;
@@ -1664,7 +1677,7 @@ function syncToneBtn() {
     const mode = appearanceMode();
     toneBtn.classList.toggle('ilg-is-light', lightBg);
     const name = { light: '白天', dark: '黑夜', custom: '自定义' }[mode];
-    const nextName = { light: '黑夜', dark: '自定义', custom: '白天' }[mode];
+    const nextName = { light: '白天', dark: '黑夜', custom: '自定义' }[nextAppearanceMode()];
     const label = `外观：${name}，点击切换${nextName}`;
     toneIcon.title = label;
     toneIcon.setAttribute('aria-label', label);
@@ -2022,6 +2035,17 @@ function applyToneBtn() {
 }
 const wallThumb = tone => [...document.querySelectorAll('#bg_menu_content .bg_example, .bg_example')]
     .find(n => n.getAttribute('bgfile') === TONE_WALLS[tone]);
+function customWallThumb() {
+    const key = wallpaperKey(S.customWallpaper || '');
+    return key && [...document.querySelectorAll('.bg_example')].find(el => {
+        const file = el.getAttribute('bgfile') || '';
+        return file && (wallpaperKey(file) === key || key.endsWith('/' + file));
+    });
+}
+function nextAppearanceMode() {
+    const mode = appearanceMode();
+    return mode === 'light' ? 'dark' : mode === 'dark' && customWallThumb() ? 'custom' : 'light';
+}
 function openWallpaperPicker() {
     closeAppearancePanel();
     const button = document.getElementById('backgrounds-button');
@@ -2029,31 +2053,49 @@ function openWallpaperPicker() {
     if (icon) icon.click();
     else toastr.info('请从菜单 → 背景中选择一张壁纸。', '选择自定义壁纸');
 }
-function selectAppearance(mode) {
+let appearanceSelection = 0;
+let lastAppearanceAction = null;
+function finishAppearance(outcome, mode) {
+    lastAppearanceAction = {mode, outcome};
+    interactionDiagnostics.mark('appearance-result', {mode, outcome});
+}
+async function selectAppearance(mode) {
+    const selection = ++appearanceSelection;
+    lastAppearanceAction = {mode, outcome:'requested'};
+    interactionDiagnostics.mark('appearance-request', {mode});
     const current = wallpaperUrl();
     if (current && !onToneWall()) rememberCustomWallpaper(current);
     let thumb;
     if (mode === 'custom') {
-        const key = wallpaperKey(S.customWallpaper || '');
-        thumb = key && [...document.querySelectorAll('.bg_example')].find(el => {
-            const file = el.getAttribute('bgfile') || '';
-            return file && (wallpaperKey(file) === key || key.endsWith('/' + file));
-        });
-        if (!thumb && appearanceMode() !== 'custom') { S.tone = 'auto'; void applyTone(); ctx.saveSettingsDebounced(); return; }
+        thumb = customWallThumb();
+        if (!thumb && appearanceMode() !== 'custom') {
+            finishAppearance('unavailable', mode);
+            syncAppearancePanel();
+            openWallpaperPicker();
+            return;
+        }
     } else {
         thumb = wallThumb(mode);
-        if (!thumb) { toastr.warning('配套壁纸未找到，请在背景中选择或重新导入配套壁纸。'); return; }
+        if (!thumb) {
+            toastr.info('正在检查并恢复配套壁纸…','NVWA 液态玻璃');
+            const result=await ensureWalls();
+            if(selection!==appearanceSelection||!S.enabled){interactionDiagnostics.mark('appearance-result',{mode,outcome:'superseded'});return;}
+            if(!result.ok){finishAppearance('unavailable',mode);toastr.warning('配套壁纸恢复未完成，请检查网络或宿主的背景上传功能，再点一次重试。','NVWA 液态玻璃');return;}
+            thumb=wallThumb(mode);
+            if(!thumb){finishAppearance('unavailable',mode);toastr.warning('配套壁纸已在背景库中，请清除背景列表筛选或刷新酒馆后再切换。','NVWA 液态玻璃');return;}
+        }
     }
     S.tone = mode === 'custom' ? 'auto' : mode;
     toneOverride = null;
     thumb?.click();
+    finishAppearance('dispatched', mode);
     void applyTone();
     const select = document.getElementById('ilg-opt-tone');
     if (select) select.value = S.tone;
     document.querySelectorAll('.ilg-settings [data-tone]').forEach(el => { el.hidden = el.dataset.tone !== S.tone; });
     ctx.saveSettingsDebounced();
 }
-toneIcon.addEventListener('click', () => selectAppearance({ light: 'dark', dark: 'custom', custom: 'light' }[appearanceMode()]));
+toneIcon.addEventListener('click', () => { void selectAppearance(nextAppearanceMode()); });
 appearancePanel.querySelector('.ilg-choose-wallpaper').addEventListener('click', openWallpaperPicker);
 appearancePanel.querySelectorAll('[name="ilg-appearance-mode"]').forEach(el => el.addEventListener('change', () => selectAppearance(el.value)));
 appearancePanel.querySelectorAll('[name="ilg-reading-style"]').forEach(el => el.addEventListener('change', () => {
@@ -2477,6 +2519,7 @@ function queueGlassSettings() {
 
 function applyRoot() {
     if (!S.enabled) hideRangeValue();
+    if (!S.enabled) interactionDiagnostics.stop('disabled');
     hostInteractionState.setEnabled(S.enabled);
     normalizeTopStyleSettings(S);
     syncInputMaterial(false);
@@ -2654,9 +2697,51 @@ function statusText() {
     return `已请求折射（${route}，${tone}），实际画面以当前设备为准。${document.body.classList.contains('bubblechat') ? '' : '消息卡片玻璃只在“气泡”样式下生效。'}`;
 }
 
+function viewportDiagnostic() {
+    const vv=window.visualViewport;
+    const rect=id=>{const el=document.getElementById(id);if(!el)return null;const r=el.getBoundingClientRect();return{x:Math.round(r.x),y:Math.round(r.y),width:Math.round(r.width),height:Math.round(r.height)};};
+    const paths={},surfaces=[];let large=0;
+    for(const [el,it] of items){const path=it.renderPath||'pending';paths[path]=(paths[path]||0)+1;if(it.fallbackReason==='large-webview-message')large++;
+        if(surfaces.length<3&&it.visible&&el.matches('.mes')){const r=el.getBoundingClientRect();surfaces.push({width:Math.round(r.width),height:Math.round(r.height),path,fallbackReason:it.fallbackReason||''});}}
+    return{layout:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},visual:vv?{width:vv.width,height:vv.height,offsetTop:vv.offsetTop,offsetLeft:vv.offsetLeft,scale:vv.scale}:null,
+        composerFocused:document.activeElement===document.getElementById('send_textarea'),keyboard:keyboard.status(),composer:rect('nonQRFormItems'),form:rect('form_sheld'),ball:{shown:S.enabled&&S.floatBall,keyboardHidden:root.classList.contains('ilg-kb-open'),rect:rect('ilg-ball')},
+        rendering:{iosCompatible:iosMaterialActive(),engineRequested:S.engine,largeWebViewMessages:large,paths,surfaces},
+        appearance:{requested:S.tone,actual:appearanceMode(),lightThumbnail:!!wallThumb('light'),darkThumbnail:!!wallThumb('dark'),customThumbnail:!!customWallThumb(),chatBackgroundLocked:chatBgLocked(),lastAction:lastAppearanceAction},
+        wallpapers:bundledWallpapers.status(),workers:{reflections:reflections.status(),ball:((({mode,reason,suspended,pending,failures})=>({mode,reason,suspended,pending,failures}))(ballGlass.status()))},lighting:lighting.status(),captureNote:'Frame intervals describe page callbacks, not display flicker detection'};
+}
+const CAPTURE_SCENARIOS = {
+    general: ['综合交互', '滚动聊天、拖动小球，再弹出键盘打几个字并收起。'],
+    appearance: ['黑白切换 / 壁纸', '点击右上角外观图标切换两三次，等壁纸恢复或错误提示出现。'],
+    rendering: ['屏闪 / 折射', '停在会闪的卡片处，先静止片刻再上下滚动；若肉眼看到屏闪，可另附短录屏。'],
+    keyboard: ['键盘 / 拖动', '拖动小球，再弹出键盘输入几个字、收起键盘并继续拖动。'],
+};
+function exportCompatibilityDiagnostic() {
+    if(interactionDiagnostics.status().recording)interactionDiagnostics.stop('exported');
+    const text=iosTrialReport()+'\n\n'+cardDisplayReport({includeCapture:false});
+    const field=document.getElementById('ilg-opt-iosReport');if(field)field.value=text;
+    downloadDiagnostic(text);
+}
+function captureBadge() {
+    let badge=document.getElementById('ilg-capture-badge');if(badge)return badge;
+    badge=document.createElement('aside');badge.id='ilg-capture-badge';badge.setAttribute('aria-label','交互诊断采集');
+    badge.innerHTML='<span role="status" aria-live="polite"></span><button type="button" data-action="main">结束</button><button type="button" data-action="close" aria-label="收起采集提示" hidden>×</button>';
+    badge.querySelector('[data-action="main"]').addEventListener('click',()=>{if(interactionDiagnostics.status().recording)interactionDiagnostics.stop('manual');else exportCompatibilityDiagnostic();});
+    badge.querySelector('[data-action="close"]').addEventListener('click',()=>badge.remove());document.body.append(badge);return badge;
+}
+const interactionDiagnostics=createInteractionDiagnostics({snapshot:viewportDiagnostic,onProgress(progress){
+    const badge=captureBadge();badge.querySelector('span').textContent='采集中 · '+Math.ceil(progress.remainingMs/1000)+' 秒';badge.querySelector('[data-action="main"]').textContent='结束';badge.querySelector('[data-action="close"]').hidden=true;
+},onFinish(result){
+    const missing=result.coverage.missing.length;
+    const labels={chatScroll:'滚动聊天',ballDrag:'拖动小球',composerInput:'输入文字',visualViewportChange:'视口变化',appearanceAttempt:'外观切换'};
+    const text='采集'+(result.quality.fullDuration?'完成':'已提前结束')+'（'+(result.durationMs/1000).toFixed(1)+' 秒）'+(missing?'，未观察到：'+result.coverage.missing.map(key=>labels[key]||key).join('、'):'')+'。点击导出即可发送这一份诊断。';
+    const status=document.getElementById('ilg-capture-state');if(status)status.textContent=text;
+    const button=document.getElementById('ilg-capture-start');if(button)button.textContent='重新采集 15 秒';
+    const badge=captureBadge();badge.querySelector('span').textContent=missing?'采集结束 · 有未测操作':'采集结束';badge.querySelector('[data-action="main"]').textContent='导出诊断';badge.querySelector('[data-action="close"]').hidden=false;
+}});
+
 function iosTrialReport() {
     const rows = [
-        'NVWA 液态玻璃 ' + BUILD_VERSION + ' · iOS 诊断',
+        'NVWA 液态玻璃 ' + BUILD_VERSION + ' · 兼容诊断',
         'UA: ' + navigator.userAgent,
         '平台 / 触摸点: ' + navigator.platform + ' / ' + navigator.maxTouchPoints,
         '视口 / DPR: ' + innerWidth + ' × ' + innerHeight + ' / ' + devicePixelRatio,
@@ -2673,6 +2758,9 @@ function iosTrialReport() {
         '界面轮廓计算: ' + JSON.stringify(reflections.status()),
         '消息渲染: ' + JSON.stringify(messageRendering.status()),
         '悬浮球计算: ' + JSON.stringify((({mode, reason, suspended, active, pending, workerFrames, syncFrames, coalesced, failures, cacheEntries}) => ({mode, reason, suspended, active, pending, workerFrames, syncFrames, coalesced, failures, cacheEntries}))(ballGlass.status())),
+        '配套壁纸恢复: ' + JSON.stringify(bundledWallpapers.status()),
+        '视口与键盘: ' + JSON.stringify(viewportDiagnostic()),
+        '短时交互采集: ' + JSON.stringify(interactionDiagnostics.report()),
         '控件材质: ' + S.glassStyle,
         'Web 预设: ' + WEB_PRESETS[S.webPreset].label,
         '状态: ' + statusText(),
@@ -2845,14 +2933,15 @@ function buildPanel() {
     wrap.querySelector('.inline-drawer-content').append(tiltControls);
     tiltControls.querySelector('#ilg-tilt-state').textContent = lighting.status();
     tiltControls.querySelector('#ilg-tilt-calibrate').addEventListener('click', requestMobileTilt);
+    const captureControls=document.createElement('div');captureControls.id='ilg-interaction-diagnostics';captureControls.className='ilg-tilt-controls';
+    captureControls.innerHTML='<label for="ilg-capture-scenario">主要复测</label><select id="ilg-capture-scenario" class="text_pole">'+Object.entries(CAPTURE_SCENARIOS).map(([key,[label]])=>'<option value="'+key+'">'+label+'</option>').join('')+'</select><button type="button" id="ilg-capture-start">开始 15 秒交互采集</button><p id="ilg-capture-state" role="status" aria-live="polite">'+CAPTURE_SCENARIOS.general[1]+' 开始后设置会收起，结束可直接导出。仅本次手动采集，不记录正文、输入内容或壁纸地址。</p>';
+    captureControls.querySelector('select').addEventListener('change',e=>{if(!interactionDiagnostics.status().recording)captureControls.querySelector('p').textContent=CAPTURE_SCENARIOS[e.target.value][1]+' 采集结束后点击导出诊断即可。';});
+    captureControls.querySelector('button').addEventListener('click',()=>{if(interactionDiagnostics.status().recording){interactionDiagnostics.stop('manual');return;}if(!S.enabled)return;if(interactionDiagnostics.start({scenario:captureControls.querySelector('select').value})){captureControls.querySelector('button').textContent='结束采集';captureControls.querySelector('p').textContent='正在采集，15 秒后自动结束；也可以点击屏幕上的提示条提前结束。';studioUI?.close(false);}});
+    wrap.querySelector('.inline-drawer-content').append(captureControls);
     studioUI = createSettingsPanel({ host, content: wrap, appearance: appearancePanel, version: BUILD_VERSION, settings: S, engines: ENGINE_NAMES });
 
     document.getElementById('ilg-opt-iosReportCopy').textContent = '导出兼容诊断 TXT';
-    document.getElementById('ilg-opt-iosReportCopy').addEventListener('click', () => {
-        const text = iosTrialReport() + '\n\n' + cardDisplayReport();
-        document.getElementById('ilg-opt-iosReport').value = text;
-        downloadDiagnostic(text);
-    });
+    document.getElementById('ilg-opt-iosReportCopy').addEventListener('click', exportCompatibilityDiagnostic);
     document.getElementById('ilg-card-report-copy').textContent = '导出卡片显示诊断 TXT';
     document.getElementById('ilg-card-report-copy').addEventListener('click', () => {
         const text = cardDisplayReport();
@@ -3532,7 +3621,7 @@ let cardTimer = 0;
 const parseRgba = s => { const m = s && s.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
 const lumOf = c => (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
 // Computed display metadata only: never include message text, frame URLs or settings payloads.
-function cardDisplayReport() {
+function cardDisplayReport({includeCapture=true}={}) {
     const describe = el => {
         const win = el.ownerDocument.defaultView;
         const cs = win.getComputedStyle(el);
@@ -3547,6 +3636,7 @@ function cardDisplayReport() {
             tag: el.tagName.toLowerCase(),
             classes: [...el.classList].slice(0, 8).map(c => c.slice(0, 80)),
             size: [Math.round(rect.width), Math.round(rect.height)],
+            intersectsViewport: rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0 && rect.top < win.innerHeight && rect.left < win.innerWidth,
             visible: !!rect.width && !!rect.height && cs.display !== 'none' && cs.visibility !== 'hidden',
             position: cs.position,
             background: style(cs),
@@ -3554,7 +3644,7 @@ function cardDisplayReport() {
             after: style(win.getComputedStyle(el, '::after')),
             solid: el.classList.contains('ilg-solid'),
         };
-        if (el.matches('.mes')) result.glass = style(win.getComputedStyle(el.querySelector(':scope > .ilg-message-glass') || el));
+        if (el.matches('.mes')) { result.glass = style(win.getComputedStyle(el.querySelector(':scope > .ilg-message-glass') || el)); const it=items.get(el);result.rendering={path:it?.renderPath||'not-tracked',fallbackReason:it?.fallbackReason||'',nearViewport:it?.visible===true}; }
         if (el.tagName === 'IFRAME') {
             try {
                 const doc = el.contentDocument;
@@ -3580,7 +3670,10 @@ function cardDisplayReport() {
         return { message: describe(message), candidates: candidates.length, sampled: sampled.map(describe), truncated: sampled.length < candidates.length };
     });
     return JSON.stringify({
-        format: 'nvwa-card-display-1', version: '1.4.4',
+        format: 'nvwa-card-display-1', version: BUILD_VERSION,
+        environment: {isIOS,androidWebView,iosCompatible:iosMaterialActive(),trueRefractionConfirmed:false},
+        viewportState: viewportDiagnostic(), ...(includeCapture ? {interactionCapture: interactionDiagnostics.report()} : {}),
+        bundledWallpapers: bundledWallpapers.status(),
         viewport: [innerWidth, innerHeight, devicePixelRatio],
         userAgent: navigator.userAgent,
         enabled: !!S.enabled, chatBackground: S.chatBackground, chatVeil: S.chatVeil,
@@ -3801,32 +3894,24 @@ applyRoot();
 paintRanges();
 ctx.eventSource.on(ctx.eventTypes.APP_READY, applyRoot);
 
-// 别人第一次装上时背景库里没有瓷白 / 墨黑两张壁纸，按时间切换和太阳 / 月亮键就找不到图；从扩展自带的 walls/ 里补传一次（已经有同名的就不动）
+// Check the real library on startup and when an explicit appearance selection needs repair.
+// The old wallsReady flag survives reinstalling the extension, so it is not proof of file presence.
+const bundledWallpapers=createBundledWallpapers({
+    files:Object.values(TONE_WALLS),getHeaders:options=>ctx.getRequestHeaders(options),
+    assetURL:file=>new URL('./walls/'+encodeURIComponent(file),import.meta.url),
+    async refresh(){const backgrounds=await import('/scripts/backgrounds.js');if(typeof backgrounds.getBackgrounds!=='function')throw new Error('refresh-unavailable');await backgrounds.getBackgrounds();},
+    onReady(){if(!S.wallsReady){S.wallsReady=true;ctx.saveSettingsDebounced();}},
+});
 async function ensureWalls() {
-    if (S.wallsReady) return;
-    try {
-        const headers = ctx.getRequestHeaders();
-        const res = await fetch('/api/backgrounds/all', { method: 'POST', headers, body: '{}' });
-        if (!res.ok) return;
-        const have = new Set(((await res.json()).images || []).map(x => x.filename));
-        const missing = Object.values(TONE_WALLS).filter(f => !have.has(f));
-        for (const file of missing) {
-            const img = await fetch(new URL(`./walls/${encodeURIComponent(file)}`, import.meta.url));
-            if (!img.ok) return;
-            const form = new FormData();
-            form.append('avatar', new File([await img.blob()], file, { type: 'image/png' }));
-            const up = await fetch('/api/backgrounds/upload', { method: 'POST', headers: ctx.getRequestHeaders({ omitContentType: true }), body: form });
-            if (!up.ok) return;
-        }
-        if (missing.length) {
-            (await import('/scripts/backgrounds.js')).getBackgrounds?.();
-            toastr.info('已把瓷白、墨黑两张壁纸放进背景库。选其中一张当壁纸，就会按时间自动换深浅色。', 'NVWA 液态玻璃');
-        }
-        S.wallsReady = true;
-        ctx.saveSettingsDebounced();
-    } catch (e) { console.warn('[NVWA 液态玻璃] 补传壁纸失败', e); }
+    interactionDiagnostics.mark('wallpaper-recovery', {phase:'checking'});
+    const result = await bundledWallpapers.ensure();
+    interactionDiagnostics.mark('wallpaper-recovery', {phase:result.phase,code:result.error});
+    return result;
 }
-ctx.eventSource.on(ctx.eventTypes.APP_READY, () => setTimeout(ensureWalls, 1500));
+let wallsStartupQueued=false;
+function queueEnsureWalls(){if(wallsStartupQueued)return;wallsStartupQueued=true;setTimeout(()=>{if(S.enabled)void ensureWalls();},1500);}
+ctx.eventSource.on(ctx.eventTypes.APP_READY,queueEnsureWalls);
+queueEnsureWalls();
 ctx.eventSource.on(ctx.eventTypes.CHAT_CHANGED, () => {
     inputCompositionText = '';
     riseQuietUntil = performance.now() + 1500;

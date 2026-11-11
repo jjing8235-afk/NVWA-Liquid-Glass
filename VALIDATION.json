@@ -1,6 +1,6 @@
 {
-  "currentVersion": "2.0.0",
-  "currentDisplayVersion": "2.0",
+  "currentVersion": "2.0.1",
+  "currentDisplayVersion": "2.0.1",
   "date": "2026-11-05",
   "version": "1.4.4-local.9",
   "baseline": "1.4.4-local.8",
@@ -2766,6 +2766,70 @@
         "Preset acceptance uses a synthetic supported content root in a registered native Popup, not the third-party preset script.",
         "Measurements are bounded same-machine before/after samples; no hardware performance access or global host scheduling patches."
       ]
+    },
+    {
+      "version": "2.0.1-test.1",
+      "date": "2026-11-11",
+      "scope": "Mobile compatibility trial with iOS keyboard lifecycle, Android WebView large-message policy, and opt-in aggregate capture",
+      "userEvidence": {
+        "ios": {
+          "reportedOS": "18.7",
+          "viewport": [
+            402,
+            778,
+            3
+          ],
+          "messages": 20,
+          "compatibleMaterialActive": true,
+          "actualDisplacement": false,
+          "ttBuildProvided": false
+        },
+        "android": {
+          "reportedDevice": "iQOO15",
+          "uaModel": "V2505A",
+          "uaWebView": "156.0.8078.47",
+          "viewport": [
+            360,
+            792,
+            4
+          ],
+          "messages": 3,
+          "tallMessageHeight": 9531,
+          "selectedEngine": "physical",
+          "userAB": "New physical engine flashes; legacy does not",
+          "screenRecordingProvided": false
+        }
+      },
+      "changes": [
+        "Use BUILD_VERSION in card report",
+        "Record effective per-message rendering path and conservative viewport intersection",
+        "Coalesce VisualViewport keyboard scroll updates; cancel stale blur work; local listener cleanup",
+        "Large Android WebView messages use a local legacy path with hysteresis; global engine unchanged",
+        "Explicit 15-second aggregate capture; no text, keys, URLs, settings payloads or persistent upload"
+      ],
+      "verification": {
+        "offlineRegressions": 26,
+        "keyboardRedGreen": "Old viewport handler schedules 100 callbacks for 100 scroll events; current handler schedules one",
+        "desktopEngines": [
+          "Microsoft Edge Chromium",
+          "Playwright Windows WebKit 26.5"
+        ],
+        "fullExtensionFixtures": [
+          "iOS 402x778 DPR3",
+          "Android WebView 360x792 DPR4 with synthetic 9531px message"
+        ],
+        "capturePrivacyAndCleanup": true,
+        "liveSillyTavern": "Not rerun: the previously used localhost:8090 service was not listening; full extension exercised in isolated host-DOM fixtures instead",
+        "phoneFlickerReproduced": false,
+        "actualDeviceChipInterference": "Not established; no native chip APIs are used by NVWA"
+      },
+      "limits": [
+        "No physical iPhone or iQOO acceptance in this turn",
+        "The large-surface guard is a conservative NVWA budget, not a detected GPU limit or proven flicker root cause",
+        "Default iOS compatible material still does not provide background pixel displacement",
+        "rAF intervals are not GPU FPS, touch latency, INP or display-flicker detection",
+        "TT exact build remains unprovided; request updated capture and about-page version for both devices"
+      ]
     }
   ],
   "formalRelease": {
@@ -2847,5 +2911,75 @@
       "Desktop emulation does not establish physical iOS/Android/TT FPS or long-term acceptance.",
       "Preset adapter baseline used synthetic content in a registered native Popup; actual third-party preset scripts were not exercised."
     ]
+  },
+  "wallpaperRecovery202": {
+    "date": "2026-11-11",
+    "version": "2.0.1-test.2",
+    "passed": true,
+    "offlineRegressions": 27,
+    "fullExtensionFixture": {
+      "engines": [
+        "chromium",
+        "webkit"
+      ],
+      "scenarios": [
+        "saved-ready-deleted",
+        "legacy-existing-stale-dom",
+        "upload-denied",
+        "startup-after-ready",
+        "latest-selection-wins",
+        "top-cycle-no-custom",
+        "top-cycle-with-custom",
+        "custom-missing-picker",
+        "first-use-existing-rendered",
+        "first-use-existing-unrendered"
+      ],
+      "mockBackgroundLibrary": true
+    },
+    "priorMobileAdaptationFixture": {
+      "chromium": [
+        "ios",
+        "android"
+      ],
+      "webkit": [
+        "ios"
+      ],
+      "passed": true
+    },
+    "redGreen": {
+      "oldPersistedReadySkipsInventory": true,
+      "oldTopCycleStallsWithoutCustom": true
+    },
+    "limits": [
+      "Physical TT Android and iPhone acceptance pending",
+      "Isolated full extension fixture is not current live SillyTavern verification"
+    ]
+  },
+  "diagnostics201": {
+    "date": "2026-11-11",
+    "schema": "nvwa-interaction-2",
+    "offlineRegressions": 27,
+    "real15SecondCapture": [
+      "chromium",
+      "webkit"
+    ],
+    "bounded": {
+      "checkpoints": 17,
+      "timeline": 80,
+      "worstStalls": 8,
+      "drags": 12
+    },
+    "checks": [
+      "structured-appearance-and-wallpaper-markers",
+      "per-second-windows",
+      "intermediate-render-state",
+      "coverage-missing-actions",
+      "observer-drain",
+      "visibility-pagehide-cancel-cleanup",
+      "single-txt-no-duplicate-capture",
+      "no-event-text-url-message-or-stack",
+      "opt-in-no-auto-upload"
+    ],
+    "physicalPhoneVerified": false
   }
 }
