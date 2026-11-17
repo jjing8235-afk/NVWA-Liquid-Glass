@@ -1,0 +1,44 @@
+{
+  "version": "2.0.4",
+  "date": "2026-11-17",
+  "stablePreviousCommit": "ee072e202973620b1a1e00ba07469f431c603905",
+  "testSourceCommit": "91bedb12e1d0647999a3e7ccfb23526d20201897",
+  "testVersion": "2.0.10-test.9",
+  "runtimeChanges": [
+    "manifest.json release metadata",
+    "index.js BUILD_VERSION only"
+  ],
+  "validation": {
+    "chromiumLayout": 238,
+    "webkitLayout": 238,
+    "androidWebViewHost": 11,
+    "source": "inherited from exact test.9 runtime; metadata promotion checked separately"
+  },
+  "limitations": [
+    "Physical TT phone flicker and FPS remain unverified",
+    "Oversized Android messages use CSS blur instead of SVG pixel displacement"
+  ],
+  "preserved": [
+    "install/",
+    "fonts/",
+    "walls/",
+    "iosLiquidGlass namespace",
+    "settings migration v9"
+  ],
+  "promotionChecks": {
+    "runtimeParityFiles": 37,
+    "runtimeParity": true,
+    "preservedAssetFiles": 109,
+    "syntax": true,
+    "regressions": [
+      "webview-message-guard-regression.mjs",
+      "form-resize-regression.mjs",
+      "keyboard-lifecycle-regression.mjs",
+      "tt-compat-regression.mjs"
+    ],
+    "manifest": true
+  },
+  "packagingChanges": [
+    "Normalize CRLF in dev/verify/tt-compat-regression.mjs; test behavior unchanged"
+  ]
+}

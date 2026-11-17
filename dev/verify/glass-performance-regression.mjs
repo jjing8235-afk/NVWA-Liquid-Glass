@@ -48,6 +48,14 @@ try {
     const timeout = make(); timeout.prepare(); advance(2500); assert.equal(timeout.status().reason,'startup-timeout'); timeout.stop();
     const renderTimeout = make(); renderTimeout.prepare(); workers.at(-1).emit({type:'ready',ok:true}); renderTimeout.request(job('timeout')); advance(1500); assert.equal(renderTimeout.status().reason,'render-timeout'); assert.deepEqual(results.at(-1),['timeout','timeout']); renderTimeout.stop();
     const crashed = make(); crashed.prepare(); const doomed = workers.at(-1); doomed.emit({type:'ready',ok:true}); crashed.request(job('obsolete')); crashed.request(job('newest')); doomed.onerror({preventDefault(){}}); assert(doomed.closed); assert.equal(crashed.status().reason,'worker-error'); assert.deepEqual(results.at(-1),['newest','newest']); crashed.stop();
+    const deferred = make({deferStartup:true}); deferred.request(job('deferred'));
+    assert(!results.some(([key])=>key==='deferred'),'A queued replacement must not rasterise synchronously during startup');
+    assert.equal(deferred.status().pending,1); const deferredWorker=workers.at(-1); deferredWorker.emit({type:'ready',ok:true});
+    assert.equal(deferredWorker.sent.length,1); deferredWorker.finish(); assert.deepEqual(results.at(-1),['deferred','deferred']); deferred.stop();
+    const deferredTimeout = make({deferStartup:true}); deferredTimeout.request(job('deferred-timeout')); advance(2500);
+    assert.deepEqual(results.at(-1),['deferred-timeout','deferred-timeout']); assert.equal(deferredTimeout.status().reason,'startup-timeout'); deferredTimeout.stop();
+    const deferredPause = make({deferStartup:true}); deferredPause.request(job('deferred-cancelled')); const stoppedCallback=workers.at(-1).onmessage;
+    deferredPause.pause(); stoppedCallback({data:{type:'ready',ok:true}}); assert(!results.some(([key])=>key==='deferred-cancelled')); deferredPause.stop();
     assert.equal(tasks.size,0); assert.equal(errors.length,0);
     console.log(JSON.stringify({passed:true,checks:['one active and one latest pending','duplicate suppression','bounded busy deferral','generation isolation','pause/restart cleanup','unsupported/CSP/canvas/timeout fallback']}));
 } finally { Object.assign(globalThis,saved); }

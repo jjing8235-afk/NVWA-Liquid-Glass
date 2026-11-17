@@ -13,7 +13,7 @@ let source=fs.readFileSync(path.join(root,'index.js'),'utf8');
 for(const [a,b]of [
  ['function mountRecent(panel) {','function mountRecent(panel) { homeWork.mounts++;'],
  ['function untrack(el) {','function untrack(el) { if(el?.classList.contains("welcomePanel"))homeWork.untracks++;'],
- ['function paint(el) {','function paint(el) { if(el?.classList.contains("welcomePanel"))homeWork.paints++;'],
+ ['function paint(el, geo) {','function paint(el, geo) { if(el?.classList.contains("welcomePanel"))homeWork.paints++;'],
  ['function buildPhysical(it, el, w, h, r) {','function buildPhysical(it, el, w, h, r) { if(el.classList.contains("welcomePanel")){homeWork.physical++;if(!it.filter)homeWork.filtersCreated++;}'],
  ['function scan() {','function scan() { homeWork.fullScans++;']
 ]){assert(source.includes(a));source=source.replace(a,b)}

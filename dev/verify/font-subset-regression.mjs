@@ -18,6 +18,15 @@ const cases=[
  [[face(' u+201c, U+201D ')],['正文'],true,'generated quotation marks'],
  [[face('U+0061-007A')],['Header'],true,'header metrics'],
  [[face('U+0300-036F')],['e\u0301'],true,'combining mark'],
+ [[face('U+0000')],['\u0000'],true,'null code point'],
+ [[face('U+10FFFF')],['\u{10FFFF}'],true,'last Unicode code point'],
+ [[face('U+1F600-1F64F')],['\u{1F680}'],false,'astral boundary outside range'],
+ [[face('U+005B-005D')],['[content]'],true,'numeric regex metacharacters'],
+ [[face('U+4E00'),face('U+1F6??')],['\u{1F680}'],true,'multiple valid ranges'],
 ];
 for(const [faces,texts,expected,label]of cases)assert.equal(fontLoadMayChangeText(faces,texts),expected,label);
-console.log(JSON.stringify({passed:true,cases:cases.length,unknownConservative:true,unicodeRanges:true,astralAndCombining:true}));
+const unreadableTexts={*[Symbol.iterator](){throw new Error('Chat must stay unread for an already-known font decision');}};
+for(const faces of [undefined,[],[{}],[face('invalid')],[face('U+0-10FFFF')],[face('U+201C')]])assert.equal(fontLoadMayChangeText(faces,unreadableTexts),true);
+const firstMatch={*[Symbol.iterator](){yield '正文';throw new Error('A matching first message must stop later reads');}};
+assert.equal(fontLoadMayChangeText([face('U+6B63')],firstMatch),true);
+console.log(JSON.stringify({passed:true,cases:cases.length,lazyCases:7,unknownConservative:true,unicodeRanges:true,astralAndCombining:true}));

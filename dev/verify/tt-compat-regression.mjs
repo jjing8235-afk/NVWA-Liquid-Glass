@@ -46,7 +46,7 @@ passed.push('Reset restores auto adaptation and keeps iOS trial off while preser
 const refract=source.match(/function refractAllowed\(it\) \{([\s\S]*?)\n\}/)[1];
 for(const[changes,kind,visible,noBlur,allowed]of [[{},'bar',true,false,true],[{enabled:false},'bar',true,false,false],[{refract:false},'bar',true,false,false],[{},'bar',true,true,false],[{refractMes:false},'mes',true,false,false],[{},'mes',false,false,false],[{},'mes',true,false,true]]){
  const e=env({settings:{androidWebViewRefract:true,...changes}});
- assert.equal(vm.runInNewContext('(function(it){'+refract+'})(it)',{S:e.S,canRefract:e.canRefract,it:{kind,visible},document:{body:{classList:{contains:()=>noBlur}}}}),allowed);
+ assert.equal(vm.runInNewContext('(function(it){'+refract+'})(it)',{isIOS:false,iosWallpaperRequested:()=>false,S:e.S,canRefract:e.canRefract,it:{kind,visible},document:{body:{classList:{contains:()=>noBlur}}}}),allowed);
 }
 passed.push('Enabled, no-blur, message preference and message visibility still gate refraction');
 const status=source.match(/function statusText\(\) \{([\s\S]*?)\n\}/)[1];

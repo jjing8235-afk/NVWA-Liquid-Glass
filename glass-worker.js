@@ -1,5 +1,6 @@
 import { rasterBall, packBallFrame } from './ball-raster.js';
 import { rasterReflection } from './reflection-raster.js';
+import { rasterWebMap } from './web-map-raster.js';
 
 async function encode(image) {
     const canvas = new OffscreenCanvas(image.w, image.h);
@@ -28,6 +29,11 @@ self.onmessage = async event => {
     if (type !== 'render') return;
     try {
         if (!await capable) throw new Error('Canvas unavailable');
+        if (job.kind === 'web-map') {
+            const image = rasterWebMap(job);
+            self.postMessage({ type: 'result', id, frame: { url: await encode(image), scale: image.scale, width: image.w, height: image.h, pixels: image.w * image.h } });
+            return;
+        }
         if (job.kind === 'reflection') {
             const image=rasterReflection(job.width,job.height,job.radius,job.dpr);
             self.postMessage({type:'result',id,frame:{url:await encode(image)}});

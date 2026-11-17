@@ -1,6 +1,6 @@
 // One worker and one replaceable pending task for NVWA-owned glass work.
 // This queue never patches host timers, animation frames, workers or settings.
-export function createGlassPerformance({ computeSync, onResult, onError = () => {}, isBusy = () => false, workerFactory } = {}) {
+export function createGlassPerformance({ computeSync, onResult, onError = () => {}, isBusy = () => false, workerFactory, deferStartup = false } = {}) {
     let worker = null, mode = 'idle', reason = '', active = null, pending = null;
     let serial = 0, generation = 0, startupTimer = 0, workTimer = 0, deferTimer = 0, suspended = false, permanent = false;
     let busyUntil = 0;
@@ -75,8 +75,8 @@ export function createGlassPerformance({ computeSync, onResult, onError = () => 
         }
         if (pending?.job.key === job.key) { pending.job = job; return; }
         const task = { id: ++serial, generation, job, notBefore: !job.low && (clock() < busyUntil || isBusy()) ? clock() + 80 : 0 };
-        // Preserve the existing immediate first paint while the worker's capability probe runs.
-        if (mode === 'sync' || mode === 'starting') { sync(task); return; }
+        // Existing consumers keep immediate first paint; replacements may await worker readiness.
+        if (mode === 'sync' || (mode === 'starting' && !deferStartup)) { sync(task); return; }
         if (pending) counts.coalesced++;
         pending = task;
         counts.peakTasks = Math.max(counts.peakTasks, Number(!!active) + 1);

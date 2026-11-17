@@ -1,5 +1,5 @@
-// Manual, bounded local capture. Never retain event text, keys, URLs or error messages.
-const SCENARIOS = ['general', 'appearance', 'rendering', 'keyboard'];
+// Manual, bounded local capture. Retain only classified script modules, never full URLs, event text, keys or errors.
+const SCENARIOS = ['general', 'appearance', 'rendering', 'keyboard', 'menus'];
 const MARKERS = new Set(['appearance-request', 'appearance-result', 'wallpaper-recovery']);
 const ENUMS = {
     mode: ['light', 'dark', 'custom'],
@@ -10,7 +10,7 @@ const ENUMS = {
 const ERROR_NAMES = new Set(['Error', 'TypeError', 'RangeError', 'SyntaxError', 'ReferenceError', 'AbortError']);
 const EVENTS = { composerFocuses:0, composerBlurs:0, ballDrags:0, ballMoves:0, chatScrolls:0, composerInputs:0,
     windowResizes:0, orientationChanges:0, visualResizes:0, visualScrolls:0, appearanceClicks:0,
-    compositionStarts:0, compositionEnds:0, runtimeErrors:0, unhandledRejections:0 };
+    compositionStarts:0, compositionEnds:0, runtimeErrors:0, unhandledRejections:0, optionsClicks:0, extensionMenuClicks:0 };
 const cleanDetails = details => {
     const out = {};
     for (const [key, values] of Object.entries(ENUMS)) if (values.includes(details?.[key])) out[key] = details[key];
@@ -27,7 +27,7 @@ export function createInteractionDiagnostics({snapshot=()=>({}),onFinish=()=>{},
     const percentile = (hist,n,p) => { if(!n)return null;let sum=0;for(let i=0;i<hist.length;i++){sum+=hist[i];if(sum>=Math.ceil(n*p))return i===255?'255+':i;}return null; };
     function bucket(data, at=elapsed(data)) {
         const second=Math.min(14,Math.floor(at/1000));
-        return data.windows[second] ||= {second,frames:{samples:0,totalMs:0,maxMs:0,over50ms:0},events:{},longTasks:{count:0,maxMs:0}};
+        return data.windows[second] ||= {second,frames:{samples:0,totalMs:0,maxMs:0,over50ms:0},events:{},longTasks:{count:0,maxMs:0},longAnimationFrames:{count:0,maxMs:0}};
     }
     function record(type, details={}) {
         if(!active)return false;
@@ -57,7 +57,7 @@ export function createInteractionDiagnostics({snapshot=()=>({}),onFinish=()=>{},
         record('ball-drag-end',{reason});
     }
     const role = target => {
-        for(const [selector,name] of [['#ilg-ball','ball'],['#send_textarea','composer'],['#ilg-tone-button, #ilg-appearance-panel','appearance'],['#ilg-capture-badge, #ilg-interaction-diagnostics','capture'],['#chat','chat']]) {
+        for(const [selector,name] of [['#options_button, #options','options-menu'],['#extensionsMenuButton, #extensionsMenu','extensions-menu'],['#ilg-ball','ball'],['#send_textarea','composer'],['#ilg-tone-button, #ilg-appearance-panel','appearance'],['#ilg-capture-badge, #ilg-interaction-diagnostics','capture'],['#chat','chat']]) {
             if(target?.closest?.(selector))return name;
         }
         return 'other';
@@ -78,6 +78,39 @@ export function createInteractionDiagnostics({snapshot=()=>({}),onFinish=()=>{},
             active.inputTiming.slowest.push(sample);active.inputTiming.slowest.sort((a,b)=>b.durationMs-a.durationMs);active.inputTiming.slowest.length=Math.min(8,active.inputTiming.slowest.length);
         }
     }
+    function scriptSource(raw) {
+        if (!raw) return {owner:'unattributed',module:''};
+        try {
+            const origin=win.location?.origin,source=new URL(raw,origin);
+            if (!origin || source.origin!==origin) return {owner:'external',module:''};
+            const pathname=source.pathname,match=/^\/scripts\/extensions\/third-party\/([\w-]{1,64})\/(?:[\w.-]+\/)*([\w.-]{1,96}\.m?js)$/.exec(pathname);
+            if(match)return {owner:match[1]==='ios-liquid-glass'?'nvwa':'third-party',module:match[1]+'/'+match[2]};
+            if(pathname==='/script.js'||/^\/(?:scripts|lib)\/(?:[\w.-]+\/)*[\w.-]{1,96}\.m?js$/.test(pathname))return {owner:'sillytavern',module:pathname.slice(1).slice(-120)};
+        } catch { /* Opaque or invalid script identifiers remain unattributed. */ }
+        return {owner:'unattributed',module:''};
+    }
+    function processLongFrames(entries) {
+        if(!active)return;
+        const stats=active.longAnimationFrames,number=value=>Number.isFinite(value)&&value>=0?value:0,round=value=>+number(value).toFixed(2);
+        for(const e of entries){
+            if(!Number.isFinite(e.startTime)||e.startTime<active.started||!Number.isFinite(e.duration)||e.duration<=0)continue;
+            stats.count++;stats.maxMs=Math.max(stats.maxMs,round(e.duration));stats.totalBlockingMs=round(stats.totalBlockingMs+number(e.blockingDuration));
+            const b=bucket(active,e.startTime-active.started);b.longAnimationFrames.count++;b.longAnimationFrames.maxMs=Math.max(b.longAnimationFrames.maxMs,round(e.duration));
+            const rows=Array.from(e.scripts||[]);stats.droppedScriptSamples+=Math.max(0,rows.length-64);const scripts=[];
+            for(const item of rows.slice(0,64)){
+                const source=scriptSource(item.sourceURL),durationMs=round(item.duration),forcedStyleAndLayoutMs=round(item.forcedStyleAndLayoutDuration);
+                const script={...source,durationMs,forcedStyleAndLayoutMs};scripts.push(script);
+                stats.totalScriptMs=round(stats.totalScriptMs+durationMs);stats.attributedForcedLayoutMs=round(stats.attributedForcedLayoutMs+forcedStyleAndLayoutMs);
+                let summary=stats.sources.find(s=>s.owner===source.owner&&s.module===source.module);
+                if(!summary&&stats.sources.length<24){summary={...source,samples:0,totalMs:0,maxMs:0,forcedStyleAndLayoutMs:0};stats.sources.push(summary);}
+                if(summary){summary.samples++;summary.totalMs=round(summary.totalMs+durationMs);summary.maxMs=Math.max(summary.maxMs,durationMs);summary.forcedStyleAndLayoutMs=round(summary.forcedStyleAndLayoutMs+forcedStyleAndLayoutMs);}
+                else stats.droppedSourceSamples++;
+            }
+            scripts.sort((a,b)=>b.durationMs-a.durationMs);
+            stats.slowest.push({atMs:Math.round(e.startTime-active.started),durationMs:round(e.duration),blockingMs:round(e.blockingDuration),scripts:scripts.slice(0,4)});
+            stats.slowest.sort((a,b)=>b.durationMs-a.durationMs);stats.slowest.length=Math.min(8,stats.slowest.length);
+        }
+    }
     function cleanup() {
         if(raf)win.cancelAnimationFrame(raf);raf=0;win.clearTimeout(timer);timer=0;
         for(const {observer} of observers)observer.disconnect();observers=[];
@@ -88,17 +121,17 @@ export function createInteractionDiagnostics({snapshot=()=>({}),onFinish=()=>{},
         for(const {observer,process} of observers){try{process(observer.takeRecords());}catch{ /* Some observers have no pending-record API. */ }}
         finishDrag(reason);viewport();checkpoint();
         const data=active;active=null;cleanup();
-        const duration=elapsed(data),observed={chatScroll:data.events.chatScrolls>0,ballDrag:data.events.ballDrags>0,composerInput:data.events.composerInputs>0,visualViewportChange:data.events.visualResizes>0,appearanceAttempt:data.events.appearanceClicks>0||data.appearanceAttempts>0,wallpaperRecovery:data.wallpaperAttempts>0};
-        const expected={general:['chatScroll','ballDrag','composerInput'],appearance:['appearanceAttempt'],rendering:['chatScroll'],keyboard:['composerInput','ballDrag','visualViewportChange']}[data.scenario];
+        const duration=elapsed(data),observed={optionsMenu:data.events.optionsClicks>0,extensionsMenu:data.events.extensionMenuClicks>0,chatScroll:data.events.chatScrolls>0,ballDrag:data.events.ballDrags>0,composerInput:data.events.composerInputs>0,visualViewportChange:data.events.visualResizes>0,appearanceAttempt:data.events.appearanceClicks>0||data.appearanceAttempts>0,wallpaperRecovery:data.wallpaperAttempts>0};
+        const expected={menus:['optionsMenu','extensionsMenu'],general:['chatScroll','ballDrag','composerInput'],appearance:['appearanceAttempt'],rendering:['chatScroll'],keyboard:['composerInput','ballDrag','visualViewportChange']}[data.scenario];
         const notes=[];if(reason!=='timeout')notes.push('ended-early');if(data.frames<5)notes.push('too-few-frame-samples');
-        if(!data.longTaskSupport)notes.push('longtask-api-unavailable');if(!data.inputTiming.supported)notes.push('event-timing-api-unavailable');
+        if(!data.longAnimationFrames.supported)notes.push('long-animation-frame-api-unavailable');if(!data.longTaskSupport)notes.push('longtask-api-unavailable');if(!data.inputTiming.supported)notes.push('event-timing-api-unavailable');
         last={format:'nvwa-interaction-2',scenario:data.scenario,reason,durationMs:duration,
             frameIntervals:{samples:data.frames,meanMs:data.frames?+(data.sum/data.frames).toFixed(2):null,p50Ms:percentile(data.hist,data.frames,.5),p95Ms:percentile(data.hist,data.frames,.95),maxMs:+data.max.toFixed(2),over34ms:data.over34,over50ms:data.over50,over100ms:data.over100},
-            events:{...data.events},viewportRange:data.viewportRange,longTasks:{supported:data.longTaskSupport,count:data.longCount,maxMs:+data.longMax.toFixed(2)},inputTiming:data.inputTiming,
+            events:{...data.events},viewportRange:data.viewportRange,longTasks:{supported:data.longTaskSupport,count:data.longCount,maxMs:+data.longMax.toFixed(2)},inputTiming:data.inputTiming,longAnimationFrames:data.longAnimationFrames,
             start:data.start,end:data.checkpoints.at(-1)?.state||safeSnapshot(),checkpoints:data.checkpoints,timeline:data.timeline,
             windows:data.windows.filter(Boolean).map(b=>({...b,frames:{...b.frames,meanMs:b.frames.samples?+(b.frames.totalMs/b.frames.samples).toFixed(2):null}})),stalls:data.stalls,drags:data.drags,
             coverage:{observed,missing:expected.filter(key=>!observed[key])},quality:{fullDuration:reason==='timeout'&&duration>=limit-100,notes,droppedMarkers:data.droppedMarkers,droppedDrags:data.droppedDrags,snapshots:data.checkpoints.length,snapshotCostMs:+data.snapshotCostMs.toFixed(2)},
-            interpretation:'Page callback gaps and optional slow event timings; not display refresh rate, flicker detection, GPU frames, end-to-end touch latency or INP. Snapshot overhead is included.'};
+            interpretation:'Page callback gaps and optional slow event timings; not display refresh rate, flicker detection, GPU frames, end-to-end touch latency or INP. Script modules are attribution hints, not proof of root cause. Snapshot overhead is included.'};
         notify(onFinish,last);return last;
     }
     function frame(t) {
@@ -122,8 +155,19 @@ export function createInteractionDiagnostics({snapshot=()=>({}),onFinish=()=>{},
     const scroll=e=>{if(e.target?.id==='chat'){if(active&&!active.events.chatScrolls)record('chat-scroll');count('chatScrolls');}};
     const input=e=>{if(e.target?.id==='send_textarea'){if(active&&!active.events.composerInputs)record('composer-input');count('composerInputs');}};
     const composition=e=>{if(active&&e.target?.id==='send_textarea'){active.composing=e.type==='compositionstart';count(active.composing?'compositionStarts':'compositionEnds');record(active.composing?'composition-start':'composition-end');}};
-    const clicked=e=>{if(e.target?.closest?.('#ilg-tone-button')){count('appearanceClicks');record('appearance-click');}};
-    const runtimeError=e=>{if(!active)return;count(e.type==='unhandledrejection'?'unhandledRejections':'runtimeErrors');const name=(e.type==='unhandledrejection'?e.reason:e.error)?.name;record('page-error',{kind:ERROR_NAMES.has(name)?name:'Other',source:e.type==='unhandledrejection'?'rejection':'error'});};
+    const clicked=e=>{if(e.target?.closest?.('#ilg-tone-button')){count('appearanceClicks');record('appearance-click');}if(e.target?.closest?.('#options_button')){count('optionsClicks');record('options-click');}if(e.target?.closest?.('#extensionsMenuButton')){count('extensionMenuClicks');record('extensions-menu-click');}};
+    const runtimeError = event => {
+        if (!active) return;
+        const rejection = event.type === 'unhandledrejection';
+        count(rejection ? 'unhandledRejections' : 'runtimeErrors');
+        const name = (rejection ? event.reason : event.error)?.name;
+        // Read only enough to classify; never retain messages, stacks, URLs or payloads.
+        const kind = !rejection && /^ResizeObserver loop/.test(event.message || '') ? 'ResizeObserverLoop'
+            : ERROR_NAMES.has(name) ? name
+            : !rejection && ['SCRIPT','IMG','LINK','IFRAME','VIDEO','AUDIO','SOURCE'].includes(event.target?.tagName) ? 'ResourceError'
+            : !rejection && event.message === 'Script error.' ? 'CrossOriginScriptError' : 'Other';
+        record('page-error', { kind, source: rejection ? 'rejection' : 'error' });
+    };
     const listeners=[[doc,'pointerdown',pointerDown],[doc,'pointermove',pointerMove],[doc,'pointerup',pointerUp],[doc,'pointercancel',pointerUp],[doc,'scroll',scroll],[doc,'input',input],[doc,'click',clicked],[doc,'compositionstart',composition],[doc,'compositionend',composition],
         [doc,'visibilitychange',()=>{if(doc.hidden)finish('hidden');}],[doc,'focusin',focused],[doc,'focusout',blurred],
         [win,'pagehide',()=>finish('pagehide')],[win,'error',runtimeError],[win,'unhandledrejection',runtimeError],
@@ -133,12 +177,12 @@ export function createInteractionDiagnostics({snapshot=()=>({}),onFinish=()=>{},
         start({scenario='general'}={}) {
             if(active||doc.hidden)return false;
             last=null;active={scenario:SCENARIOS.includes(scenario)?scenario:'general',started:now(),previous:null,nextCheckpoint:1000,frames:0,sum:0,max:0,hist:new Uint32Array(256),over34:0,over50:0,over100:0,drag:null,drags:[],droppedDrags:0,focused:false,composing:false,
-                longTaskSupport:false,longCount:0,longMax:0,inputTiming:{supported:false,thresholdMs:40,count:0,maxDelayMs:0,maxDurationMs:0,slowest:[]},viewportRange:{},events:{...EVENTS},windows:[],stalls:[],timeline:[],droppedMarkers:0,appearanceAttempts:0,wallpaperAttempts:0,checkpoints:[],snapshotCostMs:0};
+                longTaskSupport:false,longCount:0,longMax:0,longAnimationFrames:{supported:false,count:0,maxMs:0,totalBlockingMs:0,totalScriptMs:0,attributedForcedLayoutMs:0,sources:[],slowest:[],droppedScriptSamples:0,droppedSourceSamples:0},inputTiming:{supported:false,thresholdMs:40,count:0,maxDelayMs:0,maxDurationMs:0,slowest:[]},viewportRange:{},events:{...EVENTS},windows:[],stalls:[],timeline:[],droppedMarkers:0,appearanceAttempts:0,wallpaperAttempts:0,checkpoints:[],snapshotCostMs:0};
             checkpoint();active.start=active.checkpoints[0].state;viewport();record('capture-start');
             for(const [target,name,fn] of listeners)target?.addEventListener(name,fn,{capture:true,passive:true});
-            for(const [type,process] of [['longtask',processLongTasks],['event',processEventTiming]]){
+            for(const [type,process] of [['longtask',processLongTasks],['event',processEventTiming],['long-animation-frame',processLongFrames]]){
                 let observer;
-                try{if(win.PerformanceObserver?.supportedEntryTypes?.includes(type)){observer=new win.PerformanceObserver(list=>process(list.getEntries()));observer.observe({type,buffered:false,...(type==='event'?{durationThreshold:40}:{})});observers.push({observer,process});if(type==='longtask')active.longTaskSupport=true;else active.inputTiming.supported=true;}}catch{observer?.disconnect();}
+                try{if(win.PerformanceObserver?.supportedEntryTypes?.includes(type)){observer=new win.PerformanceObserver(list=>process(list.getEntries()));observer.observe({type,buffered:false,...(type==='event'?{durationThreshold:40}:{})});observers.push({observer,process});if(type==='longtask')active.longTaskSupport=true;else if(type==='event')active.inputTiming.supported=true;else active.longAnimationFrames.supported=true;}}catch{observer?.disconnect();}
             }
             raf=win.requestAnimationFrame(frame);timer=win.setTimeout(()=>finish('timeout'),limit);notify(onProgress,{elapsedMs:0,remainingMs:limit});return true;
         },

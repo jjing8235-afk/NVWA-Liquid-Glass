@@ -1,3 +1,103 @@
+# 2.0.4 · 正式发布维护入口（2026-11-17）
+
+正式仓库 jjing8235-afk/NVWA-Liquid-Glass；基线 ee072e202973620b1a1e00ba07469f431c603905。运行代码来自测试版 2.0.10-test.9 / 91bedb12e1d0647999a3e7ccfb23526d20201897，只调整正式清单与 BUILD_VERSION。正式 install/、字体及壁纸保留，iosLiquidGlass 与 S.v=9 不变。
+
+测试代码已通过 Edge / WebKit 各 238 项布局检查和 Android WebView 身份宿主 11 项检查，物理 TT 手机闪烁与帧率仍未验收。Android 超长消息使用 CSS 玻璃保护，不能宣传为同像素折射。正式发布清单与备份校验见 RELEASE-2.0.4.json。以下保留测试维护证据。
+
+# 2.0.10-test.9 · TT 滚动修复与输入区发布入口（2026-11-17）
+
+viewport.js 的阅读锚点在触摸／滚轮／阅读按键时取消旧锚点与已排队恢复，350ms 窗口随惯性滚动延续。图片、容器与视口恢复合并为单个 RAF；静止时仍按原锚点偏移校正。destroy 释放监听、观察器与待执行帧。诊断只采集补偿次数、滚动位置和高度等数值。
+
+index.js 沿用 surface-policy.js 的安卓大消息阈值及迟滞。当受保护消息请求折射时，释放 it.filter / it.physical，并阻止进入 physical 与 legacy 两条 SVG 分支，保留 CSS 模糊、色调、阅读滤镜及玻璃反光。这个例外只针对大面积安卓 WebView 消息，短消息、非 WebView、顶栏、输入区与菜单保留现有路径。长消息缩短后重新建立正常滤镜。未恢复已撤回的消息窗口、全局 GPU 试验或交互预算路径。
+
+输入框表单 ResizeObserver 只排队 updateFormSpace，在下一帧读取最终高度并一次写入 --ilg-form-h；相同高度直接返回，仍遵循宿主 auto_scroll_chat_to_bottom 设置。回归入口 dev/verify/form-resize-regression.mjs 验证通知期零布局写入、100 次通知合并、最后高度优先和宿主滚动偏好。
+
+可重复检查：dev/verify/reading-anchor-browser.mjs 使用真实 viewport 模块覆盖图片加载、排队视口恢复与新手势竞争；dev/verify/webview-message-guard-regression.mjs 执行真实 paint 分支及三份报告的几何尺寸；dev/verify/tt-scroll-host-browser.mjs 在临时数据根的真实 ST 中使用安卓 WebView UA 验证保护、小消息与输入区材质、连续滑动及尺寸往返。所有手机性能和 TT 显示结论仍需真实设备复测。
+
+interaction-diagnostics.js 将已知 ResizeObserver 循环、资源错误与跨域脚本错误保存为分类枚举；不保留原始错误字符串、堆栈或资源 URL。新报告可以继续区分 2.0.3 的未知错误风暴与后续渲染卡顿。
+
+# 2.0.10-test.8 · 本地输入区候选（2026-11-17，未发布）
+
+composerLayout 使用 classic / unified / split，未设置或非法值回退 split，保持 test.7 的默认分体方向。设置 v9 保留；外观书签白名单加入该枚举。选择器在工作台的界面布局页，使用原生单选框和静态 SVG 示意。
+
+split 不跟踪 #nonQRFormItems 为玻璃表面，而是在原 grid 内挂载两个不接收指针的装饰表面，分别交给已有 bar 材质和尺寸观察器。父容器保持透明且不滤镜，16px 间隙不参与绘制；有草稿时只给输入表面增加可读层。classic / unified 移除两块表面并恢复父表面，原生节点不移动或替换。禁用与切换释放滤镜、观察器及材质图层。没有新增常驻动画循环。
+
+三种布局的发送与停止统一占用 44px；白天 #17191e、黑夜 #1677e8。停止图标为 CSS 圆角方块，不改变宿主的生成或停止事件，不强制显示按钮。只有测试夹具模拟已连接和生成中的可见状态。
+
+实际宿主回归入口 dev/verify/composer-layout-browser.mjs。设置 NVWA_HOST_ROOT 为 ST 源码目录，NVWA_LAYOUT_SETTINGS 为独立设置夹具；脚本复制夹具到新建临时数据根，拦截设置保存和 Horde 状态请求，扩展源码通过本地路由提供，不替换已安装扩展。NVWA_LAYOUT_OUT 指定结果目录，NVWA_BROWSER / NVWA_PLAYWRIGHT_MODULE / NVWA_EDGE_EXECUTABLE / PLAYWRIGHT_BROWSERS_PATH 选择测试引擎。默认端口 8127，可用 NVWA_LAYOUT_PORT 覆盖；占用时拒绝复用。桌面 WebKit 的 iPhone UA 不是物理设备证据。历史发布记录如下。
+
+# 2.0.10-test.7 · 测试发布维护入口（2026-11-17）
+
+输入区用原有节点组成三列 grid：左侧圆形 options_button、弹性 textarea、右侧原生发送区。输入胶囊的两个伪元素覆盖第二到第三列；＋和胶囊通过 --ilg-composer-fill 共用高透底色与柔光。关闭旧的输入后发送键放大规则在合并模式下的作用，避免遮挡文字和挤出边距。发送键显示仍由宿主控制，不在产品中强制显示。
+
+composer-tools.js 管理聊天／扩展／快捷三个 pane。通过原节点 .click() 连接宿主事件，兼容 ST 的 jQuery 与 TT 的 addEventListener；routing 防止递归。旧 triggerHandler 绕过 TT 原生监听，是此前打不开的根因。保留宿主锚点和动作节点，不克隆、不移动。快捷回复接原有 setQrOpen，关闭回焦可见＋。Escape 仅处理当前面板内事件，排除第三方 dialog、作者区、上下文菜单、select2 与输入法组合事件。
+
+菜单 style／hidden 和 html class 使用局部观察器；扩展内容观察器只在扩展面板打开时工作，一次性 RAF 合并分类，不引入常驻帧循环。只有普通 list-group-item 参与布局，长标题整行；输入控件、媒体、自绘或作者标记区域保留容器。第三方图标与背景配色不替换，伯宝书也按该通用边界处理。TT 打开时写入的 inline flex 仅由自有 ilg-composer-open 类适配为 grid，关闭移除。
+
+自有 Ionicons 7.4.0 资源精简为 16 枚，dev/build-composer-icons.mjs 可重建，许可见 LICENSE-ionicons.txt。设置 v9、材质引擎与其他作者内容边界保留。主要新增可重复检查为 dev/verify/composer-tools-browser.mjs，通过 NVWA_TT_POPUP_SOURCE 指向固定 TT 源文件；固定来源、源文件哈希、宿主验证和测试发布回执见 VALIDATION.json.composerUnified20261117。以下为历史记录，旧的二页签、triggerHandler 与第三方图标映射说明不再适用于本版。
+
+# 2.0.10-test.6 · 测试发布维护入口（2026-11-16）
+
+输入区改用连续的高透液态玻璃背板，30px 外圆角、薄底色、方向性细亮边。聊天操作按用途分组，仅少量常用动作保留胶囊；扩展工具三列、360px 以下两列；快捷面板使用两个开放入口。
+
+composer-icons.css 使用离线打包的 Ionicons 7.4.0 轮廓图标，许可见 LICENSE-ionicons.txt。源 SVG 保存在 dev/assets/ionicons-composer.json，dev/build-composer-icons.mjs 可确定性重建。运行时不联网加载图标。旧 composer-matrix.css、点阵生成器及粒子光场已撤回。图标的渐变亮面与短接触阴影为静态效果，快捷图标使用伪元素蒙版，将阴影留在外层，避免被蒙版裁掉。
+
+composer-tools.js 管理单入口、聊天／扩展页签、焦点与开关还原。复用 options_button，隐藏但保留 extensionsMenuButton 的定位几何；原生动作不克隆、不迁移。用户激活时通过宿主 jQuery.triggerHandler 调用原菜单开关，完成原生淡入淡出以避免快速切换时状态滞后。页签阻止自身点击冒泡，避免被宿主全局监听提前收起。缺少该 jQuery 能力时保留原入口。
+
+一个局部 MutationObserver 只观察两块原生菜单的 style／hidden；禁用时断开。焦点使用一次性 requestAnimationFrame，没有新增常驻帧循环。禁用会撤回页签、监听、临时属性与入口合并样式；重新启用或重新跟踪时可重建。
+
+三块背板标记为 ilg-composer-liquid，继续走已有的 physical／legacy／web／CSS 或兼容模糊路径。physical 使用固定的清透 lens 参数和既有贴图缓存，模糊为 6px。漾卿路径包含这三块背板，iOS 壁纸模式继续复用已有独立壁纸平面，不能当作整页像素折射。按钮不增加独立 backdrop-filter，其他表面参数、设置 v9 与作者内容边界保留。验证及发布记录见 VALIDATION.json.composerLiquid20261116；以下为历史记录。
+
+# 2.0.10-test.5 · 测试发布维护入口（2026-11-16）
+
+本轮局部重做加号、魔杖和折叠快捷入口的视觉。点阵图标与光场为原创静态 SVG；dev/build-composer-matrix.mjs 可确定性重建 composer-matrix.css 和 assets/composer-particle-field.svg。菜单标题每块只有一个自有节点，重用、重新挂载及关闭扩展时正确撤回，不替换宿主动作节点和监听。
+
+点阵和网格绘制不使用 Canvas、粒子节点、传感器或常驻帧循环；仅标题光场有一次 320ms 透明度显现，遵守减少动态效果设置。沿用现有玻璃滤镜；可见圆角和引擎几何均为 14px。已知工具使用圆点图标，未识别的第三方启动器保留自己的图标，自有作者区域继续排除。
+
+运行验证见 VALIDATION.json.composerMatrix20261116。主要可重复入口为 dev/verify/quick-menu-ui-browser.mjs；外部独立宿主夹具覆盖真实 APP_READY、四种尺寸、明暗、四种材质和禁用清理。设置 v9 保持，手机真机与完整第三方业务尚未验收。以下为历史记录。
+
+# 2.0.10-test.4 · 测试发布维护入口（2026-11-16）
+
+本轮进一步重做三个输入区面板的背板，运行层修改限于 style.css 与 BUILD_VERSION。背景层为静态渐变、细边框与内凹阴影；沿用玻璃引擎的滤镜及高光层，不增加 DOM、观察器、动画循环、字体依赖或传感器。18px 可见圆角与引擎读取的表面几何一致。
+
+加号按操作分区、魔杖采用分隔式双列、快捷回复改为统一背板；兼容玻璃的专用样式防止旧规则覆盖新边框。原生菜单事件、v9 设置、NVWA 弹窗适配及其他作者内容边界保留。宿主矩阵、材质切换、截图及发布回执见 VALIDATION.json.composerBacking20261116。以下为历史维护记录。
+
+# 2.0.10-test.3 · 测试发布维护入口（2026-11-16）
+
+本轮仅重做原生加号、魔杖和折叠快捷回复三个面板。原生节点及业务监听保持原位；NVWA 两个入口的附加图标、说明及自有属性可撤回，内容观察器只在快捷盘打开时运行。没有新增字体依赖、传感器或常驻帧循环。既有 NVWA 弹窗适配和其他作者内容边界保留。
+
+主要回归为 dev/verify/quick-menu-ui-browser.mjs；完整宿主矩阵、截图及发布证据见 VALIDATION.json.composerMenus20261116。以下为前次维护记录。
+
+# 2.0.10-test.2 · 测试发布维护入口（2026-11-16）
+
+本次定点恢复注册 Popup 中直接 NVWA 预设／记忆根的既有玻璃适配，并改善原生输入菜单的背景阅读隔离。其他作者内容的保护边界保留，未修改预设业务脚本、材质配方或设置版本。验证及发布记录见 VALIDATION.json.menuNVWARestore20261116。
+
+以下为前次发布的维护记录。
+
+# 2.0.10-test.1 · 测试发布维护入口（2026-11-16）
+
+测试目标为 jjing8235-afk/test 的 main。此次沿已授权的 2.0.4-test.1 重建路线发布；远端 2.0.5–2.0.9 历史保留在 Git 中，其已撤回的交互预算、自动 GPU 实验与消息玻璃窗口路径不重新合入。安装器、配套主题、字体和壁纸资源保留。
+
+- 发布范围包含本工作区已验证的字体生命周期、材质图准备与缓存、手动诊断、消息尺寸循环修复、姿态高光独立图层及预设／插件显示边界适配。设置命名空间与迁移版本仍为 v9。
+- 最终高光对照为同一公共源码、600 消息、CPU 4 倍节流、每轮 90 点、三轮中位数：累计样式耗时 679.158 → 296.565ms，下降约 56.3%；活动图层增加 15 个。无高光菜单场景未确立收益，不能宣传为手机 FPS 或所有菜单提速。
+- 两份预设 15 种显示款、数据库源码中的窗口／对话框样式：Edge 与 Windows WebKit 各 53 项通过；完整独立宿主的四种 Popup、实际浮球拖动、菜单和材质切换通过。第三方业务脚本和完整插件流程没有执行。
+- 原 ResizeObserver 修复及传感器代码哈希保持；高光矩阵 35 对通过原定 8/255 门槛，最大通道差为 7/255，小楼层胶囊保留原画法。
+- 主要复现入口：dev/verify/authored-ui-browser.mjs、pose-layer-browser.mjs、message-resize-loop-browser.mjs。预设显示夹具通过 NVWA_COMPAT_FIXTURES 指定外部证据文件，仓库不包含用户预设全文。
+- 当前发布证据见 VALIDATION.json.poseCompositor20261116、authoredUICompatibility20261116 和 testRelease2010。更早字段是当时的验证快照，保留原始结论；手机真机、所有插件组合与长期性能仍需复测。
+
+## 2026-11-13 初始重建记录（历史）
+
+本版运行源码从 c18e29f（2.0.4-test.1）重新构建。2.0.5–2.0.9 的交互预算、自动 GPU 实验、消息玻璃窗口和持续 containment 路径未合入。原有设置命名空间与 v9 保留，不重置用户设置。
+
+- 唯一运行层优化是姿态变量作用范围。light-scope.js 将原 onPoint 每个坐标原样交给正在显示高光的非消息玻璃；不写 html 的继承坐标。光学公式、传感器响应、节流频率、渐变幅度和材质参数不变。
+- --ilg-pose-rim 在相同玻璃表面解析，保持原高光位置/配色；表面显隐复用既有 paint 的几何结果，禁止每次高光额外查询全 DOM 或量尺寸。
+- ball-glass.js 仅增加表面挂载/隐藏/删除通知，让融合球收到当前姿态并及时清理。主表面 untrack 同样释放，不增加新的 RAF 循环或传感器权限请求。
+- 新验证：light-scope-regression、pose-scope-browser。后者可通过 NVWA_BASELINE_ROOT 指向原 2.0.4，NVWA_POSE_OUT 指向独立目录，串行比较同一画面和采样序列；NVWA_BROWSER=webkit 覆盖 iPhone 身份与 WebKit。
+- 证据见 VALIDATION.json.restart204。29 个离线回归、宿主交互/消息布局/WebKit 姿态检查通过；历史 home-avatar 和 ios-material 夹具仍有已在未修改 2.0.4 复现的断言失败，不能写成全套通过。
+- 用户手机的长时流畅度尚未验收。桌面 CPU4、RTX5080 环境的总样式工作/回调采样不是手机 FPS，收益主要证实于姿态高光开启时。高光关闭的原生菜单总工作与 2.0.4 基本持平。
+
+---
+
 # 2.0 正式版维护入口（2026-11-11）
 
 当前正式产品版本为 **2.0**（扩展清单使用规范版本号 2.0.0，工作台显示 2.0），来源为测试仓库 1.4.5-test.25，提交 7e779dfd79b6a620926c91e211a6e1e31a15016c。正式整理只变更产品版本、正式仓库标识与文档；功能实现沿用该验证基线。下方旧版说明保留为历史，其中 1.4.4 / local / test 的“当前”状态不代表本次版本。

@@ -36,52 +36,62 @@ passed.push('Full and nine-slice geometry matches fresh filters across resize an
 
 const body = source.match(/function buildPhysical\(it, el, w, h, r\) \{([\s\S]*?)\n\}/)?.[1];
 assert(body);
-let builds = 0, sizes = 0, bounds = 0, currentMap = tiled, angle = 135;
+let builds = 0, sizes = 0, bounds = 0, currentMap = tiled, angle = 135, lastOptions;
 const settings = { profile: 'lens', pIor: 1.5, pMagnify: 3, pBezel: 40, pThickness: 30,
     pStrength: 1, pAberration: 3, pSaturate: 1.15, pBrightness: 1.02, pContrast: 1,
     pSpecular: 0, pSharp: 4, pEdgeShade: 0, pFresnel: 0, pCaustic: 0 };
 let lightWrites = 0;
 const lights = [{ dataset: { light: '1' }, setAttribute() { lightWrites++; } }];
-const it = { kind: 'panel' };
+const it = { kind: 'panel' }, plainElement={matches:()=>false};
 const surfaceBlur = source.match(/function surfaceBlur\(it, el\) \{[\s\S]*?\n\}/)[0];
 const build = vm.runInNewContext(surfaceBlur + '\n(function(it,el,w,h,r){' + body + '})', {
-    controlReadable: () => false, foldedMenuSurface: () => false,
+    HOST_MENU_SEL:'host-menu', controlReadable: () => false, foldedMenuSurface: () => false, composerGlassSurface: el => el.composer === true,
     ARC_ONLY: { specular: 0, sharp: 4, edgeShade: 0, fresnel: 0, caustic: 0 },
     S: settings, KIND: { panel: { blur: () => 8, k: 0.7, bezelK: 1.1, thickK: 1.5 } },
-    getMaps: () => currentMap, lightAngle: () => angle, lightRow: () => 'matrix',
+    getMaps: (_w,_h,_r,options) => {lastOptions=options;return currentMap;}, lightAngle: () => angle, lightRow: () => 'matrix',
     physicalFilter() { builds++; return '<filter/>'; },
     resizePhysicalFilter() { sizes++; },
     filterOf(item) { bounds++; return item.filter ||= { querySelectorAll: () => lights }; },
 });
-build(it, {}, 374, 717, 20);
+build(it, plainElement, 374, 717, 20);
 const filter = it.filter;
-build(it, {}, 374, 717, 20);
+build(it, plainElement, 374, 717, 20);
 assert.equal(builds, 1); assert.equal(sizes, 0); assert.equal(bounds, 1);
-build(it, {}, 374, 600, 20);
+build(it, plainElement, 374, 600, 20);
 assert.equal(builds, 1); assert.equal(sizes, 1); assert.equal(bounds, 2); assert.equal(it.filter, filter);
 // 1.4.4-local.8 以后滤镜只保留弧度（ARC_ONLY），没有光照节点；换光源角度不应重建
 angle = 90;
-build(it, {}, 374, 600, 20);
+build(it, plainElement, 374, 600, 20);
 assert.equal(builds, 1, 'Arc-only filters must not rebuild on a light-angle change');
 settings.pAberration = 0;
-build(it, {}, 374, 600, 20);
+build(it, plainElement, 374, 600, 20);
 assert.equal(builds, 2);
 currentMap = full;
-build(it, {}, 374, 600, 20);
+build(it, plainElement, 374, 600, 20);
 assert.equal(builds, 3);
 it.physical = null;
-build(it, {}, 374, 600, 20);
+build(it, plainElement, 374, 600, 20);
 assert.equal(builds, 4);
 passed.push('Unchanged material reuses nodes; resize only patches bounds; parameter, map and engine changes rebuild; arc-only light changes do not rebuild');
+
+const composerItem={kind:'panel'},composerElement={composer:true};
+build(composerItem,composerElement,344,478,30);
+const composerBuilds=builds;
+assert.equal(lastOptions.profile,'lens');assert.equal(lastOptions.magnify,1.35);assert.equal(lastOptions.blur,6);
+settings.pBezel=80;settings.pMagnify=8;
+build(composerItem,composerElement,344,478,30);
+assert.equal(builds,composerBuilds,'Composer material must reuse its stable map despite unrelated global lens values');
+passed.push('Composer sheets use the clear liquid lens and reuse the cached map');
 
 const paintBody = source.match(/function paint\(el, geo\) \{([\s\S]*?)\n\}/)?.[1];
 let painted = 0;
 const element = { isConnected: true, offsetWidth: 0, offsetHeight: 0, style: {}, classList: { toggle() {} } };
 const hiddenItem = { kind: 'bar' };
 vm.runInNewContext('(function(el, geo){' + paintBody + '})(el)', {
+    lightScope: { visibility() {} },
     measure: e => ({ w: e.offsetWidth, h: e.offsetHeight, r: 0 }), messageSurface: e => e,
     controlSurface: () => false, controlReadable: () => false, cssGlassActive: () => false, webStyleEnabled: () => false,
-    webGlass: { release() {} }, reflections: { release() {} }, surfaceBlur: () => 1,
+    iosWallpaperRequested:()=>false, iosWallpaper:{release(){}}, webGlass: { release() {} }, reflections: { release() {} }, surfaceBlur: () => 1,
     el: element, visibleItems: new Set([element]), items: new Map([[element, hiddenItem]]), trackable: () => true,
     document: { body: { classList: { contains: () => false } } },
     KIND: { bar: { blur: () => 1 } }, S: { saturate: 1, brightness: 1 },

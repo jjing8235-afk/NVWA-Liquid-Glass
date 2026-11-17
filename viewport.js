@@ -70,54 +70,84 @@ export function createKeyboard({ root, enabled, input }) {
  * 在底部时什么都不做，交给酒馆的自动滚动。
  */
 export function createReadingAnchor({ chat, enabled }) {
-    let anchor = null, restoring = false, lastH = chat.clientHeight, lastSH = chat.scrollHeight;
+    let anchor = null, restoring = false, destroyed = false;
+    let lastH = chat.clientHeight, lastSH = chat.scrollHeight;
+    let captureFrame = 0, restoreFrame = 0, releaseFrame = 0, settleUntil = 0, inputUntil = 0;
+    let restores = 0, yielded = 0, lastRestoreDelta = 0;
     const atBottom = () => chat.scrollHeight - chat.scrollTop - chat.clientHeight < 8;
+    const cancelRestore = () => { if (restoreFrame) cancelAnimationFrame(restoreFrame); restoreFrame = 0; };
     const capture = () => {
-        if (restoring || !enabled() || atBottom()) { anchor = null; return; }
+        if (destroyed || !enabled() || atBottom()) { anchor = null; return; }
+        if (restoring) return;
         const top = chat.getBoundingClientRect().top;
         const pad = parseFloat(getComputedStyle(chat).paddingTop) || 0;
-        // 从中间往上找，比从头遍历快：只看可见范围附近
         const list = chat.children;
         let lo = 0, hi = list.length - 1, pick = null;
         while (lo <= hi) {
             const mid = (lo + hi) >> 1, el = list[mid];
-            const r = el.getBoundingClientRect();
-            if (r.bottom <= top + pad) lo = mid + 1;
+            if (el.getBoundingClientRect().bottom <= top + pad) lo = mid + 1;
             else { pick = el; hi = mid - 1; }
         }
         if (!pick || !pick.classList?.contains('mes')) { anchor = null; return; }
         anchor = { el: pick, offset: pick.getBoundingClientRect().top - top };
     };
     const restore = () => {
-        if (!anchor || !enabled() || !anchor.el.isConnected) return;
+        if (destroyed || !enabled()) { anchor = null; return; }
+        if (!anchor || !anchor.el.isConnected) return;
+        // Manual movement owns the reading position, including momentum after a touch.
+        if (performance.now() < inputUntil || captureFrame) { yielded++; return; }
         const top = chat.getBoundingClientRect().top;
         const drift = anchor.el.getBoundingClientRect().top - top - anchor.offset;
         if (Math.abs(drift) < 1) return;
-        restoring = true;
+        restoring = true; restores++; lastRestoreDelta = drift;
         chat.scrollTop += drift;
-        requestAnimationFrame(() => { restoring = false; });
+        if (releaseFrame) cancelAnimationFrame(releaseFrame);
+        releaseFrame = requestAnimationFrame(() => { releaseFrame = 0; restoring = false; });
     };
-    let captureQueued = false, settleUntil = 0;
-    chat.addEventListener('scroll', () => {
-        // 尺寸刚变过的这一小段时间里，scroll 事件来自酒馆自己的“保持底边不动”补偿，不是用户在翻，不能重记锚点
-        if (restoring || captureQueued || performance.now() < settleUntil) return;
-        captureQueued = true;
-        requestAnimationFrame(() => { captureQueued = false; capture(); });
-    }, { passive: true });
-    // 聊天区本身变高/变矮（键盘、转屏、输入框）或内容在锚点上方变高（图片加载）都要复位。
-    // 酒馆（RossAscends-mods.js）有自己的 ResizeObserver：不在底部时按高度差改 scrollTop，让“底边”不动。
-    // 那样顶部正在读的那条会被推走，所以等它改完（下一帧）再按锚点放回原位，最终以“顶部那条不动”为准。
-    const ro = new ResizeObserver(() => {
+    const queueRestore = () => {
+        if (destroyed || !enabled()) { anchor = null; return; }
+        if (!anchor || performance.now() < inputUntil) return;
+        settleUntil = performance.now() + 250;
+        if (!restoreFrame) restoreFrame = requestAnimationFrame(() => { restoreFrame = 0; restore(); });
+    };
+    const onIntent = event => {
+        if (event.type === 'keydown' && (!['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].includes(event.key)
+            || event.target?.closest?.('input,textarea,select,[contenteditable="true"],[contenteditable=""]'))) return;
+        inputUntil = performance.now() + 350;
+        anchor = null; settleUntil = 0; restoring = false;
+        cancelRestore();
+        if (releaseFrame) cancelAnimationFrame(releaseFrame); releaseFrame = 0;
+        if (captureFrame) cancelAnimationFrame(captureFrame); captureFrame = 0;
+    };
+    const onScroll = () => {
+        if (destroyed || restoring || captureFrame) return;
+        if (performance.now() < settleUntil && performance.now() >= inputUntil) return;
+        // Keep yielding while touch/wheel momentum continues; the capture below records the new position.
+        if (performance.now() < inputUntil) inputUntil = performance.now() + 350;
+        captureFrame = requestAnimationFrame(() => { captureFrame = 0; capture(); });
+    };
+    const onResize = () => {
         const h = chat.clientHeight, sh = chat.scrollHeight;
         if (h === lastH && sh === lastSH) return;
-        lastH = h; lastSH = sh;
-        if (!anchor) return;
-        settleUntil = performance.now() + 250;
-        requestAnimationFrame(restore);
-    });
-    ro.observe(chat);
-    // 图片加载完会改变上方高度但不触发 chat 的 ResizeObserver（它只看自己的盒子）
-    chat.addEventListener('load', e => { if (e.target?.tagName === 'IMG') restore(); }, true);
-    onViewportChange(() => { if (anchor) { settleUntil = performance.now() + 250; requestAnimationFrame(restore); } });
-    return { capture, restore, get anchor() { return anchor; } };
+        lastH = h; lastSH = sh; queueRestore();
+    };
+    const onLoad = event => { if (event.target?.tagName === 'IMG') queueRestore(); };
+    const intentEvents = ['touchstart','touchmove','pointerdown','wheel','keydown'];
+    for (const type of intentEvents) chat.addEventListener(type, onIntent, { passive: true, capture: true });
+    chat.addEventListener('scroll', onScroll, { passive: true });
+    chat.addEventListener('load', onLoad, true);
+    const ro = new ResizeObserver(onResize); ro.observe(chat);
+    const unsubscribe = onViewportChange(queueRestore);
+    return {
+        capture, restore, get anchor() { return anchor; },
+        status: () => ({ pendingRestore: !!restoreFrame, userScrolling: performance.now() < inputUntil, restores, yielded, lastRestoreDelta }),
+        destroy() {
+            destroyed = true; anchor = null; cancelRestore();
+            if (captureFrame) cancelAnimationFrame(captureFrame);
+            if (releaseFrame) cancelAnimationFrame(releaseFrame);
+            captureFrame = releaseFrame = 0; ro.disconnect(); unsubscribe();
+            for (const type of intentEvents) chat.removeEventListener(type, onIntent, true);
+            chat.removeEventListener('scroll', onScroll); chat.removeEventListener('load', onLoad, true);
+        },
+    };
 }

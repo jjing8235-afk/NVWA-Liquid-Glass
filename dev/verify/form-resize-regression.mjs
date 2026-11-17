@@ -1,0 +1,11 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../../index.js',import.meta.url),'utf8');
+const start=source.indexOf('// 输入框高度变化时同步底部留白'),end=source.indexOf('const keyboard =',start);assert(start>=0&&end>start);
+let callback,height=54,writes=0,serial=0,scrollWrites=0;const frames=new Map(),styles=new Map(),chat={scrollHeight:1200,clientHeight:600};let top=600;Object.defineProperty(chat,'scrollTop',{get:()=>top,set:v=>{top=v;scrollWrites++}});
+const form={get offsetHeight(){return height}},root={style:{getPropertyValue:key=>styles.get(key)||'',setProperty(key,value){styles.set(key,value);writes++}}};const context={document:{getElementById:id=>id==='form_sheld'?form:chat},root,S:{enabled:true},ctx:{powerUserSettings:{auto_scroll_chat_to_bottom:false}},createMessageRendering:()=>({}),createCardTextClarity:()=>({}),items:new Map(),ro:{},ResizeObserver:class{constructor(fn){callback=fn}observe(){}},requestAnimationFrame(fn){const id=++serial;frames.set(id,fn);return id;}};
+vm.runInNewContext(source.slice(start,end),context);
+for(let i=0;i<100;i++)callback([]);assert.equal(writes,0,'ResizeObserver must not synchronously change layout');assert.equal(frames.size,1,'Burst resize notifications must coalesce into one update');
+const flush=()=>{const batch=[...frames.values()];frames.clear();batch.forEach(fn=>fn());};height=150;flush();assert.equal(styles.get('--ilg-form-h'),'150px');assert.equal(writes,1);callback([]);flush();assert.equal(writes,1,'An identical height must not rewrite root styles');
+height=100;callback([]);height=180;callback([]);assert.equal(frames.size,1);flush();assert.equal(styles.get('--ilg-form-h'),'180px');assert.equal(scrollWrites,0,'Manual reading must not be forced to the bottom');
+context.ctx.powerUserSettings.auto_scroll_chat_to_bottom=true;height=200;callback([]);flush();assert.equal(scrollWrites,1,'Host-enabled bottom following still works');
+console.log(JSON.stringify({passed:true,noWritesInObserver:true,notificationsCoalesced:100,latestHeightWins:true,idempotent:true,hostScrollPreferencePreserved:true}));

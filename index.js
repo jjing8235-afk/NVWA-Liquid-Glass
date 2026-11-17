@@ -3,12 +3,15 @@
    折射引擎有两套：新版物理折射（glass2.js，实验台 v2 移植）和旧版（本文件里的 makeMap / buildFilter） */
 import { getMaps, clearMaps, physicalFilter, resizePhysicalFilter } from './glass2.js';
 import { makeOrb } from './orb.js';
+import { createIOSWallpaperRefraction } from './ios-wallpaper-refraction.js';
 import { createBundledWallpapers } from './bundled-wallpapers.js';
 import { largeWebViewMessage } from './surface-policy.js';
 import { createInteractionDiagnostics } from './interaction-diagnostics.js';
 import { positionFixed } from './fixed-position.js';
 import { createMessageRendering } from './message-rendering.js';
 import { createHostInteractionState } from './host-interaction-state.js';
+import { createComposerTools } from './composer-tools.js';
+import { normalizeComposerLayout, composerLayoutPicker, syncComposerLayout } from './composer-layout.js';
 import { migrateClearOptics, restoreOriginalRefraction } from './optics-settings.js';
 import { WEB_PRESETS, normalizeWebPreset, webPresetOf } from './web-presets.js';
 import { createBallGlass } from './ball-glass.js';
@@ -18,6 +21,7 @@ import { createLiquidGlassWeb } from './liquid-glass-web.js';
 import { createCardTextClarity } from './card-clarity.js';
 import { createGlassReflections } from './glass-reflections.js';
 import { createGlassLighting } from './glass-lighting.js';
+import { createLightScope } from './light-scope.js';
 import { wallpaperLayout, wallpaperPoint, topTone } from './wallpaper-sampling.js';
 import { createAppearanceBookmark } from './appearance-bookmark.js';
 import { onViewportChange, createKeyboard, createReadingAnchor } from './viewport.js';
@@ -28,7 +32,7 @@ window.__ilgLoaded = new URL('.', import.meta.url).pathname;
 
 let studioUI = null;
 const MODULE = 'iosLiquidGlass';
-const BUILD_VERSION = '2.0.3';
+const BUILD_VERSION = '2.0.4';
 const ENGINE_NAMES = Object.freeze({performance:'御风性能引擎',refraction:'棱光折射引擎'});
 const NS = 'http://www.w3.org/2000/svg';
 const ctx = SillyTavern.getContext();
@@ -607,7 +611,7 @@ const PRESETS_PREVIOUS = {
 };
 const DEFAULTS = {
     chatBackground: 'glass', chatVeil: 45, chatFontSize: 0, firstLineIndent: false, justifyText: false, compatibilityMode: 'auto', androidWebViewRefract: false, iosSvgTrial: false, iosMaterial: true,
-    enabled: true, float: true, islands: true, fold: true, topShortcut1: '', topShortcut2: '', qrFold: true, home: true, toneBtn: true, homeName: 'NVWA 用户', icons: true, refract: true, refractMes: true, font: true, tone: 'time', dayStart: 7, dayEnd: 19, avatar: 'line', orb: true, panelRead: true, dock: false, floatBall: true, ballSnap: true, ballFuse: true, ballSide: 'right', ballY: 0.62, ballFx: 0.92, ballFy: 0.6, ballDock: false,
+    enabled: true, float: true, islands: true, fold: true, topShortcut1: '', topShortcut2: '', qrFold: true, composerLayout: 'split', home: true, toneBtn: true, homeName: 'NVWA 用户', icons: true, refract: true, refractMes: true, font: true, tone: 'time', dayStart: 7, dayEnd: 19, avatar: 'line', orb: true, panelRead: true, dock: false, floatBall: true, ballSnap: true, ballFuse: true, ballSide: 'right', ballY: 0.62, ballFx: 0.92, ballFy: 0.6, ballDock: false,
     webPreset: 'clear', mobileTilt: false, glassStyle: 'original', engine: 'physical', follow: true, pLight: 135, customTextTone: 'auto', customWallpaper: '', readingStyle: 'warm', proseLeading: 0, proseInset: 0,
     // 自然弧度没写的参数（厚度、折射率等，只给物理折射截面用）沿用清透立体的
     ...PRESETS.depth[1], ...PRESETS.natural[1],
@@ -668,6 +672,9 @@ const TOGGLES = [
     ['ballFuse', '小球拖到顶栏或输入框旁边时和那块玻璃边缘融合'],
 ];
 
+// Apply platform defaults before merging saved preferences. Explicit saved choices win.
+if (window.__TAURITAVERN_HOST__?.platform === 'ios' || /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) DEFAULTS.glassStyle = 'liquid-web';
 ctx.extensionSettings[MODULE] = Object.assign({}, DEFAULTS, ctx.extensionSettings[MODULE]);
 const S = ctx.extensionSettings[MODULE];
 // Retired option: authored card colors and transparency always remain in control.
@@ -680,6 +687,7 @@ S.chatBackground = S.chatBackground === 'transparent' ? 'transparent' : 'glass';
 S.readingStyle = normalizeReadingStyle(S.readingStyle);
 S.iosMaterial = S.iosMaterial === true;
 S.glassStyle = S.glassStyle === 'liquid-web' ? 'liquid-web' : 'original';
+S.composerLayout = normalizeComposerLayout(S.composerLayout);
 // Folded toolbar is the sole layout; retain legacy fields for saved looks.
 function normalizeTopStyleSettings(settings) {
     const values = [settings.topShortcut1, settings.topShortcut2].map(value =>
@@ -759,7 +767,7 @@ function canRefract() {
 // This material uses CSS blur and light, never background pixel displacement.
 function iosMaterialActive() {
     return S.enabled && !cssGlassActive() && iosBlurEligible && S.iosMaterial === true
-        && !document.body.classList.contains('no-blur') && !(S.refract && canRefract());
+        && !document.body.classList.contains('no-blur') && (!(S.refract && canRefract()) || S.glassStyle==='liquid-web');
 }
 function compatibilityHint() {
     return cssGlassActive()
@@ -783,6 +791,9 @@ const PILL_SEL = '#nonQRFormItems';
 const BAR_SEL = `#top-bar, ${PILL_SEL}`;
 // 只处理酒馆 Popup 注册表里的标准外壳；不扫描、标记或改造第三方浮窗。
 const NATIVE_POPUP_SEL = 'dialog.popup[data-id]:not(.transparent_dialogue_popup)';
+const HOST_MENU_SEL = '#options .options-content, #extensionsMenu';
+const composerGlassSurface = el => el.matches(HOST_MENU_SEL)
+    || (S.qrFold && el.matches('#form_sheld #qr--bar') && !el.closest('[data-nvwa-style="author"], #catgod-oracle-qrbar'));
 const PANEL_SEL = '#top-settings-holder > .drawer > .drawer-content, #character_popup, #world_popup, #options .options-content, #extensionsMenu, ' + NATIVE_POPUP_SEL;
 const HOST_UI_SEL = '#top-settings-holder, #sheld, #options, #extensionsMenu, #ilg-fold-menu';
 // 世界书编辑器在抽屉里时，不再叠第二层玻璃。
@@ -793,25 +804,28 @@ function isNativePopup(el) {
 }
 // 仅对原生 Popup 内固定内容根做定点适配，不通过标题、类名或相似结构猜测所有权。
 const ADAPTED_PANEL_SEL = ':scope > .popup-body > .popup-content > :is(#nvwa-panel, #nvwa-memory)';
+function popupOwnsStyle(el) {
+    if (adaptedPanel(el)) return false;
+    const content = el.querySelector?.(':scope > .popup-body > .popup-content');
+    return !!content?.matches?.('[data-nvwa-style="author"]') || !!content?.querySelector?.('style, link[rel~="stylesheet"], iframe, [data-v-app], [data-reactroot], [data-nvwa-style="author"]');
+}
 function adaptedPanel(el) {
     return isNativePopup(el) ? el.querySelector(ADAPTED_PANEL_SEL) : null;
 }
 function trackable(el) {
     const popup = el.closest('dialog, .popup, [role="dialog"]:not(.ilg-recent)');
-    return (!popup || isNativePopup(popup)) && !(el.id === 'world_popup' && inDrawer(el));
+    return (!popup || isNativePopup(popup) && !popupOwnsStyle(popup)) && !(el.id === 'world_popup' && inDrawer(el));
 }
 const MES_SEL = '.mes:not(.smallSysMes)';
 
 const root = document.documentElement;
+const composerTools = createComposerTools({root});
+const lightScope = createLightScope(root);
 const webGlass = createLiquidGlassWeb();
 const reflections = createGlassReflections();
 const lighting = createGlassLighting({
     onPoint(point) {
-        root.classList.toggle('ilg-tilt-light', !!point);
-        for (const key of ['x', 'y']) {
-            if (point) root.style.setProperty('--ilg-tilt-' + key, point[key]);
-            else root.style.removeProperty('--ilg-tilt-' + key);
-        }
+        lightScope.update(point);
     },
     onStatus(text) { const status = document.getElementById('ilg-tilt-state'); if (status) status.textContent = text; },
 });
@@ -836,6 +850,11 @@ svg.innerHTML = '<defs></defs>';
 document.body.appendChild(svg);
 const defs = svg.firstChild;
 
+const iosWallpaper=createIOSWallpaperRefraction({background:()=>{
+    for(const id of ['bg_custom','bg1']){const el=document.getElementById(id);if(el&&/^url\(/.test(getComputedStyle(el).backgroundImage))return el;}
+    return null;
+},onReady:()=>requestAnimationFrame(()=>{repaintVisible();const status=document.getElementById('ilg-status');if(status)status.textContent=statusText();})});
+const iosWallpaperRequested=()=>isIOS&&S.refract&&S.compatibilityMode!=='blur'&&webStyleEnabled()&&!document.body.classList.contains('no-blur');
 const items = new Map();
 // Host UI state changes only need surfaces near the viewport; other messages update on intersection.
 const visibleItems = new Set();
@@ -906,10 +925,11 @@ function filterOf(it, w, h, slot = 'filter') {
 // 滤镜只负责折射；两种材质的表面反光统一在 CSS / 融合距离场中绘制，避免重复叠亮。
 const ARC_ONLY = Object.freeze({ specular: 0, sharp: 4, edgeShade: 0, fresnel: 0, caustic: 0 });
 // 统一玻璃表面；折叠顶栏与空输入区保持高透，仅有内容的输入区启用可读层。
-const controlSurface = el => el.matches('.ilg-island, #nonQRFormItems, #ilg-floor');
+const inputGlass = el => el.matches('#nonQRFormItems, #ilg-composer-input-glass');
+const controlSurface = el => el.matches('.ilg-island, #nonQRFormItems, #ilg-floor, .ilg-composer-glass');
 let inputMaterialReadable = false, inputCompositionText = '';
 const foldedMenuSurface = el => S.fold && el.classList.contains('ilg-island') && el.icons?.some(icon => icon.id === 'ilg-fold-button');
-const controlReadable = el => controlSurface(el) && (el.id === 'nonQRFormItems' ? inputMaterialReadable : S.islands && S.dock);
+const controlReadable = el => controlSurface(el) && (inputGlass(el) ? inputMaterialReadable : el.id === 'ilg-composer-plus-glass' ? false : S.islands && S.dock);
 function syncInputMaterial(repaint = true) {
     const value = document.getElementById('send_textarea')?.value || '';
     const next = value.trim().length > 0 || inputCompositionText.trim().length > 0;
@@ -917,7 +937,7 @@ function syncInputMaterial(repaint = true) {
     if (root.classList.contains('ilg-has-draft') !== shown) root.classList.toggle('ilg-has-draft', shown);
     if (next === inputMaterialReadable) return;
     inputMaterialReadable = next;
-    const bar = document.getElementById('nonQRFormItems');
+    const bar = document.getElementById(S.composerLayout === 'split' ? 'ilg-composer-input-glass' : 'nonQRFormItems');
     if (repaint && S.enabled && bar && items.has(bar)) paint(bar);
 }
 // 发送清空、恢复草稿与粘贴都走同一个 input 入口；只在空 / 有文字切换时重建材质。
@@ -934,8 +954,11 @@ for (const type of ['compositionstart', 'compositionupdate', 'compositionend']) 
 }, true);
 document.addEventListener('focusin', e => { if (e.target.id === 'send_textarea') syncInputMaterial(); });
 function surfaceBlur(it, el) {
+    if (composerGlassSurface(el)) return 6;
     if (it.kind === 'mes' && S.chatBackground === 'transparent') return 0;
     const blur = KIND[it.kind].blur();
+    // Native input menus sit over message text; keep that text from competing with their labels.
+    if (it.kind === 'panel' && el.matches(HOST_MENU_SEL)) return Math.max(10, blur);
     return controlReadable(el) ? Math.max(1.1, blur) : blur;
 }
 // 新版：模糊、调色、折射全在一个 SVG 滤镜里，所以 backdrop-filter 只写 url()
@@ -946,7 +969,7 @@ function buildPhysical(it, el, w, h, r) {
     const o = {
         profile: S.profile, ior: S.pIor, magnify: foldedMenuSurface(el) ? 1 + (S.pMagnify - 1) * .45 : control ? 1 + (S.pMagnify - 1) * .6 : S.pMagnify, bezel,
         thickness: S.pThickness * kind.thickK * (control ? bezel / baseBezel : 1),
-        controlCore: control, controlRadius: r, controlBlur: el.id === 'nonQRFormItems' ? 3 : 5.5,
+        controlCore: control, controlRadius: r, controlBlur: inputGlass(el) ? 3 : 5.5,
         // 中心遮罩随尺寸变化，不能只复用九宫格边缘的尺寸更新。
         controlGeometry: control ? [w, h, r].join(':') : '',
         strength: S.pStrength * kind.k * (foldedMenuSurface(el) ? .82 : 1), aberration: S.pAberration, blur: surfaceBlur(it, el),
@@ -954,6 +977,12 @@ function buildPhysical(it, el, w, h, r) {
         // 只留弧度：滤镜里不画高光、边缘反光、厚度阴影和聚光。法线贴图和光照节点因此不再生成，GPU 也少算几层。
         ...ARC_ONLY,
     };
+    // Compact clear lens for composer sheets, using the existing physical map cache.
+    if (it.kind === 'panel' && composerGlassSurface(el)) Object.assign(o, {
+        profile: 'lens', ior: 1.45, magnify: 1.35, bezel: Math.min(14, r * .65),
+        thickness: 28, strength: .9, aberration: .15, blur: 6,
+        saturate: 1.15, brightness: 1.02, contrast: 1,
+    });
     const maps = getMaps(w, h, r, o), key = JSON.stringify(o);
     const previous = it.physical;
     // Nine-slice maps already share their pixels. Keep the filter nodes too when only its bounds change.
@@ -991,6 +1020,7 @@ function buildFilter(it, w, h, r, el) {
 
 function refractAllowed(it) {
     if (!S.enabled || !S.refract || !canRefract() || document.body.classList.contains('no-blur')) return false;
+    if(isIOS&&iosWallpaperRequested())return false;
     if (it.kind === 'mes') return S.refractMes && it.visible;
     return true;
 }
@@ -1041,6 +1071,7 @@ function paintMany(list, measured = null) {
 function paint(el, geo) {
     const it = items.get(el);
     if (!it) return;
+    if (it.kind === 'panel' && el.matches(HOST_MENU_SEL)) mountTrayHeading(el);
     if (!geo) {
         if (!el.isConnected) { untrack(el); return; }
         if (!trackable(el)) { untrack(el); return; }
@@ -1053,17 +1084,21 @@ function paint(el, geo) {
     }
     if (it.kind !== 'mes') {
         it.visible = !!geo.w && !!geo.h;
-        if (it.visible) visibleItems.add(el); else { visibleItems.delete(el); return; }
+        lightScope.visibility(el, it.visible);
+        if (it.visible) visibleItems.add(el); else { visibleItems.delete(el); iosWallpaper.release(el); return; }
     }
     const surface = it.kind === 'mes' ? messageSurface(el, it) : el;
     const control = it.kind === 'bar' && controlSurface(el);
     el.classList.toggle('ilg-control-surface', control);
     el.classList.toggle('ilg-control-readable', control && controlReadable(el));
     it.renderPath = 'pending'; it.fallbackReason = '';
+    const composer = it.kind === 'panel' && composerGlassSurface(el);
+    el.classList.toggle('ilg-composer-liquid', composer);
     const cssMode = cssGlassActive();
     el.classList.toggle('ilg-css-surface', cssMode);
-    const useWeb = it.kind === 'bar' && webStyleEnabled();
+    const useWeb = (it.kind === 'bar' || composer) && webStyleEnabled();
     if (!useWeb) webGlass.release(el);
+    if (!useWeb||!iosWallpaperRequested()) iosWallpaper.release(el);
     if (document.body.classList.contains('no-blur')) {
         it.renderPath = 'no-blur';
         reflections.release(el);
@@ -1084,7 +1119,7 @@ function paint(el, geo) {
         setPhys(el, it, false);
         let lightBlur;
         if (it.kind === 'mes') lightBlur = S.chatBackground === 'transparent' ? 0 : Math.max(1.5, Math.min(6, blur));
-        else if (control) lightBlur = controlReadable(el) ? (el.id === 'nonQRFormItems' ? 3.5 : 4) : Math.max(.75, Math.min(1.5, blur));
+        else if (control) lightBlur = controlReadable(el) ? (inputGlass(el) ? 3.5 : 4) : Math.max(.75, Math.min(1.5, blur));
         else lightBlur = Math.max(1, Math.min(it.kind === 'panel' || it.kind === 'toast' ? 8 : 3, blur));
         const filter = (lightBlur ? `blur(${lightBlur}px) saturate(${Math.max(1, Math.min(1.35, S.saturate))})` : reading ? 'blur(0px)' : 'none') + reading;
         surface.style.backdropFilter = filter;
@@ -1092,22 +1127,28 @@ function paint(el, geo) {
         return;
     }
     // Offscreen messages retain their CSS material; rasterise their contour on entry.
-    if (it.kind === 'mes' && !it.visible) reflections.release(el);
+    if (composer || (it.kind === 'mes' && !it.visible)) reflections.release(el);
     else reflections.paint(el, w, h, r);
     if (useWeb) {
         it.renderPath = 'web-compatible';
         setPhys(el, it, false);
         webGlass.paint(el, it, { width: w, height: h,
-            refract: S.refract && canRefract() && !isIOS,
-            filter: () => filterOf(it, w, h, 'webFilter'), radius: r, preset: S.webPreset, refractionScale: foldedMenuSurface(el) ? .82 : 1, controlCore: control && controlReadable(el), controlBlur: el.id === 'nonQRFormItems' ? 3 : 5.5,
+            refract: S.refract && (canRefract() || iosWallpaperRequested()),
+            sourcePlane: iosWallpaperRequested()?value=>iosWallpaper.paint(el,value):null,
+            filter: () => filterOf(it, w, h, 'webFilter'), radius: r, preset: S.webPreset, refractionScale: foldedMenuSurface(el) ? .82 : 1, controlCore: control && controlReadable(el), controlBlur: inputGlass(el) ? 3 : 5.5,
             // 输入胶囊上下两条边的折射圈加厚一点（用户 2026-11-05 要求），岛保持上游原样
-            bendY: el.id === 'nonQRFormItems' ? 1.5 : 1 });
+            bendY: inputGlass(el) ? 1.5 : 1 });
+        if(iosWallpaperRequested()&&el.querySelector(':scope > .ilg-ios-wallpaper-plane'))it.renderPath='web-wallpaper';
         return;
     }
     it.largeWebView = largeWebViewMessage({webView:androidWebView,kind:it.kind,width:w,height:h,dpr:devicePixelRatio,previous:it.largeWebView});
-    const guarded = S.engine === 'physical' && it.largeWebView;
+    const guarded = it.largeWebView;
     const phys = refractAllowed(it) && S.engine === 'physical' && !guarded;
-    if(guarded&&refractAllowed(it))it.fallbackReason='large-webview-message';
+    if (guarded && refractAllowed(it)) {
+        it.fallbackReason = 'large-webview-message';
+        // Legacy displacement still allocates a full-size filtered surface. Release it as well.
+        it.filter?.remove(); it.filter = null; it.physical = null;
+    }
     setPhys(el, it, phys);
     if (canRefract() && !isIOS) surface.style.webkitBackdropFilter = '';
     if (phys) {
@@ -1115,7 +1156,7 @@ function paint(el, geo) {
         buildPhysical(it, el, w, h, r);
         surface.style.backdropFilter = `url(#${it.id})` + reading;
         if (isIOS) surface.style.webkitBackdropFilter = `url(#${it.id})` + reading;
-    } else if (refractAllowed(it)) {
+    } else if (!guarded && refractAllowed(it)) {
         it.renderPath = 'legacy';
         buildFilter(it, w, h, r, el);
         surface.style.backdropFilter = `url(#${it.id}) ${tail}`;
@@ -1190,22 +1231,37 @@ function track(el, kind) {
         el.style.position = 'relative';
         it.posFixed = true;
     }
+    if (isNativePopup(el)) {
+        const content = el.querySelector(':scope > .popup-body > .popup-content');
+        if (content) {
+            it.contentObserver = new MutationObserver(() => {
+                if (popupOwnsStyle(el)) { untrack(el); return; }
+                if (el.classList.contains('ilg-adapted') !== !!adaptedPanel(el)) paint(el);
+            });
+            it.contentObserver.observe(content, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-nvwa-style'] });
+        }
+    }
     ro.observe(el);
     if (kind === 'mes') { messageRendering.track(el); io.observe(el); }
     paint(el);
 }
 
 function untrack(el) {
+    composerTools.release(el);
+    releaseTrayHeading(el);
+    lightScope.release(el);
     messageRendering.release(el);
     reflections.release(el);
     webGlass.release(el);
+    iosWallpaper.release(el);
     const it = items.get(el);
     if (!it) return;
+    it.contentObserver?.disconnect();
     it.filter?.remove();
     it.backdrop?.remove();
     ro.unobserve(el);
     io.unobserve(el);
-    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys', 'ilg-adapted', 'ilg-message-backdrop', 'ilg-control-surface', 'ilg-control-readable', 'ilg-css-surface');
+    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys', 'ilg-adapted', 'ilg-message-backdrop', 'ilg-control-surface', 'ilg-control-readable', 'ilg-css-surface', 'ilg-composer-liquid');
     if (el.id === 'nonQRFormItems') el.querySelectorAll('[data-ilg-input-tone]').forEach(action => delete action.dataset.ilgInputTone);
     el.style.backdropFilter = '';
     el.style.webkitBackdropFilter = '';
@@ -1216,7 +1272,8 @@ function untrack(el) {
 
 function scan() {
     if (!S.enabled) return;
-    document.querySelectorAll(S.islands ? PILL_SEL : BAR_SEL).forEach(el => track(el, 'bar'));
+    const inputSurfaces = S.composerLayout === 'split' ? '#nonQRFormItems > .ilg-composer-glass' : PILL_SEL;
+    document.querySelectorAll(S.islands ? inputSurfaces : '#top-bar, ' + inputSurfaces).forEach(el => track(el, 'bar'));
     document.querySelectorAll(PANEL_SEL).forEach(el => track(el, 'panel'));
     const bubble = document.body.classList.contains('bubblechat');
     document.querySelectorAll(`#chat ${MES_SEL}`).forEach(el => bubble ? track(el, 'mes') : untrack(el));
@@ -1629,6 +1686,7 @@ appearancePanel.setAttribute('aria-label', '外观与阅读');
 appearancePanel.innerHTML = `<div class="ilg-appearance-heading"><div><strong>外观与阅读</strong><p>明暗、壁纸与文字风格</p></div><button type="button" class="ilg-appearance-close" aria-label="关闭外观面板"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button></div>
   <fieldset class="ilg-appearance-modes"><legend class="ilg-sr-only">界面外观</legend>${[['light','白天'],['dark','黑夜'],['custom','自定义']].map(([value,label]) => `<label><input type="radio" name="ilg-appearance-mode" value="${value}"><span>${appearanceSvg(value)}<span>${label}</span></span></label>`).join('')}</fieldset>
   <fieldset class="ilg-glass-choice"><legend>玻璃材质</legend><label><input type="radio" name="ilg-glass-style" value="original"><span><strong>映卿</strong><small>清透弧面 · 安静轻盈</small></span></label><label><input type="radio" name="ilg-glass-style" value="liquid-web"><span><strong>漾卿</strong><small>柔润折射 · 轻弹流动</small></span></label></fieldset><p class="ilg-web-style-hint"></p><fieldset class="ilg-glass-choice ilg-web-presets"><legend>漾卿 · 质感</legend>${Object.entries(WEB_PRESETS).map(([value,p]) => `<label><input type="radio" name="ilg-web-preset" value="${value}"><span><strong>${p.label}</strong><small>${p.detail}</small></span></label>`).join('')}</fieldset>
+  ${composerLayoutPicker()}
   <div class="ilg-reading-section"><fieldset class="ilg-reading-choice"><legend>文字风格</legend>${[['warm','青瓷','青绿对白 · 留白排版'],['classic','栖暖','柔琥珀色 · 安静叙事'],['moon','笺月','宋体优先 · 疏朗书卷'],['sunny','晴笺','清爽黑体 · 蓝调对白']].map(([value,label,detail]) => `<label data-reading-style="${value}"><input type="radio" name="ilg-reading-style" value="${value}"><span><span class="ilg-style-name">${label}</span><span class="ilg-style-sample" aria-hidden="true"><span>微光落在纸上</span><q>故事慢慢说</q></span><span class="ilg-style-detail">${detail}</span></span></label>`).join('')}</fieldset>
   <p class="ilg-reading-font-note">字体优先使用设备已有字库；缺少时由系统回退。样式只调整普通正文。</p>
   <div class="ilg-preview-heading"><span>阅读预览</span><span class="ilg-preview-tone"></span></div>
@@ -1655,9 +1713,10 @@ function rememberCustomWallpaper(url) {
 }
 function syncAppearancePanel() {
     appearancePanel.querySelectorAll('[name="ilg-glass-style"]').forEach(el => { el.checked = el.value === S.glassStyle; });
+    document.querySelectorAll('[name="ilg-composer-layout"]').forEach(el => { el.checked = el.value === S.composerLayout; });
     const hint = appearancePanel.querySelector('.ilg-web-style-hint');
     if (hint) hint.textContent = cssGlassActive() ? '通用仿液态玻璃正在使用 CSS 材质；映卿与漾卿的参数会保留。' : S.glassStyle === 'liquid-web'
-        ? (!webStyleEnabled() ? '当前环境暂不支持漾卿，已使用兼容材质。' : isIOS ? 'iOS 只用系统模糊与调色；真实背景折射尚未验证。' : !S.refract || !canRefract() ? '当前只用模糊与调色；开启可用的边缘折射后可见弯曲效果。' : '漾卿用于顶栏、输入区与悬浮小球。')
+        ? (!webStyleEnabled() ? '当前环境暂不支持漾卿，已使用兼容材质。' : iosWallpaperRequested() ? 'iOS 壁纸折射：仅折射壁纸，不包含聊天正文；关闭边缘折射可恢复兼容模糊。' : isIOS ? 'iOS 当前使用兼容模糊；开启边缘折射可尝试壁纸折射。' : !S.refract || !canRefract() ? '当前只用模糊与调色；开启可用的边缘折射后可见弯曲效果。' : '漾卿用于顶栏、输入区与悬浮小球。')
         : '映卿保留独立弧度；两种材质可随时切换。';
     appearancePanel.querySelector('.ilg-web-presets').hidden = S.glassStyle !== 'liquid-web';
     appearancePanel.querySelectorAll('[name="ilg-web-preset"]').forEach(el => { el.checked = el.value === S.webPreset; });
@@ -1829,7 +1888,9 @@ function neckGeometry(x1, y1, R, n) {
 let fuseList = null, bridgeTint = '', ballMat = null, ballSdfFailed = false;
 // 融合半径：两块玻璃的空隙小于它的一半时开始长颈部
 const SMIN_K = 30;
-const ballGlass = createBallGlass({ onError(error) {
+const ballGlass = createBallGlass({ onSurface(el, visible) {
+    if (visible === null) lightScope.release(el); else lightScope.visibility(el, visible);
+}, onError(error) {
     console.warn('[NVWA] 悬浮小球绘制失败，恢复兼容绘制。', error);
     ballSdfFailed = true; applyBall();
 } });
@@ -2124,6 +2185,11 @@ appearancePanel.querySelectorAll('[name="ilg-reading-style"]').forEach(el => el.
     syncAppearancePanel();
     ctx.saveSettingsDebounced();
 }));
+appearancePanel.querySelectorAll('[name="ilg-composer-layout"]').forEach(el => el.addEventListener('change', () => {
+    if (!el.checked) return;
+    S.composerLayout = normalizeComposerLayout(el.value);
+    clearAll(); applyRoot(); syncAppearancePanel(); ctx.saveSettingsDebounced();
+}));
 appearancePanel.querySelectorAll('[name="ilg-glass-style"]').forEach(el => el.addEventListener('change', () => {
     if (!el.checked || !['original', 'liquid-web'].includes(el.value)) return;
     S.glassStyle = el.value;
@@ -2142,6 +2208,88 @@ appearancePanel.querySelectorAll('[name="ilg-custom-text"]').forEach(el => el.ad
 }));
 // 快捷回复折叠：输入框左边一个按钮，点开后快捷回复按钮浮在输入胶囊上方的一块玻璃里，点了某个按钮就收起
 const qrBar = () => document.getElementById('qr--bar');
+
+// A single owned heading per tray; never replace or clone host action nodes.
+const trayHeadings = new Map();
+function mountTrayHeading(el) {
+    if (el.closest('[data-nvwa-style="author"], #catgod-oracle-qrbar')) return;
+    const title = el.id === 'extensionsMenu' ? '扩展工具'
+        : el.id === 'qr--bar' ? '快捷面板'
+        : el.matches('#options .options-content') ? '聊天操作' : null;
+    if (!title) return;
+    let heading = trayHeadings.get(el);
+    if (!heading) {
+        heading = document.createElement('span');
+        heading.className = 'ilg-tray-heading';
+        heading.setAttribute('role', 'heading');
+        heading.setAttribute('aria-level', '2');
+        heading.textContent = title;
+        trayHeadings.set(el, heading);
+    }
+    if (heading.parentElement !== el) el.prepend(heading);
+    composerTools.decorate(el);
+}
+function releaseTrayHeading(el) {
+    trayHeadings.get(el)?.remove();
+    trayHeadings.delete(el);
+}
+
+// Decorate the two NVWA launchers in place; host quick-reply handlers stay on their original nodes.
+const qrEntryUi = new Map();
+function clearQrEntry(button, state) {
+    state.icon.remove(); state.caption.remove();
+    button.removeAttribute('data-ilg-entry');
+    if (state.roleAdded && button.getAttribute('role') === 'button') button.removeAttribute('role');
+    if (state.tabAdded && button.getAttribute('tabindex') === '0') button.removeAttribute('tabindex');
+    qrEntryUi.delete(button);
+}
+function clearQrPresentation(bar = null) {
+    for (const el of trayHeadings.keys()) {
+        if (el.id === 'qr--bar' && (!bar || bar === el)) releaseTrayHeading(el);
+    }
+    for (const [button, state] of qrEntryUi) {
+        if (!bar || bar.contains(button)) clearQrEntry(button, state);
+    }
+}
+function decorateQrEntries(bar) {
+    const found = new Set();
+    for (const button of bar.querySelectorAll('.qr--button')) {
+        if (button.closest('#catgod-oracle-qrbar, [data-nvwa-style="author"]')) continue;
+        const label = (button.querySelector('.qr--button-label')?.textContent
+            || [...button.childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join('')).replace(/^\s*NVWA\s*/i, '').trim();
+        const entry = label === '预设面板' ? 'preset' : label === '记忆' ? 'memory' : null;
+        if (!entry) continue;
+        found.add(button);
+        let state = qrEntryUi.get(button);
+        if (!state) {
+            const icon = document.createElement('span'), caption = document.createElement('span');
+            icon.className = 'ilg-quick-icon'; icon.setAttribute('aria-hidden', 'true');
+            caption.className = 'ilg-quick-caption';
+            state = { icon, caption, roleAdded: !button.hasAttribute('role'), tabAdded: !button.hasAttribute('tabindex') };
+            qrEntryUi.set(button, state);
+            button.prepend(icon); button.append(caption);
+            if (state.roleAdded) button.setAttribute('role', 'button');
+            if (state.tabAdded) button.setAttribute('tabindex', '0');
+        }
+        if (button.dataset.ilgEntry !== entry) button.dataset.ilgEntry = entry;
+        const caption = entry === 'preset' ? '提示词与风格' : '剧情与状态';
+        if (state.caption.textContent !== caption) state.caption.textContent = caption;
+    }
+    for (const [button, state] of qrEntryUi) {
+        if (!found.has(button)) clearQrEntry(button, state);
+    }
+}
+const qrMenuUiObserver = new MutationObserver(() => syncQrPresentation(true));
+function syncQrPresentation(open) {
+    qrMenuUiObserver.disconnect();
+    const bar = qrBar();
+    if (!S.enabled || !S.qrFold) { clearQrPresentation(); return; }
+    if (!open || !bar || !document.getElementById('form_sheld').contains(bar)) return;
+    mountTrayHeading(bar);
+    decorateQrEntries(bar);
+    qrMenuUiObserver.observe(bar, { childList: true, subtree: true, characterData: true });
+}
+
 const qrToggle = document.createElement('div');
 qrToggle.id = 'ilg-qr-toggle';
 qrToggle.className = 'interactable';
@@ -2153,7 +2301,7 @@ qrToggle.setAttribute('aria-expanded', 'false');
 function applyQrFold() {
     const on = S.enabled && S.qrFold;
     root.classList.toggle('ilg-qrfold', on);
-    if (!on) { setQrOpen(false); const bar=qrBar();if(bar&&items.has(bar))untrack(bar);qrToggle.remove();return; }
+    if (!on) { setQrOpen(false); syncQrPresentation(false); const bar=qrBar();if(bar&&items.has(bar))untrack(bar);qrToggle.remove();return; }
     const left = document.getElementById('leftSendForm');
     if (left && qrToggle.parentElement !== left) left.appendChild(qrToggle);
 }
@@ -2163,17 +2311,26 @@ function setQrOpen(open) {
     if (root.classList.contains('ilg-qr-open') === open) return;
     root.classList.toggle('ilg-qr-open', open);
     qrToggle.setAttribute('aria-expanded', String(open));
+    syncQrPresentation(open);
     if (!bar) return;
     if (open) {
         if (!items.has(bar)) track(bar, 'panel');
         else { const it=items.get(bar);it.visible=true;visibleItems.add(bar);paint(bar); }
-    } else { const it=items.get(bar);if(it)it.visible=false;visibleItems.delete(bar); }
+    } else { const it=items.get(bar);if(it)it.visible=false;visibleItems.delete(bar); if (bar.contains(document.activeElement)) { if(root.classList.contains('ilg-merged-tools'))composerTools.focusLauncher();else qrToggle.focus({ preventScroll: true }); } }
 }
 qrToggle.addEventListener('click', () => setQrOpen(!root.classList.contains('ilg-qr-open')));
 qrToggle.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setQrOpen(!root.classList.contains('ilg-qr-open')); }
     if (e.key === 'Escape') setQrOpen(false);
 });
+
+document.getElementById('form_sheld').addEventListener('keydown', e => {
+    if (e.defaultPrevented || !S.enabled || !root.classList.contains('ilg-qr-open') || !['Enter', ' '].includes(e.key)) return;
+    const state = qrEntryUi.get(e.target);
+    if (!state?.roleAdded || e.target.matches('button, a[href], input, [disabled], [aria-disabled="true"], .disabled')) return;
+    e.preventDefault(); e.target.click();
+});
+
 // 点了某个快捷回复（不是它旁边的小箭头）就收起；点外面也收起
 document.getElementById('form_sheld').addEventListener('click', e => {
     if (!root.classList.contains('ilg-qr-open')) return;
@@ -2182,7 +2339,7 @@ document.getElementById('form_sheld').addEventListener('click', e => {
 });
 document.addEventListener('pointerdown', e => {
     if (!root.classList.contains('ilg-qr-open')) return;
-    if (qrBar()?.contains(e.target) || qrToggle.contains(e.target) || e.target.closest?.('.ctx-menu, .list-group')) return;
+    if ((root.classList.contains('ilg-merged-tools') && document.getElementById('options_button')?.contains(e.target)) || qrBar()?.contains(e.target) || qrToggle.contains(e.target) || e.target.closest?.('.ctx-menu, .list-group')) return;
     setQrOpen(false);
 }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setQrOpen(false); });
@@ -2240,7 +2397,9 @@ function setHome(on) {
 }
 const hostInteractionState = createHostInteractionState({ holder, form: document.getElementById('form_sheld'), home, qrToggle,
     onQrBar(previous,next){
-        if(previous&&items.has(previous))untrack(previous);
+        composerTools.refresh();
+        if(previous){clearQrPresentation(previous);if(items.has(previous))untrack(previous);}
+        syncQrPresentation(root.classList.contains('ilg-qr-open'));
         if(next&&S.enabled&&root.classList.contains('ilg-qr-open'))track(next,'panel');
         if(!next&&root.classList.contains('ilg-qr-open'))setQrOpen(false);
     },
@@ -2445,6 +2604,7 @@ function followTone() {
 }
 async function applyTone() {
     const request = ++toneRequest, url = wallpaperUrl(), custom = !!url && !onToneWall();
+    if(iosWallpaperRequested())iosWallpaper.refresh();
     if (currentWallpaperSample?.url !== url) currentWallpaperSample = null;
     let sampled = null;
     root.classList.toggle('ilg-custom-wallpaper', S.enabled && custom);
@@ -2548,10 +2708,14 @@ function applyRoot() {
     applyChatFontSize();
     applyProseSpacing();
     root.classList.toggle('ilg', S.enabled);
+    S.composerLayout = normalizeComposerLayout(S.composerLayout);
+    composerTools.setEnabled(S.enabled && S.composerLayout !== 'classic');
+    syncComposerLayout({root, enabled:S.enabled, layout:S.composerLayout, release:untrack});
     root.classList.toggle('ilg-clear-optics', S.enabled);
     root.classList.toggle('ilg-css-glass', cssGlassActive());
     root.classList.toggle('ilg-liquid-web', webStyleEnabled());
     webGlass.setEnabled(webStyleEnabled());
+    iosWallpaper.setEnabled(iosWallpaperRequested());
     reflections.setEnabled(S.enabled && !cssGlassActive());
     syncMobileTilt();
     root.classList.toggle('ilg-ios-experiment', S.enabled && isIOS);
@@ -2600,10 +2764,18 @@ const form = document.getElementById('form_sheld');
 const chatEl = document.getElementById('chat');
 const messageRendering = createMessageRendering(chatEl, { onReset(el) { if (items.has(el)) { ro.unobserve(el); ro.observe(el); } } });
 const cardClarity = createCardTextClarity(chatEl);
-new ResizeObserver(() => {
+let formResizeRaf = 0;
+function updateFormSpace() {
+    formResizeRaf = 0;
+    const height = `${form.offsetHeight}px`;
+    if (root.style.getPropertyValue('--ilg-form-h') === height) return;
     const atBottom = chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < 40;
-    root.style.setProperty('--ilg-form-h', `${form.offsetHeight}px`);
+    root.style.setProperty('--ilg-form-h', height);
     if (S.enabled && ctx.powerUserSettings?.auto_scroll_chat_to_bottom && atBottom) chatEl.scrollTop = chatEl.scrollHeight;
+}
+// Changing chat geometry inside this observer can re-trigger a shallower host observer.
+new ResizeObserver(() => {
+    if (!formResizeRaf) formResizeRaf = requestAnimationFrame(updateFormSpace);
 }).observe(form);
 const keyboard = createKeyboard({ root, enabled: () => S.enabled && S.float, input: () => document.getElementById('send_textarea') });
 const readingAnchor = createReadingAnchor({ chat: chatEl, enabled: () => S.enabled });
@@ -2701,7 +2873,7 @@ function statusText() {
     if (!S.enabled) return '美化已关闭。';
     if (document.body.classList.contains('no-blur')) return '你开了酒馆的“关闭模糊”，所以玻璃和折射都暂停了。';
     if (cssGlassActive()) return '澄卿 · 通用仿液态玻璃：CSS 轻模糊、细亮边与柔和投影；SVG 折射与轮廓贴图已停用。';
-    if (S.glassStyle === 'liquid-web') return '漾卿 · 顶栏与输入区。' + (isIOS ? 'iOS 使用模糊与光感，不宣称真实折射。' : S.refract && canRefract() ? '已请求弯曲背景折射。' : '当前使用模糊与光感。');
+    if (S.glassStyle === 'liquid-web') return '漾卿 · 顶栏与输入区。' + (iosWallpaperRequested() ? (iosWallpaper.status().surfaces>0?'iOS 壁纸折射图层已启用：仅壁纸，不包含聊天正文；实际位移仍需真机确认。':iosWallpaper.status().reason==='loading-wallpaper'?'iOS 壁纸图层准备中，暂用兼容模糊。':iosWallpaper.status().reason==='image-unavailable'?'iOS 壁纸图层加载失败，已保留兼容模糊。':'iOS 壁纸折射尚未就绪，暂用兼容模糊。') : isIOS ? 'iOS 使用模糊与光感，不宣称真实折射。' : S.refract && canRefract() ? '已请求弯曲背景折射。' : '当前使用模糊与光感。');
     if (iosMaterialActive()) return 'iOS 兼容玻璃：系统模糊与边缘光感已启用，此模式不包含真实背景折射。';
     if (!S.refract) return '边缘折射已关闭，现在只有模糊。';
     if (isIOS && iosTrialRequested()) return 'iOS SVG 折射实验已请求；不代表背景位移已显示，请对比画面确认。关闭实验开关即可恢复模糊。';
@@ -2724,13 +2896,14 @@ function viewportDiagnostic() {
     for(const [el,it] of items){const path=it.renderPath||'pending';paths[path]=(paths[path]||0)+1;if(it.fallbackReason==='large-webview-message')large++;
         if(surfaces.length<3&&it.visible&&el.matches('.mes')){const r=el.getBoundingClientRect();surfaces.push({width:Math.round(r.width),height:Math.round(r.height),path,fallbackReason:it.fallbackReason||''});}}
     return{layout:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},visual:vv?{width:vv.width,height:vv.height,offsetTop:vv.offsetTop,offsetLeft:vv.offsetLeft,scale:vv.scale}:null,
-        composerFocused:document.activeElement===document.getElementById('send_textarea'),keyboard:keyboard.status(),composer:rect('nonQRFormItems'),form:rect('form_sheld'),ball:{shown:S.enabled&&S.floatBall,keyboardHidden:root.classList.contains('ilg-kb-open'),rect:rect('ilg-ball')},
+        composerFocused:document.activeElement===document.getElementById('send_textarea'),keyboard:keyboard.status(),chat:{scrollTop:chatEl.scrollTop,scrollHeight:chatEl.scrollHeight,clientHeight:chatEl.clientHeight,readingAnchor:readingAnchor.status()},composer:rect('nonQRFormItems'),form:rect('form_sheld'),ball:{shown:S.enabled&&S.floatBall,keyboardHidden:root.classList.contains('ilg-kb-open'),rect:rect('ilg-ball')},
         rendering:{iosCompatible:iosMaterialActive(),engineRequested:S.engine,largeWebViewMessages:large,paths,surfaces},
         appearance:{requested:S.tone,actual:appearanceMode(),lightThumbnail:!!wallThumb('light'),darkThumbnail:!!wallThumb('dark'),customThumbnail:!!customWallThumb(),chatBackgroundLocked:chatBgLocked(),lastAction:lastAppearanceAction},
-        wallpapers:bundledWallpapers.status(),workers:{reflections:reflections.status(),ball:((({mode,reason,suspended,pending,failures})=>({mode,reason,suspended,pending,failures}))(ballGlass.status()))},lighting:lighting.status(),captureNote:'Frame intervals describe page callbacks, not display flicker detection'};
+        wallpapers:bundledWallpapers.status(),wallpaperRefraction:iosWallpaper.status(),workers:{reflections:reflections.status(),ball:((({mode,reason,suspended,pending,failures})=>({mode,reason,suspended,pending,failures}))(ballGlass.status()))},lighting:lighting.status(),captureNote:'Frame intervals describe page callbacks, not display flicker detection'};
 }
 const CAPTURE_SCENARIOS = {
     general: ['综合交互', ['上下滑动聊天几次，停一下，再来回滑动。', '拖动悬浮小球几次，观察是否跟手；未开启小球时可跳过。', '点输入框打几个字，收起键盘，再拖动一次小球。']],
+    menus: ['输入框菜单 / 卡顿', ['若通常用久才变慢，先正常使用到变慢，再点击开始采集。', '点击输入框左侧的“＋”，等菜单显示后关闭，重复两三次。', '再点击魔法棒图标，打开、关闭两三次，尽量在 15 秒内完成。', '采集结束后点击提示条的“导出诊断”，把下载的 TXT 文件发回。']],
     appearance: ['黑白切换 / 壁纸', ['点击右上角的太阳、月亮或调色盘图标。', '连续切换两三次；如提示正在恢复壁纸，留在页面等待结果。', '观察壁纸和文字颜色是否变化，以及有没有错误提示。']],
     rendering: ['屏闪 / 折射', ['停在原来会闪的卡片处，先静止约 3 秒，观察静止时是否也闪。', '上下滑动这张卡片几次，再停住，观察屏闪或卡顿出现的时机。', '方便时另录约 10 秒视频；反馈时说明静止、滚动或打字时是否闪。']],
     keyboard: ['键盘 / 拖动', ['拖动悬浮小球几次，观察是否跟手；先确认小球已开启。', '点输入框打几个字，观察输入框有没有被键盘挡住。', '收起键盘，再拖动小球，观察位置和跟手是否恢复。']],
@@ -2758,7 +2931,7 @@ const interactionDiagnostics=createInteractionDiagnostics({snapshot:viewportDiag
     const badge=captureBadge();badge.querySelector('span').textContent='采集中 · '+Math.ceil(progress.remainingMs/1000)+' 秒';badge.querySelector('[data-action="main"]').textContent='提前结束';badge.querySelector('[data-action="close"]').hidden=true;
 },onFinish(result){
     const missing=result.coverage.missing.length;
-    const labels={chatScroll:'滚动聊天',ballDrag:'拖动小球',composerInput:'输入文字',visualViewportChange:'视口变化',appearanceAttempt:'外观切换'};
+    const labels={optionsMenu:'打开加号菜单',extensionsMenu:'打开魔法棒菜单',chatScroll:'滚动聊天',ballDrag:'拖动小球',composerInput:'输入文字',visualViewportChange:'视口变化',appearanceAttempt:'外观切换'};
     const reason=result.quality.fullDuration?'15 秒采集完成':({manual:'已手动提前结束',hidden:'切到后台，采集已中断',pagehide:'离开页面，采集已中断',disabled:'美化已关闭，采集已停止',exported:'已在导出时提前结束'}[result.reason]||'采集已提前结束');
     const text=reason+'（实际 '+(result.durationMs/1000).toFixed(1)+' 秒）。'+(missing?'未记录到：'+result.coverage.missing.map(key=>labels[key]||key).join('、')+'。建议按上方步骤重新采集；如果已复现问题，也可导出这次结果。':'点击屏幕提示条的“导出诊断”，把下载的 TXT 文件发回即可。');
     const scenario=document.getElementById('ilg-capture-scenario');if(scenario)scenario.disabled=false;
@@ -3460,8 +3633,12 @@ document.head.appendChild(iconLink);
 
 // Keep the filled track aligned with the native 20px thumb, including the workbench dialog.
 const RANGE_THUMB = 20; // Match the CSS grip width; its height is independent.
+const AUTHORED_CONTROL_SEL = '.mes_text, .mes_reasoning, .popup-content, dialog, .popup, [role="dialog"]:not(.ilg-recent), [role="alertdialog"], [data-nvwa-style="author"], #catgod-oracle-qrbar';
+function ownsHostControl(el) {
+    return !!el.closest('#ilg-studio') || !!el.closest(HOST_UI_SEL) && !el.closest(AUTHORED_CONTROL_SEL);
+}
 function paintRange(el) {
-    if (!el.closest('#ilg-studio') && (!el.closest(HOST_UI_SEL) || el.closest('dialog, .popup, [role="dialog"]:not(.ilg-recent)'))) return;
+    if (!ownsHostControl(el)) return;
     const min = Number(el.min || 0), max = Number(el.max || 100), v = Number(el.value);
     const p = max > min ? Math.min(1, Math.max(0, (v - min) / (max - min))) : 0;
     const fill = `calc(${p.toFixed(4)} * (100% - ${RANGE_THUMB}px) + ${RANGE_THUMB / 2}px)`;
@@ -3492,7 +3669,7 @@ function updateRangeValue(el) {
     rangeValue.dataset.target = el.id;
 }
 function showRangeValue(el) {
-    if (!S.enabled || el.disabled || !el.closest('#ilg-studio') && (!el.closest(HOST_UI_SEL) || el.closest('dialog, .popup, [role="dialog"]:not(.ilg-recent)'))) return;
+    if (!S.enabled || el.disabled || !ownsHostControl(el)) return;
     if (rangeValueInput === el) { updateRangeValue(el); return; }
     hideRangeValue();
     const rect = el.getBoundingClientRect(), dialog = el.closest('dialog');
@@ -3525,7 +3702,7 @@ const thumbCenter = el => {
 };
 document.addEventListener('pointerdown', e => {
     const el = e.target;
-    if (!(el instanceof HTMLInputElement) || el.type !== 'range') return;
+    if (!(el instanceof HTMLInputElement) || el.type !== 'range' || !S.enabled || !ownsHostControl(el)) return;
     // 按下去这一刻 value 还没被浏览器改，用它算圆点位置
     const nearThumb = Math.abs(e.clientX - thumbCenter(el)) <= RANGE_THUMB * 0.9;
     rangeGuards.set(el, { value: el.value, skip: coarsePointer.matches && !nearThumb });
@@ -3537,7 +3714,7 @@ document.addEventListener('pointerdown', e => {
 }, true));
 ['input', 'change'].forEach(t => document.addEventListener(t, e => {
     const el = e.target;
-    if (!(el instanceof HTMLInputElement) || el.type !== 'range') return;
+    if (!(el instanceof HTMLInputElement) || el.type !== 'range' || !S.enabled || !ownsHostControl(el)) return;
     const guard = rangeGuards.get(el);
     if (guard?.skip) {
         // 还原成按下之前的值，并且在捕获阶段截住，别让设置面板把这次误触存进 S
@@ -3553,7 +3730,7 @@ document.addEventListener('pointerdown', e => {
 // Bubble after the target's setting handler so the formatted value is current.
 for (const type of ['input', 'change']) document.addEventListener(type, e => {
     const el = e.target;
-    if (!(el instanceof HTMLInputElement) || el.type !== 'range') return;
+    if (!(el instanceof HTMLInputElement) || el.type !== 'range' || !S.enabled || !ownsHostControl(el)) return;
     if (e.type === 'input' && document.activeElement === el && !rangeValueInput) showRangeValue(el);
     else updateRangeValue(el);
 });
@@ -3567,7 +3744,7 @@ document.addEventListener('scroll', e => {
 window.addEventListener('resize', hideRangeValue);
 document.addEventListener('visibilitychange', () => { if (document.hidden) hideRangeValue(); });
 // 酒馆读预设时是直接改 value（不发 input 事件），所以打开抽屉、切预设之后再统一刷一遍
-document.addEventListener('click', e => { if (e.target.closest?.('.drawer-toggle, .inline-drawer-toggle')) requestAnimationFrame(paintRanges); }, true);
+document.addEventListener('click', e => { if (e.target.closest?.('.drawer-toggle, .inline-drawer-toggle') && ownsHostControl(e.target)) requestAnimationFrame(paintRanges); }, true);
 ['APP_READY', 'SETTINGS_LOADED', 'OAI_PRESET_CHANGED_AFTER', 'PRESET_CHANGED'].forEach(t => {
     if (ctx.eventTypes[t]) ctx.eventSource.on(ctx.eventTypes[t], () => setTimeout(paintRanges, 50));
 });
@@ -3586,7 +3763,11 @@ const thinkPill = () => {
 };
 // sawReply：这次生成里已经出现过占位 / 思维链 / 正文，之后就算短暂对不上（流刚结束、酒馆还没收尾）也不再弹浮动胶囊
 let genSince = 0, sawReply = false, floatPill = null, thinkTimer = 0, thinkQueued = false;
-const dotsOnly = m => !(m.querySelector('.mes_text')?.textContent || '').replace(/[.…]/g, '').trim();
+const dotsOnly = m => {
+    const text = m.querySelector('.mes_text');
+    return !!text && !text.querySelector('iframe, details, summary, img, video, audio, svg, canvas, table, button, input, select, textarea, [class]:not(.ilg-prose):not(.ilg-indentable), [style], [role]')
+        && !(text.textContent || '').replace(/[.…]/g, '').trim();
+};
 const genOn = () => S.enabled && S.orb && document.body.dataset.generating === 'true';
 function syncThink() {
     thinkQueued = false;
@@ -3594,6 +3775,7 @@ function syncThink() {
     // 1. 思维链标题
     // 只看正在想的和已经挂了球的，长聊天里不用把每条消息都翻一遍
     chatEl.querySelectorAll('.mes[data-reasoning-state="thinking"] .mes_reasoning_header, .mes_reasoning_header:has(> .ilg-orb)').forEach(head => {
+        if (head.closest('.mes_text, .mes_reasoning, [data-nvwa-style="author"]')) return;
         const want = on && head.closest('.mes').dataset.reasoningState === 'thinking';
         const orb = head.querySelector(':scope > .ilg-orb');
         if (want && !orb) head.prepend(makeOrb());

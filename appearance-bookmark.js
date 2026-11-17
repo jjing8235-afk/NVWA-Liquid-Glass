@@ -5,7 +5,7 @@ const ENUMS = {
     chatBackground:['glass','transparent'], compatibilityMode:['auto','blur'],
     tone:['time','system','auto','light','dark'], avatar:['line','side'],
     ballSide:['left','right'], webPreset:['clear','thin','soft','crystal'],
-    glassStyle:['original','liquid-web'], engine:['physical','legacy'],
+    composerLayout:['classic','unified','split'], glassStyle:['original','liquid-web'], engine:['physical','legacy'],
     customTextTone:['auto','dark','light'], readingStyle:['warm','classic','moon','sunny'],
     profile:['lens','squircle','circle','soft'],
 };

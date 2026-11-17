@@ -382,3 +382,27 @@ html.ilg:is([data-ilg-reading-style="moon"],[data-ilg-reading-style="sunny"]) #i
 #ilg-studio #ilg-capture-start:focus-visible {outline:2px solid var(--s-accent);outline-offset:3px;}
 #ilg-studio #ilg-interaction-diagnostics .ilg-capture-privacy {color:var(--s-muted);font-size:12px;}
 @media(max-width:560px) {#ilg-studio #ilg-interaction-diagnostics {padding:14px 15px;}}
+
+/* Illustrated composer layout choices. Native radios retain keyboard selection. */
+#ilg-studio .ilg-composer-choice { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0;padding:0;border:0;min-width:0; }
+#ilg-studio .ilg-composer-choice label { display:block;position:relative;min-width:0;cursor:pointer; }
+#ilg-studio .ilg-composer-choice input { position:absolute;width:1px;height:1px;opacity:0; }
+#ilg-studio .ilg-composer-choice label > span { display:flex;flex-direction:column;height:100%;min-height:132px;padding:10px 12px 12px;border:1px solid var(--s-line);border-radius:16px;background:var(--s-fill);color:var(--s-fg);transition:background .15s,border-color .15s; }
+#ilg-studio .ilg-composer-choice svg { display:block;width:100%;height:54px;margin-bottom:5px;color:var(--s-fg); }
+#ilg-studio .ilg-composer-preview-glass { fill:var(--s-fill-hi);stroke:currentColor;stroke-width:.8; }
+#ilg-studio .ilg-composer-choice strong { font-size:13px;font-weight:600;line-height:1.6; }
+#ilg-studio .ilg-composer-choice small { display:block;margin-top:4px;color:var(--s-muted);font-size:11px;line-height:1.6; }
+#ilg-studio .ilg-composer-choice input:checked + span { background:var(--s-accent-soft);border-color:var(--s-accent); }
+#ilg-studio .ilg-composer-choice input:focus-visible + span { outline:2px solid var(--s-accent);outline-offset:3px; }
+@media(max-width:560px) {
+ #ilg-studio .ilg-composer-choice { grid-template-columns:1fr;gap:8px; }
+ #ilg-studio .ilg-composer-choice label > span { display:grid;grid-template-columns:minmax(100px,40%) minmax(0,1fr);grid-template-rows:auto auto;column-gap:14px;min-height:78px;padding:10px 12px;align-content:center; }
+ #ilg-studio .ilg-composer-choice svg { grid-row:1 / 3;align-self:center;margin:0;height:48px; }
+ #ilg-studio .ilg-composer-choice strong { align-self:end; }
+ #ilg-studio .ilg-composer-choice small { margin-top:2px; }
+}
+@media(prefers-reduced-motion:reduce) { #ilg-studio .ilg-composer-choice label > span { transition:none; } }
+
+#ilg-studio .ilg-composer-preview-send { fill:#1677e8;stroke:rgba(255,255,255,.15); }
+#ilg-studio[data-tone=light] .ilg-composer-preview-send { fill:#17191e; }
+#ilg-studio .ilg-composer-preview-send-arrow { stroke:#fff; }

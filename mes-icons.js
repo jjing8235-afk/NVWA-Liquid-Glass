@@ -45,8 +45,9 @@ const uri = body => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="h
 export function installMessageIcons() {
     if (document.getElementById('ilg-mes-icons')) return;
     const scope = 'html.ilg.ilg-icons body #chat .mes';
-    const rows = Object.entries(ICONS).map(([cls, body]) => `${scope} .${cls} { --ilg-mes-icon: ${uri(body)}; }`);
-    const list = Object.keys(ICONS).map(cls => `${scope} .${cls}`).join(',\n');
+    const boundary = ':where(:not(.mes_text *, .mes_reasoning *, [data-nvwa-style="author"], [data-nvwa-style="author"] *))';
+    const rows = Object.entries(ICONS).map(([cls, body]) => `${scope} .${cls}${boundary} { --ilg-mes-icon: ${uri(body)}; }`);
+    const list = Object.keys(ICONS).map(cls => `${scope} .${cls}${boundary}`).join(',\n');
     const css = `${rows.join('\n')}
 /* 换成遮罩画的图标：字体图标那个字形不要了，::before 用 --ilg-mes-icon 涂成当前文字色 */
 ${list.replace(/,\n/g, '::before,\n')}::before {

@@ -38,3 +38,18 @@ pending.find(x=>x.options.type==='event').rows.push({startTime:now+1,duration:80
 advance(120);const observed=observers.stop();assert.equal(observed.longTasks.count,1);assert.equal(observed.longTasks.maxMs,99);assert.equal(observed.inputTiming.count,1);assert.equal(observed.inputTiming.maxDelayMs,24);assert.equal(disconnected,2);assert(!/PRIVATE/.test(JSON.stringify(observed)));delete win.PerformanceObserver;
 assert.equal(doc.count()+win.count()+vv.count()+frames.size+timers.size,0);
 console.log('PASS capped records, error privacy, composition, cancellation, pagehide and observer draining');
+
+// Report recurring browser failures without retaining private exception text or resource URLs.
+const errorsCapture=createInteractionDiagnostics({win,doc});assert(errorsCapture.start());
+for(const event of [
+ {type:'error',message:'ResizeObserver loop completed with undelivered notifications.'},
+ {type:'error',error:{name:'ReferenceError'},message:'PRIVATE_SAMPLE_TEXT'},
+ {type:'error',target:{tagName:'IMG',src:'PRIVATE_URL'}},
+ {type:'error',message:'Script error.'},
+ {type:'unhandledrejection',reason:{name:'TypeError',message:'PRIVATE_SAMPLE_TEXT'}},
+])win.emit(event.type,event);
+const errorReport=errorsCapture.stop();assert.equal(errorReport.events.runtimeErrors,4);assert.equal(errorReport.events.unhandledRejections,1);
+assert.deepEqual(errorReport.timeline.filter(e=>e.type==='page-error').map(e=>e.kind),['ResizeObserverLoop','ReferenceError','ResourceError','CrossOriginScriptError','TypeError']);
+assert(!/PRIVATE|undelivered|src|stack/.test(JSON.stringify(errorReport)));
+assert.equal(doc.count()+win.count()+vv.count()+frames.size+timers.size,0);
+console.log('PASS classified browser errors without exception text or resource URLs');

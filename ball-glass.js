@@ -5,7 +5,7 @@ import { positionFixed } from './fixed-position.js';
 import { FILTER_TAIL } from './liquid-glass-web.js';
 const NS = 'http://www.w3.org/2000/svg', SHADE = 18;
 
-export function createBallGlass({ workerFactory, onError = () => {} } = {}) {
+export function createBallGlass({ workerFactory, onSurface = () => {}, onError = () => {} } = {}) {
     const glass = document.createElement('div'), shade = document.createElement('div');
     const blurBox = document.createElement('div'), shape = document.createElement('div');
     glass.id = 'ilg-ball-glass'; shade.id = 'ilg-ball-glass-shade';
@@ -123,14 +123,16 @@ export function createBallGlass({ workerFactory, onError = () => {} } = {}) {
     }
     function mount() {
         if (!glass.isConnected) document.body.append(svg, shade, glass);
+        onSurface(glass, true);
         listen(true); engine.resume();
     }
     function hide() {
+        onSurface(glass, false);
         glass.style.display = shade.style.display = 'none'; clearReflection();
         wanted = displayed = null; lastKey = ''; listen(false); engine.pause();
     }
     function remove() {
-        hide(); engine.stop(); glass.remove(); shade.remove(); svg.remove();
+        hide(); onSurface(glass, null); engine.stop(); glass.remove(); shade.remove(); svg.remove();
         canvas.width = canvas.height = 0; frames.clear(); circle = null; cachedPixels = cachedChars = 0;
         for (const filter of filters) filter.innerHTML = '';
         glass.style.backgroundImage = glass.style.backdropFilter = glass.style.webkitBackdropFilter = '';

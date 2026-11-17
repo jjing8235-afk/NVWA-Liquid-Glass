@@ -1,7 +1,7 @@
 // Pure ball geometry and rasterisation shared by the worker and synchronous fallback.
 import { lut, LUT_N, physicalFilter } from './glass2.js';
 import { reflectionPixel } from './glass-reflections.js';
-import { sampleWebDisplacement, sampleWebMap } from './liquid-glass-web.js';
+import { sampleWebDisplacement, sampleWebMap } from './web-map-raster.js';
 
 const PAD = 3, SHADE = 18, WEB_STEPS = 64, SEAM = 4;
 // 接缝：融合玻璃离那块玻璃的边越近越淡、折射越弱，贴边处归零，不会在接缝上折出一条彩线

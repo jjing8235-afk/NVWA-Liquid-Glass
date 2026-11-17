@@ -14,13 +14,13 @@ export function fontLoadMayChangeText(faces, texts) {
             ranges.push([lo, hi]);
         }
     }
-    // Standard list markers and generated quotation marks also affect plain prose.
-    const characters = new Set('0123456789.()•◦▪“”‘’«»');
-    for (const text of texts) for (const character of text || '') characters.add(character);
-    for (const character of characters) {
-        const point = character.codePointAt(0);
-        if (ranges.some(([lo, hi]) => point >= lo && point <= hi)) return true;
-    }
+    // A numeric character class tests whole strings in the browser's regex engine.
+    // All endpoints were validated above; no font-provided pattern is executed.
+    const glyphs = new RegExp('[' + ranges.map(([lo, hi]) => '\\u{' + lo.toString(16) + '}-\\u{' + hi.toString(16) + '}').join('') + ']', 'u');
+    // Check generated glyphs before touching the chat. Broad/unknown fonts can
+    // invalidate metrics without reading and copying every message's text.
+    if (glyphs.test('0123456789.()•◦▪“”‘’«»')) return true;
+    for (const text of texts) if (glyphs.test(text || '')) return true;
     return false;
 }
 
@@ -31,8 +31,8 @@ const OWN_CLASSES = new Set(['ilg-prose', 'ilg-indentable']);
 export function createMessageRendering(chat, { onReset = () => {} } = {}) {
     const doc = chat.ownerDocument, root = doc.documentElement, win = doc.defaultView;
     const supported = !!win.CSS?.supports?.('content-visibility', 'auto') && !!win.CSS?.supports?.('contain-intrinsic-block-size', 'auto 1px');
-    const states = new Map();
-    let environment = '';
+    const states = new Map(), pendingResizes = new Map();
+    let environment = '', fontCycle = 0, handledFontCycle = 0, fontRaf = 0, resizeRaf = 0;
     const excluded = el => el.matches('.last_mes, .smallSysMes, .ilg-content-overlay, .ilg-card-renderer, [is_system="true"]');
     function plain(el) {
         const text = el.querySelector('.mes_text');
@@ -55,8 +55,12 @@ export function createMessageRendering(chat, { onReset = () => {} } = {}) {
             el.style.setProperty(SIZE, state.height + 'px'); el.classList.add(MARK); state.culled = true;
         }
     }
+    function forgetResize(el) {
+        pendingResizes.delete(el);
+        if (!pendingResizes.size && resizeRaf) { win.cancelAnimationFrame(resizeRaf); resizeRaf = 0; }
+    }
     function reset(el, state) {
-        clear(el, state); state.height = null; state.plain = null;
+        forgetResize(el); clear(el, state); state.height = null; state.plain = null;
         if (el.isConnected) onReset(el);
     }
     function invalidateAll() { for (const [el, state] of states) reset(el, state); }
@@ -71,8 +75,25 @@ export function createMessageRendering(chat, { onReset = () => {} } = {}) {
     // A menu can load an unrelated CJK font subset. Only a subset containing
     // message characters can invalidate measured message heights. Missing or
     // malformed range metadata always takes the conservative invalidation path.
+    function cancelFontCheck() { if (fontRaf) win.cancelAnimationFrame(fontRaf); fontRaf = 0; }
+    const fontsLoading = () => {
+        const cycle = ++fontCycle;
+        cancelFontCheck();
+        // Some engines settle FontFaceSet.ready without delivering loadingdone.
+        // Give the normal event its turn first, then remeasure once if it was missed.
+        doc.fonts?.ready?.then(() => {
+            if (!states.size || cycle !== fontCycle || handledFontCycle === cycle) return;
+            fontRaf = win.requestAnimationFrame(() => {
+                fontRaf = 0;
+                if (!states.size || cycle !== fontCycle || handledFontCycle === cycle) return;
+                handledFontCycle = cycle; invalidateAll();
+            });
+        }, () => {});
+    };
+    function* messageTexts() { for (const el of states.keys()) yield el.textContent; }
     const fontsChanged = event => {
-        if (fontLoadMayChangeText(event?.fontfaces, [...states.keys()].map(el => el.textContent))) invalidateAll();
+        handledFontCycle = fontCycle; cancelFontCheck();
+        if (fontLoadMayChangeText(event?.fontfaces, messageTexts())) invalidateAll();
     };
     function listen(on) {
         if (on) {
@@ -80,8 +101,35 @@ export function createMessageRendering(chat, { onReset = () => {} } = {}) {
             observer.observe(root, { attributes: true, attributeFilter: ['class', 'style', 'data-ilg-reading-style'] });
             observer.observe(chat, { attributes: true, attributeFilter: ['class', 'style'] });
             observer.observe(doc.body, { attributes: true, attributeFilter: ['class', 'style'] });
+            doc.fonts?.addEventListener('loading', fontsLoading);
             doc.fonts?.addEventListener('loadingdone', fontsChanged);
-        } else { observer.disconnect(); doc.fonts?.removeEventListener('loadingdone', fontsChanged); }
+            if (doc.fonts?.status === 'loading') fontsLoading();
+        } else {
+            observer.disconnect(); fontCycle++; cancelFontCheck();
+            doc.fonts?.removeEventListener('loading', fontsLoading);
+            doc.fonts?.removeEventListener('loadingdone', fontsChanged);
+        }
+    }
+    function applyResize(el, contentHeight, contentWidth) {
+        const state = states.get(el); if (!state) return;
+        if (state.culled && state.width !== null && Number.isFinite(contentWidth) && Math.abs(contentWidth - state.width) > .25) {
+            state.width = contentWidth; reset(el, state); return;
+        }
+        if (Number.isFinite(contentWidth)) state.width = contentWidth;
+        if (excluded(el)) {
+            clear(el, state);
+            if (Number.isFinite(contentHeight) && contentHeight > 0) state.height = contentHeight;
+            return;
+        }
+        if (!state.culled && Number.isFinite(contentHeight) && contentHeight > 0) state.height = contentHeight;
+        apply(el, state);
+    }
+    // ResizeObserver deliveries must not change the measured layout. Keep only
+    // the latest size per message and apply containment before the next layout.
+    function flushResizes() {
+        resizeRaf = 0;
+        const updates = [...pendingResizes]; pendingResizes.clear();
+        for (const [el, size] of updates) applyResize(el, size.contentHeight, size.contentWidth);
     }
     return {
         track(el) {
@@ -90,26 +138,17 @@ export function createMessageRendering(chat, { onReset = () => {} } = {}) {
             states.set(el, { near: null, height: null, width: null, plain: null, culled: false });
         },
         resize(el, contentHeight, contentWidth) {
-            const state = states.get(el); if (!state) return;
-            if (state.culled && state.width !== null && Number.isFinite(contentWidth) && Math.abs(contentWidth - state.width) > .25) {
-                state.width = contentWidth; reset(el, state); return;
-            }
-            if (Number.isFinite(contentWidth)) state.width = contentWidth;
-            if (excluded(el)) {
-                clear(el, state);
-                if (Number.isFinite(contentHeight) && contentHeight > 0) state.height = contentHeight;
-                return;
-            }
-            if (!state.culled && Number.isFinite(contentHeight) && contentHeight > 0) state.height = contentHeight;
-            apply(el, state);
+            if (!states.has(el)) return;
+            pendingResizes.set(el, { contentHeight, contentWidth });
+            if (!resizeRaf) resizeRaf = win.requestAnimationFrame(flushResizes);
         },
         visibility(el, near) { const state = states.get(el); if (state) { state.near = near; apply(el, state); } },
         invalidate(el) {
             const state = states.get(el); if (!state) return;
             state.plain = null;
-            if (state.culled) reset(el, state);
+            if (state.culled || pendingResizes.has(el)) reset(el, state);
         },
-        release(el) { const state = states.get(el); if (!state) return; clear(el, state); states.delete(el); if (!states.size) listen(false); },
+        release(el) { const state = states.get(el); if (!state) return; forgetResize(el); clear(el, state); states.delete(el); if (!states.size) listen(false); },
         invalidateAll,
         status: () => ({ supported, tracked: states.size, culled: [...states.values()].filter(s => s.culled).length }),
     };

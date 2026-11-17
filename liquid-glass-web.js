@@ -1,5 +1,7 @@
 import { controlCoreFilter } from './control-material.js';
 import { webPresetOf, normalizeWebPreset } from './web-presets.js';
+import { getWebMap as displacement, cachedWebMap, webMapJob, clearWebMaps, createWebMapPreparation } from './web-map-cache.js';
+export { sampleWebDisplacement, sampleWebMap } from './web-map-raster.js';
 /* Liquid Glass Web adapter.
  * Displacement fragment, normalization, filter chain, shadow and jelly spring follow
  * xiaofangstudio/liquid-glass-web @ 3094add905e60ee5aeb45e806751beb94425dd73 (MIT declared in README).
@@ -10,71 +12,11 @@ import { webPresetOf, normalizeWebPreset } from './web-presets.js';
 const NS = 'http://www.w3.org/2000/svg';
 export const FILTER_TAIL = 'contrast(1.2) brightness(1.05) saturate(1.1)';
 const PRESS_STRENGTH = 1.3;
-const maps = new Map();
-let cachedPixels = 0;
-const smoothStep = (a, b, t) => { t = Math.max(0, Math.min(1, (t - a) / (b - a))); return t * t * (3 - 2 * t); };
-function roundedRectSDF(x, y, w, h, r) {
-    const qx = Math.abs(x) - w + r, qy = Math.abs(y) - h + r;
-    return Math.min(Math.max(qx, qy), 0) + Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) - r;
-}
-// Long capsules: upstream normalizes by the whole width, so a 374x52 pill gets a 75 px ring and up to
-// ~117 px end displacement. NVWA caps the normalized length at END_ASPECT x the short side; the extra
-// length becomes a flat middle (only the top/bottom ring bends there). Shapes up to 3:1 are unchanged.
-const END_ASPECT = 3;
-// Upstream fragment on whole-element normalized coordinates: flat centre, strongly bent ring.
-// bendY > 1 thickens only the top/bottom ring (the input pill uses it); 1 = upstream.
-// Returns the CSS-pixel offset from (x, y) to the sampled source point.
-export function sampleWebDisplacement(x, y, width, height, recipe = webPresetOf('clear'), strength = 1, bendY = 1) {
-    const vw = Math.min(width, height * END_ASPECT), vh = Math.min(height, width * END_ASPECT);
-    // Fold the real position into the virtual box: ends keep their own offset, the middle maps to its centre line.
-    const fold = (p, real, virtual) => p < virtual / 2 ? p : p > real - virtual / 2 ? p - (real - virtual) : virtual / 2;
-    const vx = fold(x, width, vw), vy = fold(y, height, vh);
-    const ix = vx / vw - .5, iy = vy / vh - .5;
-    const d = roundedRectSDF(ix, iy, .3, .2, recipe.rad);
-    const s = smoothStep(0, 1, smoothStep(.8, 0, d - .15 / recipe.edge / strength));
-    const sy = bendY === 1 ? s : smoothStep(0, 1, smoothStep(.8, 0, d - .15 / (recipe.edge * bendY) / strength));
-    return [(ix * s + .5) * vw - vx, (iy * sy + .5) * vh - vy];
-}
-// Pure displacement samples are also usable inside the ball worker.
-export function sampleWebMap(width, height, preset, strength = 1, bendY = 1) {
-    const recipe = webPresetOf(preset);
-    const w = Math.max(2, Math.round(width)), h = Math.max(2, Math.round(height));
-    // At most one texel per CSS pixel (upstream canvasDPI = 1) and a bounded total; the map stretches to the element.
-    const resolution = Math.min(1, 2048 / w, 768 / h, Math.sqrt(393216 / (w * h)));
-    const tw = Math.max(2, Math.round(w * resolution)), th = Math.max(2, Math.round(h * resolution));
-    const raw = new Float32Array(tw * th * 2); let max = 0;
-    for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
-        const [dx, dy] = sampleWebDisplacement((x + .5) * w / tw, (y + .5) * h / th, w, h, recipe, strength, bendY);
-        const i = (y * tw + x) * 2; raw[i] = dx; raw[i + 1] = dy;
-        max = Math.max(max, Math.abs(dx), Math.abs(dy));
-    }
-    // Upstream normalization: halve the peak, encode raw / half + 0.5, let the byte clamp the far tails.
-    const half = Math.max(.0001, max * .5);
-    return { raw, tw, th, half };
-}
-function displacement(width, height, preset, strength, bendY) {
-    const w = Math.max(2, Math.round(width)), h = Math.max(2, Math.round(height));
-    const key = w + 'x' + h + ':' + normalizeWebPreset(preset) + ':' + strength + ':' + bendY;
-    if (maps.has(key)) { const value = maps.get(key); maps.delete(key); maps.set(key, value); return value; }
-    const { raw, tw, th, half } = sampleWebMap(w, h, preset, strength, bendY);
-    const image = new ImageData(tw, th);
-    for (let i = 0, p = 0; i < image.data.length; i += 4, p += 2) {
-        image.data[i] = (raw[p] / half + .5) * 255;
-        image.data[i + 1] = (raw[p + 1] / half + .5) * 255;
-        image.data[i + 2] = 0; image.data[i + 3] = 255;
-    }
-    const canvas = document.createElement('canvas'); canvas.width = tw; canvas.height = th;
-    const context = canvas.getContext('2d'); if (!context) throw new Error('Liquid Glass Web requires a 2D canvas.');
-    context.putImageData(image, 0, 0);
-    const result = { url: canvas.toDataURL('image/png'), scale: half, width: tw, height: th, pixels: tw * th };
-    canvas.width = canvas.height = 0;
-    while (maps.size && (maps.size >= 20 || cachedPixels + result.pixels > 1572864)) { const first = maps.keys().next().value; cachedPixels -= maps.get(first).pixels; maps.delete(first); }
-    maps.set(key, result); cachedPixels += result.pixels; return result;
-}
 // 悬浮小球融合形状要和单独那颗球用同一个归一化系数，才不会一融合就变强 / 变弱（ball-glass.js）
 export function webMapHalf(width, height, preset, strength = 1, bendY = 1) { return displacement(width, height, preset, strength, bendY).scale; }
-export function createLiquidGlassWeb() {
+export function createLiquidGlassWeb({ workerFactory } = {}) {
     const known = new Map(), animations = new Map();
+    const preparation = createWebMapPreparation({ workerFactory });
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     let enabled = false, active = null, failed = false;
     const reduced = () => motion.matches || document.body.classList.contains('reduced-motion');
@@ -105,8 +47,15 @@ export function createLiquidGlassWeb() {
         const item = known.get(el);
         if (item.web?.filter) item.web.filter.remove();
         item.webFilter = null;
-        item.web = null; item.webOptions = null; item.webStrength = 1;
+        item.web = null; item.webOptions = null; item.webWanted = null; item.webStrength = 1;
         known.delete(el);
+    }
+    function present(el, options, value) {
+        if (options.sourcePlane) {
+            if (!options.sourcePlane(value)) return false;
+            el.style.backdropFilter = 'none'; el.style.webkitBackdropFilter = 'none';
+        } else { el.style.backdropFilter = value; el.style.webkitBackdropFilter = value; }
+        return true;
     }
     function paint(el, item, options) {
         known.set(el, item); el.classList.add('ilg-web-glass');
@@ -116,12 +65,30 @@ export function createLiquidGlassWeb() {
         const strength = item.webStrength || 1, bendY = options.bendY || 1, refractionScale = options.refractionScale ?? 1;
         const control = options.controlCore === true;
         const tone = control ? 'contrast(1.04) brightness(1.02) saturate(1.12)' : FILTER_TAIL;
-        el.style.setProperty('--ilg-web-tint', recipe.tint);
         if (refract && !failed) {
             try {
                 const key = Math.round(width) + 'x' + Math.round(height) + ':' + preset + ':' + strength + ':' + bendY + ':' + control + ':' + options.radius + ':' + options.controlBlur + ':' + refractionScale;
+                item.webWanted = key;
                 if (!item.web || item.web.key !== key) {
-                    const map = displacement(width, height, preset, strength, bendY), filter = options.filter();
+                    const job = webMapJob(width, height, preset, strength, bendY);
+                    let map = cachedWebMap(job);
+                    if (!map && item.web?.value && item.web.filter.isConnected && preparation.request(job, el, result => {
+                        if (!enabled || !usable() || !known.has(el) || !el.isConnected || item.webWanted !== key || item.webOptions !== options) return;
+                        if (!result) failed = true;
+                        paint(el, item, options);
+                    })) {
+                        // Retain the complete displayed material while its replacement is prepared.
+                        el.style.setProperty('--ilg-web-tint', item.web.tint);
+                        if (!present(el, options, item.web.value)) {
+                            const fallback = 'blur(' + (control ? Math.max(3.5, recipe.blur) : recipe.blur) + 'px) ' + tone;
+                            el.style.backdropFilter = fallback; el.style.webkitBackdropFilter = fallback;
+                        }
+                        return;
+                    }
+                    preparation.cancel(el);
+                    // A surface's first appearance keeps the original immediate full material.
+                    map ||= displacement(width, height, preset, strength, bendY);
+                    const filter = options.filter();
                     filter.setAttribute('x', '0'); filter.setAttribute('y', '0');
                     filter.setAttribute('width', width); filter.setAttribute('height', height);
                     filter.replaceChildren();
@@ -133,17 +100,19 @@ export function createLiquidGlassWeb() {
                     if (control) disp.setAttribute('result', 'ilg-control-refracted');
                     filter.append(image, disp);
                     if (control) filter.insertAdjacentHTML('beforeend', controlCoreFilter('ilg-control-refracted', width, height, options.radius, options.controlBlur));
-                    item.web = { key, filter };
-                }
-                const value = `url(#${item.web.filter.id}) blur(${control ? Math.max(1.1, recipe.blur) : recipe.blur}px) ${tone}`;
-                el.style.backdropFilter = value; el.style.webkitBackdropFilter = value;
-                return;
+                    item.web = { key, filter, tint: recipe.tint };
+                } else preparation.cancel(el);
+                const value = 'url(#' + item.web.filter.id + ') blur(' + (control ? Math.max(1.1, recipe.blur) : recipe.blur) + 'px) ' + tone;
+                item.web.value = value;
+                el.style.setProperty('--ilg-web-tint', recipe.tint);
+                if (present(el, options, value)) return;
             } catch (error) {
                 failed = true;
                 console.warn('[NVWA Liquid Glass Web] Displacement unavailable; retaining the filter chain without refraction.', error);
             }
-        }
-        const value = `blur(${control ? Math.max(3.5, recipe.blur) : recipe.blur}px) ${tone}`;
+        } else { preparation.cancel(el); item.webWanted = null; }
+        el.style.setProperty('--ilg-web-tint', recipe.tint);
+        const value = 'blur(' + (control ? Math.max(3.5, recipe.blur) : recipe.blur) + 'px) ' + tone;
         el.style.backdropFilter = value; el.style.webkitBackdropFilter = value;
     }
     function resolve(target) {
@@ -193,14 +162,24 @@ export function createLiquidGlassWeb() {
         const el = active.el; active = null; spring(el);
     }
     function out(e) { if (!e.relatedTarget && active) clearFeedback(); }
-    function visibility() { if (document.hidden) clearFeedback(); }
+    function pausePreparation() { clearFeedback(); preparation.pause(); }
+    function resumePreparation() {
+        if (!enabled || document.hidden) return;
+        preparation.resume();
+        known.forEach((item, el) => { if (el.isConnected && item.webOptions) paint(el, item, item.webOptions); });
+    }
+    function visibility() { if (document.hidden) pausePreparation(); else resumePreparation(); }
     const events = [['pointerdown', down], ['pointerup', up], ['pointercancel', up], ['pointerout', out], ['keydown', keyDown], ['keyup', keyUp], ['visibilitychange', visibility]];
     function setEnabled(on) {
         if (on === enabled) { if (!usable()) clearFeedback(); return; }
         enabled = on;
+        if (on) preparation.start();
         events.forEach(([event, handler]) => document[on ? 'addEventListener' : 'removeEventListener'](event, handler, { passive: true }));
         window[on ? 'addEventListener' : 'removeEventListener']('blur', clearFeedback);
-        if (!on) { clearFeedback(); [...known.keys()].forEach(release); maps.clear(); cachedPixels = 0; }
+        window[on ? 'addEventListener' : 'removeEventListener']('pagehide', pausePreparation);
+        window[on ? 'addEventListener' : 'removeEventListener']('pageshow', resumePreparation);
+        if (!on) { clearFeedback(); preparation.stop(); [...known.keys()].forEach(release); clearWebMaps(); }
+        else if (document.hidden) preparation.pause();
     }
-    return { paint, release, setEnabled, clearFeedback, destroy() { setEnabled(false); } };
+    return { paint, release, setEnabled, clearFeedback, status: preparation.status, destroy() { setEnabled(false); } };
 }
