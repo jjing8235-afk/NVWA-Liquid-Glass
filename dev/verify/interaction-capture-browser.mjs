@@ -8,7 +8,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 const root=path.resolve(process.env.NVWA_EXTENSION_ROOT||fileURLToPath(new URL('../../',import.meta.url)));
 const moduleName=process.env.NVWA_PLAYWRIGHT_MODULE||'playwright';
 const tools=await import(path.isAbsolute(moduleName)?pathToFileURL(moduleName).href:moduleName);
-const engine=process.env.NVWA_BROWSER||'chromium';
+const engine=process.env.NVWA_BROWSER||'chromium', flicker=process.env.NVWA_FLICKER_FLOW==='1';
 const version=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8')).version;
 const source=fs.readFileSync(path.join(root,'dev/verify/home-avatar-browser.mjs'),'utf8');
 const template=source.slice(source.indexOf('function fixture('),source.indexOf('const server='));
@@ -21,7 +21,20 @@ const bg=document.createElement('div');bg.id='bg1';bg.style.backgroundImage='url
 const library=document.createElement('div');library.id='bg_menu_content';document.body.append(library);
 for(const file of ${JSON.stringify(files)}){const el=document.createElement('button');el.className='bg_example';el.setAttribute('bgfile',file);el.onclick=()=>{bg.style.backgroundImage='url('+JSON.stringify('/backgrounds/'+encodeURIComponent(file))+')';};library.append(el);}
 `;
-const html=fixture(0,true,'light').replace('window.fixtureReady=false;',setup+'\nwindow.fixtureReady=false;');
+const flickerSetup=`
+    const captureEvents=new Map();
+    context.eventTypes.CHAT_CHANGED='chat-changed';
+    context.eventSource.on=(name,fn)=>{const callbacks=captureEvents.get(name)||[];callbacks.push(fn);captureEvents.set(name,callbacks);};
+    const captureChat=document.getElementById('chat');
+    captureChat.replaceChildren();fixtureChatId=undefined;
+    window.flickerFixture=(open)=>{
+        fixtureChatId=open?'PRIVATE_CHAT_ID':undefined;
+        if(open)captureChat.innerHTML='<div class="mes last_mes" mesid="PRIVATE_MESSAGE_ID" style="min-height:2500px"><div class="mes_block"><div class="mes_text"><section class="PRIVATE_PRESET_CLASS" style="background:#2e4156"><button>PRIVATE_MESSAGE_TEXT</button><iframe src="/PRIVATE_FRAME_URL"></iframe></section></div></div></div>';
+        else captureChat.replaceChildren();
+        for(const fn of captureEvents.get('chat-changed')||[])fn(fixtureChatId);
+    };
+`;
+const html=fixture(0,true,'light').replace('window.fixtureReady=false;',setup+(flicker?flickerSetup:'')+'\nwindow.fixtureReady=false;');
 const server=http.createServer((req,res)=>{
     const u=new URL(req.url,'http://localhost');
     if(u.pathname==='/'){res.setHeader('content-type','text/html;charset=utf-8');res.end(html);return;}
@@ -39,11 +52,112 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let browser;
 try {
     browser=await tools[engine].launch({headless:true,...(engine==='chromium'&&process.env.NVWA_EDGE_EXECUTABLE?{executablePath:process.env.NVWA_EDGE_EXECUTABLE}:{})});
-    const context=await browser.newContext({acceptDownloads:true,viewport:{width:394,height:806},deviceScaleFactor:3.25,isMobile:true,hasTouch:true,
+    const context=await browser.newContext({acceptDownloads:true,viewport:flicker?{width:691,height:716}:{width:394,height:806},deviceScaleFactor:3.25,isMobile:true,hasTouch:true,
         userAgent:engine==='webkit'?'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148':'Mozilla/5.0 (Linux; Android 17; wv) AppleWebKit/537.36 Version/4.0 Chrome/156.0.8078.47 Mobile Safari/537.36'});
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>fixtureReady||fixtureFailure);
     assert.equal(await page.evaluate(()=>fixtureFailure),null);
+    if(flicker){
+        let downloads=0;page.on('download',()=>downloads++);
+        const badge=page.locator('#ilg-flicker-badge'), start=page.locator('#ilg-flicker-start');
+        assert.equal(await badge.count(),0,'No diagnostic overlay before opt-in');
+        await page.evaluate(()=>{document.getElementById('ilg-open-settings').click();document.getElementById('ilg-studio-tab-diagnostics').click();});
+        assert.equal(await start.count(),1,'Opt-in cold/reentry diagnostic is present');
+        assert(await start.isVisible());
+        await Promise.all([page.waitForEvent('load'),start.click()]);
+        await page.waitForFunction(()=>fixtureReady||fixtureFailure); assert.equal(await page.evaluate(()=>fixtureFailure),null);
+        await badge.waitFor();
+        const badgeStyle=await badge.evaluate(el=>{const s=getComputedStyle(el);return {position:s.position,filter:s.backdropFilter,transform:s.transform,fit:el.getBoundingClientRect().right<=innerWidth};});
+        assert.deepEqual(badgeStyle,{position:'fixed',filter:'none',transform:'none',fit:true});
+        for(const [phase,mark] of [['first',true],['reentry',false]]){
+            if(phase==='reentry'){
+                await badge.locator('[data-action="next"]').click();
+                await page.evaluate(()=>flickerFixture(false));
+                await page.waitForFunction(()=>!document.querySelector('#chat .mes'));
+            }
+            await page.evaluate(()=>flickerFixture(true));
+            await page.waitForFunction(()=>document.querySelector('#chat .mes')?.classList.contains('ilg-card-renderer'));
+            await page.locator('#chat').evaluate(chat=>{chat.scrollTop=200;chat.dispatchEvent(new Event('scroll'));});
+            if(phase==='reentry'){
+                // The tall first message places the second beyond the prewarm margin.
+                await page.evaluate(()=>{
+                    document.head.append(Object.assign(document.createElement('style'), {
+                        textContent:'#chat > .width-feedback { width:90%; min-height:120px } #chat > .width-feedback.ilg-render-away { width:80% }',
+                    }));
+                    document.querySelector('#chat').insertAdjacentHTML('beforeend', '<div class="mes width-feedback" mesid="1"><div class="mes_block"><div class="mes_text"><p>Plain message with offscreen width feedback.</p></div></div></div>');
+                });
+                // Two real widths and a fresh natural measurement pass through
+                // production observers before the report download.
+                await page.evaluate(async()=>{for(let i=0;i<12;i++)await new Promise(requestAnimationFrame);});
+                assert.equal(await page.locator('#chat > .width-feedback.ilg-render-away').count(),0);
+            }
+            if(mark){
+                await page.evaluate(()=>{
+                    document.querySelector('.mes_text button').hidden=true;
+                    const floor = document.querySelector('#chat > .mes');
+                    floor.setAttribute('class', floor.className); // MutationRecord without a value change.
+                    floor.style.setProperty('--PRIVATE_FIXTURE_KEY', 'PRIVATE_FIXTURE_VALUE');
+                    floor.style.removeProperty('--PRIVATE_FIXTURE_KEY'); // Reversal in the same observer batch.
+                    window.dispatchEvent(new ErrorEvent('error',{message:'PRIVATE_ERROR_MESSAGE',filename:'PRIVATE_ERROR_FILE'}));
+                    const until=performance.now()+70;while(performance.now()<until){} // Inject main-thread evidence, not visual flicker.
+                });
+                await badge.locator('[data-action="mark"]').click();
+            }
+        }
+        const out=process.env.NVWA_FLICKER_TEST_OUT;
+        if(out){fs.mkdirSync(out,{recursive:true});await page.screenshot({path:path.join(out,'fixture-reentry.png'),scale:'css'});}
+        assert.equal(downloads,0,'Do not export without a click');
+        const pending=page.waitForEvent('download');await badge.locator('[data-action="export"]').click();const download=await pending;
+        const text=fs.readFileSync(await download.path(),'utf8').replace(/^﻿/,'');
+        assert(!/PRIVATE_/.test(text),'Do not export chat IDs, CSS selectors, frame URLs, text, or errors');
+        assert(text.length<100000);
+        const report=JSON.parse(text);
+        assert.equal(report.format,'nvwa-flicker-comparison-2');
+        assert(report.attributeSample.targets>=2&&!report.attributeSample.capped);
+        assert.equal(report.environment.version,version);
+        assert.equal(report.boot.navigation,'reload');
+        assert.equal(report.boot.hadMessagesAtStart,false);
+        assert.equal(report.reason,'exported');
+        assert.deepEqual(report.coverage.map(x=>[x.phase,x.mounted,x.scrolled,x.marked,x.sameChatEvent]),[['first',true,true,true,true],['reentry',true,true,false,true]]);
+        for(const sample of report.phases){
+            assert(sample.states.some(state=>state.messages.some(m=>m.card&&m.guarded&&m.presetSplit&&m.iframe&&m.size?.[1]>=2400&&m.filter==='css')));
+            assert(sample.states.some(state=>state.controls.composer));
+            assert(sample.windows.some(w=>w.frames>0));
+        }
+        const sum=(p,k)=>p.windows.reduce((n,w)=>n+(w[k]||0),0);
+        assert(report.phases[0].windows.some(w=>w.messageAttributeValues?.class?.same>=1&&w.messageAttributeValues?.style?.changed>=2));
+        assert(report.phases[0].windows.some(w=>w.messagePaints?.mount>0));
+        assert(sum(report.phases[0],'runtimeErrors')===1);
+        assert(sum(report.phases[0],'descendantMutations')>0);
+        assert(sum(report.phases[1],'messageRemovals')>0);
+        const widthEvents=report.phases[1].windows.reduce((counts,w)=>{
+            counts.retry+=w.offscreenWidthFeedback?.retry||0;
+            counts.keptRendered+=w.offscreenWidthFeedback?.keptRendered||0;
+            return counts;
+        },{retry:0,keptRendered:0});
+        assert.deepEqual(widthEvents,{retry:1,keptRendered:1});
+        assert(report.phases[0].windows.some(w=>w.maxFrameGapMs>50||w.mainThreadTasks?.maxMs>50));
+        assert(report.phases[0].states.some(s=>s.viewport[0]===691));
+        await badge.locator('[data-action="dismiss"]').click();
+        await page.reload();await page.waitForFunction(()=>fixtureReady||fixtureFailure);
+        assert.equal(await badge.count(),0,'Opt-in is consumed once; subsequent reload runs no capture');
+        await page.evaluate(()=>{document.getElementById('ilg-open-settings').click();document.getElementById('ilg-studio-tab-diagnostics').click();});
+        await Promise.all([page.waitForEvent('load'),start.click()]);
+        await page.waitForFunction(()=>fixtureReady||fixtureFailure);await badge.waitFor();
+        await page.evaluate(()=>window.dispatchEvent(new Event('pagehide')));
+        assert(await badge.locator('[data-action="mark"]').isHidden());
+        await page.evaluate(()=>flickerFixture(true)); // Must not affect the finished report.
+        const stopped=page.waitForEvent('download');await badge.locator('[data-action="export"]').click();
+        const stoppedFile=await (await stopped).path();
+        const stoppedReport=JSON.parse(fs.readFileSync(stoppedFile,'utf8').replace(/^\uFEFF/,''));
+        assert.equal(stoppedReport.reason,'pagehide');
+        assert.equal(stoppedReport.phases.length,1);
+        assert.equal(stoppedReport.coverage[0].mounted,false);
+        assert.deepEqual(errors,[]);
+        if(out)fs.writeFileSync(path.join(out,'synthetic-report.json'),JSON.stringify(report,null,2));
+        console.log(JSON.stringify({passed:true,engine,version,coverage:report.coverage,bytes:Buffer.byteLength(text),truth:'Synthetic Android viewport, not an OPPO GPU trace'}));
+        await context.close();
+    }else{
     assert.equal(await page.locator('#ilg-capture-badge').count(),0,'No capture UI before manual start');
     await page.evaluate(()=>{document.getElementById('ilg-open-settings').click();document.getElementById('ilg-studio-tab-diagnostics').click();});
     await page.locator('#ilg-studio').evaluate(el=>Promise.all(el.getAnimations().map(animation=>animation.finished.catch(()=>{}))));
@@ -101,4 +215,5 @@ try {
     await page.locator('#ilg-capture-badge [data-action="close"]').click();assert.equal(await page.locator('#ilg-capture-badge').count(),0);assert.deepEqual(errors,[]);
     const result={engine,version,passed:true,fullRealTimeout:true,durationMs:capture.durationMs,checkpoints:capture.checkpoints.length,timeline:capture.timeline.length,captureBytes:Buffer.byteLength(JSON.stringify(capture)),singleTxt:true,privacy:true,physicalDevice:false};
     fs.writeFileSync(path.join(out,engine+'.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));await context.close();}
+    }
 } finally {await browser?.close();await new Promise(r=>server.close(r));}

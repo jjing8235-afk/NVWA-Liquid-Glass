@@ -1,3 +1,11 @@
+# 2.0.5 · 正式发布维护入口（2026-11-18）
+
+正式仓库 jjing8235-afk/NVWA-Liquid-Glass，上一版 e936802b28acae4785d96723af4c6a60912c6693。运行文件同步自 2.0.10-test.21 / 632e4a049ec4261dfe2f1225ac9555d05ca99aec，除 BUILD_VERSION 和清单外与测试版一致。保留正式 install/、壁纸与字体素材、iosLiquidGlass 命名空间与设置 v9；字体加载样式同步测试版。
+
+OPPO N6 内屏 Edge 的防闪修复已由用户在 test.20 确认。预设保色已用桌面 Edge 模拟宽、窄屏及深、浅色对照；正式包尚未在该设备上复测。未执行第三方预设脚本或加载外链素材。
+
+发布校验见 RELEASE-2.0.5.json；以下是此前的维护记录。
+
 # 2.0.4 · 正式发布维护入口（2026-11-17）
 
 正式仓库 jjing8235-afk/NVWA-Liquid-Glass；基线 ee072e202973620b1a1e00ba07469f431c603905。运行代码来自测试版 2.0.10-test.9 / 91bedb12e1d0647999a3e7ccfb23526d20201897，只调整正式清单与 BUILD_VERSION。正式 install/、字体及壁纸保留，iosLiquidGlass 与 S.v=9 不变。

@@ -9,7 +9,7 @@ const tools=await import(path.isAbsolute(moduleName)?pathToFileURL(moduleName).h
 const root=path.resolve(process.env.NVWA_EXTENSION_ROOT||fileURLToPath(new URL('../../',import.meta.url)));
 const baseline=process.env.NVWA_EXPECT_BASELINE==='1',engine=process.env.NVWA_BROWSER||'chromium';
 const hostCSS=process.env.NVWA_WELCOME_CSS?fs.readFileSync(process.env.NVWA_WELCOME_CSS,'utf8'):'';
-let source=fs.readFileSync(path.join(root,'index.js'),'utf8');
+let source=fs.readFileSync(process.env.NVWA_HOME_SOURCE||path.join(root,'index.js'),'utf8');
 for(const [a,b]of [
  ['function mountRecent(panel) {','function mountRecent(panel) { homeWork.mounts++;'],
  ['function untrack(el) {','function untrack(el) { if(el?.classList.contains("welcomePanel"))homeWork.untracks++;'],
@@ -42,13 +42,15 @@ let browser;const results=[],errors=[];
 try{browser=await tools[engine].launch({headless:true,...(engine==='chromium'&&process.env.NVWA_EDGE_EXECUTABLE?{executablePath:process.env.NVWA_EDGE_EXECUTABLE}:{})});
 for(const config of [{count:30,hidden:true,width:390,tone:'light'},{count:600,hidden:false,width:390,tone:'dark'},{count:600,hidden:true,width:1280,tone:'light'},{count:0,hidden:true,width:390,tone:'dark'}]){
  const p=await browser.newPage({viewport:{width:config.width,height:844},deviceScaleFactor:2,...(engine==='chromium'?{userAgent:'Mozilla/5.0 (Linux; Android 17; wv) AppleWebKit/537.36 Version/4.0 Chrome/155.0.0.0 Mobile Safari/537.36'}:{userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'})});p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:'+server.address().port+'/?'+new URLSearchParams(config));await p.waitForFunction(()=>fixtureReady||fixtureFailure);assert.equal(await p.evaluate(()=>fixtureFailure),null);await p.evaluate(()=>settle());assert.equal(await p.locator('html.ilg-home').count(),1);
+ // Settings-panel startup writes its own tab memo. Measure only subsequent recent-list actions.
+ await p.evaluate(()=>{fixtureCalls.storageWrites=0;});
  let cdp;if(engine==='chromium'){cdp=await p.context().newCDPSession(p);await cdp.send('Performance.enable')};const metrics=async()=>cdp?Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map(x=>[x.name,x.value])):{};
  const measure=async action=>{await p.evaluate(()=>resetWork());const a=await metrics();await action();await p.evaluate(()=>settle());const b=await metrics();return{...await p.evaluate(()=>homeWork),style:cdp?{recalcCount:b.RecalcStyleCount-a.RecalcStyleCount,layoutCount:b.LayoutCount-a.LayoutCount,layoutSeconds:b.LayoutDuration-a.LayoutDuration,recalcSeconds:b.RecalcStyleDuration-a.RecalcStyleDuration}:null}};
  const firstOpen=await measure(()=>p.locator('.ilg-home-recent').click());const listVisible=await p.locator('.welcomeRecent').isVisible();if(!baseline)assert(listVisible,'Native recentHidden must not hide the explicitly opened list');
  const beforeFilter=await p.locator('.welcomePanel').evaluate(el=>el.style.backdropFilter||el.style.webkitBackdropFilter);
  const firstClose=await measure(()=>p.locator('.ilg-recent-close').click());assert(!(await p.locator('.welcomePanel').isVisible()));
  const repeats=[];for(let i=0;i<2;i++){const open=await measure(()=>p.locator('.ilg-home-recent').click());const close=await measure(()=>p.keyboard.press('Escape'));repeats.push({open,close})}
- const boundary={hostHiddenPreferencePreserved:await p.evaluate(()=>sessionStorage.getItem('WelcomePage_RecentChatsHidden'))===String(config.hidden),noStorageWrites:await p.evaluate(()=>fixtureCalls.storageWrites)===0};assert(Object.values(boundary).every(Boolean));
+ const boundary={hostHiddenPreferencePreserved:await p.evaluate(()=>sessionStorage.getItem('WelcomePage_RecentChatsHidden'))===String(config.hidden),noStorageWrites:await p.evaluate(()=>fixtureCalls.storageWrites)===0};assert(Object.values(boundary).every(Boolean),JSON.stringify({config,boundary,writes:await p.evaluate(()=>fixtureCalls.storageWrites)}));
  let lifecycle={};if(!baseline&&config.count===30){
   await p.locator('.ilg-home-recent').click();await p.locator('.recentChat .pinChat').first().click();await p.evaluate(()=>settle());assert.equal(await p.locator('.ilg-recent-head').count(),1);assert(await p.locator('.welcomeRecent').isVisible());
   await p.locator('.recentChat .renameChat').first().click();assert.equal(await p.locator('.characterName').first().textContent(),'Renamed');await p.locator('.recentChat .deleteChat').last().click();assert.equal(await p.locator('.recentChat').count(),29);await p.locator('.showMoreChats').click();assert.equal(await p.locator('.recentChat.hidden').count(),24);await p.locator('.showMoreChats').click();assert.equal(await p.locator('.recentChat.hidden').count(),0);
@@ -72,7 +74,7 @@ for(const config of [{count:30,hidden:true,width:390,tone:'light'},{count:600,hi
   }
   await p.evaluate(()=>activeChat());await p.evaluate(()=>settle(60));
  }
- if(process.env.NVWA_SCREENSHOT_DIR&&!baseline){await p.locator('.mes[is_user="true"] .avatar').evaluate(el=>el.innerHTML='<div class="missing-avatar fa-solid fa-user-slash"></div>');await p.evaluate(()=>settle(80));} 
+ if(process.env.NVWA_SCREENSHOT_DIR&&!baseline){await p.locator('.mes[is_user="true"] .avatar').evaluate(el=>el.innerHTML='<div class="missing-avatar fa-solid fa-user-slash"></div>');await p.evaluate(()=>settle(80));}
  if(process.env.NVWA_SCREENSHOT_DIR&&!baseline)await p.screenshot({path:path.join(process.env.NVWA_SCREENSHOT_DIR,`avatar-${engine}-${config.width}-${config.count}.png`)});
  results.push({...config,listVisible,firstOpen,firstClose,repeats,beforeFilter,boundary,lifecycle,avatars});await p.close();
 }

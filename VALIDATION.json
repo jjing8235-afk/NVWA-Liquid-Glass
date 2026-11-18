@@ -1,6 +1,6 @@
 {
-  "currentVersion": "2.0.10-test.9",
-  "currentDisplayVersion": "2.0.10-test.9",
+  "currentVersion": "2.0.5",
+  "currentDisplayVersion": "2.0.5",
   "date": "2026-11-05",
   "version": "1.4.4-local.9",
   "baseline": "1.4.4-local.8",
@@ -5999,6 +5999,621 @@
       "remoteHeadVerified": true,
       "remoteTreeVerified": true,
       "verifiedFiles": 10
+    }
+  },
+  "menuPopup20261117": {
+    "status": "tested-release-candidate",
+    "base": "e936802b28acae4785d96723af4c6a60912c6693",
+    "readability": {
+      "engines": [
+        "chromium",
+        "webkit"
+      ],
+      "casesPerEngine": 10,
+      "pluginEntries": 40,
+      "minimumCalculatedContrast": 7.713156046994099
+    },
+    "nativeTtMenuChecksPerEngine": 19,
+    "firstFrameLayouts": 3,
+    "firstFrameTones": 2,
+    "hostEngines": [
+      "chromium",
+      "webkit"
+    ],
+    "androidIdentityHostPopupCycles": 3,
+    "paintModeCombinations": 8,
+    "paintCloseOpenCycles": 96,
+    "existingLargeMessageGuard": "passed",
+    "limits": [
+      "Physical Android GPU flicker remains unverified; Android identity in desktop Chromium is not a physical device"
+    ],
+    "evidenceDirectory": "work/menu-readability/evidence",
+    "version": "2.0.10-test.10",
+    "baseTestCommit": "91bedb12e1d0647999a3e7ccfb23526d20201897",
+    "evidenceSummary": "20 layout cases, 38 TT menu controller checks, first-frame coverage across 3 layouts and 2 tones in Chromium/WebKit, 3 real-host popup cycles, 96 paint state cycles"
+  },
+  "quickStyleFirstOpen20261117": {
+    "version": "2.0.10-test.11",
+    "baseTestCommit": "54dd14b03d41a9564c6a2b0eff76ee3031762368",
+    "status": "tested-release-candidate",
+    "surface": "Quick-pane transparent material shared by chat/tools/quick; dark #fff and light #000",
+    "layoutCases": 20,
+    "ttMenuControllerChecks": 38,
+    "realHostModes": [
+      "Android native browser identity in Chromium",
+      "Android WebView identity in Chromium",
+      "Windows WebKit"
+    ],
+    "firstMenuFramesPerCase": 16,
+    "firstMenuLayouts": 3,
+    "firstMenuTones": 2,
+    "androidMenuFilterStable": true,
+    "historyModes": [
+      "glass",
+      "transparent"
+    ],
+    "historyInitialMaterialStable": true,
+    "chatChangedPreservesGlobalMaterial": true,
+    "androidTransformEntranceSuppressed": true,
+    "offscreenHistoryLazy": true,
+    "regressions": [
+      "first-open-material",
+      "popup-material",
+      "webview-message-guard",
+      "filter-reuse",
+      "form-resize"
+    ],
+    "contrastScope": "Matching black/white backdrops; transparent glass cannot guarantee contrast against arbitrary bright artwork",
+    "limits": [
+      "Physical-phone initial chat/menu flashing remains pending original-device retest",
+      "Android identity in desktop Chromium is not a physical Android GPU test"
+    ]
+  },
+  "recentColdOpen20261117": {
+    "version": "2.0.10-test.12",
+    "baseTestCommit": "f46984465da5940a41b702f6ce6d8f889e621d05",
+    "status": "tested-release-candidate",
+    "regressionBeforeFix": {
+      "recent": "cold first visible frame had backdrop-filter:none",
+      "nativeLongMessage": "physical instead of protected blur at 349x3000 DPR3.25",
+      "largeReflection": "full-height reflection allocated before the guard"
+    },
+    "recentBrowserEngines": [
+      "chromium",
+      "webkit"
+    ],
+    "recentIdentities": [
+      "android-native",
+      "android-webview",
+      "desktop"
+    ],
+    "recentTones": [
+      "light",
+      "dark"
+    ],
+    "recentPaths": [
+      "cold",
+      "warm",
+      "return-from-chat",
+      "custom-material"
+    ],
+    "hostNoBlurPreserved": true,
+    "homeAndBookshelfChecks": [
+      "chromium",
+      "webkit"
+    ],
+    "realIsolatedHostModes": [
+      "Android native identity in Chromium",
+      "Android WebView identity in Chromium"
+    ],
+    "longMessageEngines": [
+      "physical",
+      "legacy"
+    ],
+    "longMessageGuardBeforeReflection": true,
+    "ordinaryMessageAndComposerRefractionPreserved": true,
+    "customRenderersAndIframesPreserved": true,
+    "regressions": [
+      "recent-first-frame-browser",
+      "home-avatar-browser",
+      "bookshelf-home-browser",
+      "message-rendering-browser",
+      "tt-scroll-host-browser",
+      "menu-first-frame-browser",
+      "webview-message-guard",
+      "first-open-material",
+      "popup-material",
+      "filter-reuse",
+      "form-resize"
+    ],
+    "limits": [
+      "Original phone GPU flicker needs user retest",
+      "Android UA in desktop browsers is not an Android GPU runtime"
+    ],
+    "evidenceDirectory": "work/history-first-open",
+    "recentCoverage": {
+      "chromium": {
+        "cases": 24,
+        "visibleFrames": 300
+      },
+      "webkit": {
+        "cases": 24,
+        "visibleFrames": 300
+      }
+    }
+  },
+  "androidTypography20261118": {
+    "version": "2.0.10-test.13",
+    "baseTestCommit": "8625517eaa74523f18ac0ced285522fb3d8710cb",
+    "status": "tested-release-candidate",
+    "reportObservation": {
+      "test12GuardAlreadyActive": true,
+      "fontActivityNotRecorded": true,
+      "viewport": [
+        691,
+        716,
+        3.25
+      ],
+      "activeGestureViewportForcedLayoutMs": 499.2,
+      "measurementScope": "15s user capture; callback timing does not detect glyph flicker"
+    },
+    "beforeFix": {
+      "bundledFontRequestsInColdFixture": 9,
+      "glyphRasterChangedAfterLoad": true,
+      "glyphMetricsUnchanged": true,
+      "readingAnchorGeometryReadsIn100GestureFrames": 700
+    },
+    "afterFix": {
+      "androidUnifiedFont": "system-ui, sans-serif",
+      "bundledFontRequestsInColdFixture": 0,
+      "glyphRasterStable": true,
+      "readingAnchorGeometryReadsIn100GestureFrames": 0,
+      "idleCaptureDelayMs": 350,
+      "stationaryImageGrowthPreserved": true
+    },
+    "browserEngines": [
+      "chromium",
+      "webkit"
+    ],
+    "fontIdentities": [
+      "android-native",
+      "android-webview",
+      "desktop",
+      "ios"
+    ],
+    "hostAndAuthorFontsPreserved": true,
+    "fontFaceSetCountersScope": "Whole page, no family names or URLs stored",
+    "realHostModes": [
+      "Android native identity in Chromium",
+      "Android WebView identity in Chromium"
+    ],
+    "diagnosticAndroidGuardCountCorrected": true,
+    "regressions": [
+      "android-font-first-frame-browser",
+      "reading-anchor-scroll-budget-regression",
+      "reading-anchor-browser",
+      "font-loading-lifecycle-browser",
+      "recent-first-frame-browser",
+      "tt-scroll-host-browser",
+      "chat-font",
+      "font-subset",
+      "first-open-material",
+      "webview-message-guard",
+      "form-resize",
+      "resize-batch"
+    ],
+    "limits": [
+      "Font substitution reproduced locally; user phone font activity was absent from test.12 report",
+      "Desktop engine with Android identity does not prove physical phone pixel stability"
+    ],
+    "evidenceDirectory": "work/font-first-open"
+  },
+  "foldableBackdrop20261118": {
+    "version": "2.0.10-test.14",
+    "baseTestCommit": "e807c26ba7a141fe1ca87e9ece501bf01b6ce154",
+    "status": "tested-release-candidate",
+    "userObservation": "Folded display no longer flashes; expanded display still flashes",
+    "beforeFix": {
+      "viewportHeight": 716,
+      "messageHeight": 3698,
+      "backdropHeight": 3698,
+      "fixtureBackdropWidth": 667,
+      "existingAndroidLargeMessageGuardActive": true
+    },
+    "afterFix": {
+      "minimumWideViewport": 600,
+      "wideBackdropHeightMaximum": 716,
+      "foldedBackdropHeight": 3698,
+      "stickySwitchUsesCSS": true,
+      "originalTintRetained": true,
+      "transparentAndNoBlurRetained": true,
+      "authoredNodesAndFixedControlsRetained": true
+    },
+    "browserEngines": [
+      "chromium",
+      "webkit"
+    ],
+    "identities": [
+      "android-native",
+      "android-webview",
+      "desktop",
+      "ios"
+    ],
+    "widths": [
+      360,
+      600,
+      691,
+      1100
+    ],
+    "scrollPoints": [
+      0,
+      1500,
+      3050
+    ],
+    "initialModes": [
+      "cold-expanded",
+      "cold-folded"
+    ],
+    "realHostWidths": [
+      360,
+      691,
+      900
+    ],
+    "realHostScrollPoints": [
+      0,
+      1200,
+      2400
+    ],
+    "realHostModes": [
+      "Android native identity in Chromium",
+      "Android WebView identity in Chromium"
+    ],
+    "regressions": [
+      "foldable-backdrop-browser",
+      "tt-scroll-host-browser with NVWA_FOLDABLE_HOST=1",
+      "webview-message-guard",
+      "popup-material",
+      "card-solid",
+      "filter-reuse",
+      "first-open-material",
+      "resize-batch",
+      "settings"
+    ],
+    "limits": [
+      "The red/green check detects an unbounded filtering surface, not physical-phone pixel flashing",
+      "Foldable display and GPU are simulated through viewport sizes and Android identities; original phone requires retest"
+    ],
+    "evidenceDirectory": "work/foldable-screen",
+    "coverage": {
+      "chromium": {
+        "geometrySamples": 90,
+        "wideBackdropMaximum": 716
+      },
+      "webkit": {
+        "geometrySamples": 90,
+        "wideBackdropMaximum": 716
+      }
+    }
+  },
+  "renderingCompatibility20261118": {
+    "version": "2.0.10-test.15",
+    "date": "2026-11-18",
+    "baseline": "96947ea0729689ef06518ae410b4c4555673be58",
+    "upstream": {
+      "repository": "baibai-git/ST-BaiBai-Tools",
+      "commit": "d828d6812994414cef24be9e5f995a264e9fe370",
+      "manifestVersion": "1.2.0",
+      "scope": "Actual upstream longChatRender/constants/state modules; stub host events and synthetic chat, not complete plugin acceptance"
+    },
+    "regression": {
+      "baibai": {
+        "passed": true,
+        "overlappingOwnedMessagesBefore": 44,
+        "after": 0,
+        "oldScroll": {
+          "before": 5000,
+          "upstream": 40541,
+          "nvwaRestore": 5000
+        },
+        "fixedScroll": {
+          "before": 5000,
+          "upstream": 129080,
+          "nvwaRestore": 129080
+        },
+        "enableDisableAndColdStart": true,
+        "streamUpdates": 12
+      },
+      "delayedFont": {
+        "passed": true,
+        "engine": "Windows Edge Chromium",
+        "identities": [
+          "native Android",
+          "Android WebView",
+          "desktop",
+          "iOS UA"
+        ],
+        "screenshotUnchanged": true,
+        "oldDesktopSwapFailed": true,
+        "physicalIOS": false
+      },
+      "compositor": {
+        "passed": true,
+        "engine": "Windows Edge with Android UA",
+        "widths": [
+          394,
+          691
+        ],
+        "dpr": 3.25,
+        "modes": [
+          "physical",
+          "css"
+        ],
+        "floating": [
+          true,
+          false
+        ],
+        "framesPerCase": 100,
+        "scrollDrift": 0,
+        "composerPaintCallsDuringScroll": 0,
+        "oldControlSVGHeight": 254,
+        "newControlSVGHeight": 54,
+        "displacementPreserved": true,
+        "originalOpacityBlurAndRefractionParameters": true
+      },
+      "hostChecks": 44,
+      "composerLayoutChecks": 238,
+      "foldableGeometrySamples": 90,
+      "additionalPassed": [
+        "message-rendering-browser",
+        "reading-anchor-scroll-budget-regression",
+        "reading-anchor-browser",
+        "font-loading-lifecycle-browser",
+        "settings-regression",
+        "surface-policy-regression",
+        "font-subset-regression",
+        "filter-reuse-regression",
+        "resize-batch-regression",
+        "popup-material-regression",
+        "first-open-material-regression"
+      ]
+    },
+    "limits": [
+      "OPPO N6 Edge GPU flicker has not been reproduced or accepted on the actual phone; compositor changes are a test candidate.",
+      "BaiBai fixture demonstrates duplicate height ownership and a stale anchor restoring over an upstream scroll, not every cause of the reported generation jump.",
+      "font-display optional keeps the first visible fallback glyphs on a slow load; it does not guarantee the downloaded font on the first visit.",
+      "Screenshots compare original and changed composer rendering in a synthetic striped backdrop on an isolated real ST host; no claim of identical pixels on every GPU."
+    ]
+  },
+  "presetLayering20261118": {
+    "version": "2.0.10-test.16",
+    "date": "2026-11-18",
+    "baseline": "0a93f23b7d03757d1bd1b92ca2605e2a0b477a95",
+    "deviceEvidence": {
+      "onVideo": "User-provided recording, November 18 2026 at 17:15",
+      "onDecodedFrames": 260,
+      "observedBlankEpisodes": 3,
+      "offControlVideo": "User-provided recording, November 18 2026 at 17:35",
+      "offDecodedFrames": 656,
+      "offObservedBlankEpisodes": 0,
+      "switchClickVisible": false,
+      "versionVisibleInVideos": false,
+      "interpretation": "Control requested by the assistant; native toolbar visible and preset UI retained. Supports a combined rendering trigger, not a proven GPU root cause."
+    },
+    "change": {
+      "scope": "Android large authored messages at width >= 600px",
+      "messageIsolation": "auto",
+      "decorationZ": 0,
+      "hostContentZ": 1,
+      "contentTransformAdded": false,
+      "contentContainAdded": false,
+      "refractionAndBlurParametersChanged": false,
+      "presetNodesReplaced": false
+    },
+    "automated": {
+      "presetLayerChecks": 235,
+      "realIsolatedHostChecks": 51,
+      "foldableGeometryPassed": true,
+      "messageRenderingPassed": true,
+      "baselineStackingTestFailed": true,
+      "regressionScope": "Real extension and host contracts in Windows Edge with Android identities; structural regression, not phone pixel disappearance."
+    },
+    "limits": [
+      "The OPPO blanking is not reproduced on desktop; this version requires phone acceptance.",
+      "Compositor records show two large message-owned layers absent after separation in the synthetic fixture, but the largest chat layer remains. No GPU-memory or monolithic-texture reduction is claimed.",
+      "Wide, large authored-message stacking changes only; desktop and folded layouts keep the existing structure."
+    ]
+  },
+  "presetFirstPaint20261118": {
+    "version": "2.0.10-test.17",
+    "date": "2026-11-18",
+    "baseline": "93fc2141aed7cd04975d90db06c3a9254087f851",
+    "deviceReport": "OPPO N6 Edge: first entry to an authored chat flickers on the inner display; reopening does not; outer display is unaffected.",
+    "change": "Prepare existing authored content's markers on first wide Android guarded paint. Keep the same final stacking, filters, DOM, settings and later debounce.",
+    "automated": {
+      "baselineFailedFirstFrameStacking": true,
+      "candidatePassedPresetChecks": 239,
+      "realIsolatedHostChecks": 51,
+      "foldableGeometryPassed": true,
+      "messageRenderingPassed": true,
+      "settledNativeScreenshotMeanAbsoluteChannelDifference": 0.0311,
+      "preExistingMockErrors": [
+        "chat-background-regression",
+        "webview-message-guard-regression"
+      ]
+    },
+    "limits": [
+      "The reproduced issue is a first-paint stacking transition, not pixel disappearance on the physical phone.",
+      "The first-paint fix covers authored content already present in a guarded Android message at width >= 600px. Later DOM changes retain the existing debounce.",
+      "Acceptance requires the first entry on the OPPO inner display after upgrading and refreshing, with the same preset and NVWA enabled."
+    ]
+  },
+  "flickerComparison20261118": {
+    "version": "2.0.10-test.18",
+    "date": "2026-11-18",
+    "baseline": "39e783d325b679ae61b9f6811e8e4ce1ea86fefe",
+    "deviceReport": "OPPO N6 Edge inner-screen flicker remains after test.17.",
+    "scope": "Opt-in first-entry/re-entry trace. Rendering and material settings unchanged.",
+    "automated": {
+      "coldReloadAndReentryCapture": true,
+      "manualFlashMarker": true,
+      "privacySentinelsRemoved": true,
+      "interruptedCaptureStops": true,
+      "oneShotArm": true,
+      "originalCapturePassed": true,
+      "presetLayerChecks": 239
+    },
+    "limits": [
+      "No GPU paint, pixel or screen recording is captured by the extension.",
+      "Requires a marked first-entry reproduction and a same-chat re-entry on the actual device for useful correlation."
+    ]
+  },
+  "flickerAttributeEvidence20261118": {
+    "version": "2.0.10-test.19",
+    "date": "2026-11-18",
+    "baseline": "9df38eb0a13526fb135326d9fb6675f769417299",
+    "syntheticTallPresetRepaint": {
+      "messages": 10,
+      "baselineSameValueClassRecordsPerExplicitRound": 20,
+      "candidateRecordsPerExplicitRound": 0,
+      "settledLayerStateUnchanged": true
+    },
+    "presetLayerChecks": 240,
+    "flickerReportV2Passed": true,
+    "originalTimedCapturePassed": true,
+    "reflectionQueuePassed": true,
+    "wallpaperGeometryPassed": true,
+    "fullWallpaperBrowser": "WebKit executable unavailable; desktop Edge fallback timed out before wallpaper activation on both baseline and candidate.",
+    "baibaiInteropPassed": true,
+    "limits": [
+      "Repeated no-op writes are reproduced under explicit repaint, not a reproduction of physical screen flicker.",
+      "The existing report does not prove the source of all on-device mutations. No physical OPPO acceptance yet."
+    ]
+  },
+  "offscreenWidthFeedback20261118": {
+    "version": "2.0.10-test.20",
+    "baseline": "4d0f2cb7295eff26dc01d7bda8ae1ba309345e36",
+    "deviceTrace": {
+      "resizeTriggeredMessagePaintsWithinMarkedWindows": 225,
+      "observedClassAndStyleValueChangesWithinMarkedWindows": 440,
+      "messageDescendantMutationsWithinMarkedWindows": 0,
+      "videoShowsPartialChatContentLoss": true
+    },
+    "desktopEdge": {
+      "baselineFailedIdleWidthFeedback": true,
+      "candidatePassedIdleWidthFeedback": true,
+      "safeCullingResumesAfterWidthChange": true,
+      "originalScrollHeightPreserved": true,
+      "messageRenderingPassed": true,
+      "fontLoadingLifecyclePassed": true,
+      "baibaiInteropPassed": true,
+      "presetLayerChecks": 240,
+      "foldableGeometryPassed": true,
+      "reportWidthFeedbackCountersPassed": true
+    },
+    "limits": [
+      "The deterministic fixture induces a width difference while culling. This verifies the feedback mechanism, not the exact phone layout or missing compositor pixels.",
+      "OPPO N6 inner-screen acceptance is pending."
+    ]
+  },
+  "presetAuthorForeground20261118": {
+    "version": "2.0.10-test.21",
+    "baseline": "627aa366ed4ef0c9f48ddce065675ece4f489e35",
+    "date": "2026-11-18",
+    "deviceEvidence": "User confirmed test.20 stopped the inner-screen flicker on OPPO N6 Edge; test.21 itself has not been tested on the phone.",
+    "desktopEdge": {
+      "widths": [
+        360,
+        691
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "baselineOverrodeInlinePresetForeground": true,
+      "authoredForegroundPreserved": true,
+      "unstyledContrastFallbackPreserved": true,
+      "presetLayerChecks": 246,
+      "foldableGeometryCases": 90,
+      "authoredUiChecks": 40,
+      "offscreenWidthFeedbackRegressionPassed": true,
+      "firstLineIndentRegressionPassed": true
+    },
+    "limits": [
+      "Preset scripts and external assets were not executed or loaded.",
+      "Shared-performance legacy harness has a stale repaintVisible instrumentation hook."
+    ]
+  },
+  "formalRelease205": {
+    "version": "2.0.5",
+    "date": "2026-11-18",
+    "stablePreviousCommit": "e936802b28acae4785d96723af4c6a60912c6693",
+    "testSourceCommit": "632e4a049ec4261dfe2f1225ac9555d05ca99aec",
+    "testVersion": "2.0.10-test.21",
+    "runtimeParity": {
+      "files": 39,
+      "except": [
+        "index.js BUILD_VERSION",
+        "manifest.json formal metadata"
+      ]
+    },
+    "preserved": [
+      "install/",
+      "wallpaper and font assets",
+      "iosLiquidGlass namespace",
+      "settings schema v9"
+    ],
+    "testEvidence": {
+      "version": "2.0.10-test.21",
+      "baseline": "627aa366ed4ef0c9f48ddce065675ece4f489e35",
+      "date": "2026-11-18",
+      "deviceEvidence": "User confirmed test.20 stopped the inner-screen flicker on OPPO N6 Edge; test.21 itself has not been tested on the phone.",
+      "desktopEdge": {
+        "widths": [
+          360,
+          691
+        ],
+        "tones": [
+          "light",
+          "dark"
+        ],
+        "baselineOverrodeInlinePresetForeground": true,
+        "authoredForegroundPreserved": true,
+        "unstyledContrastFallbackPreserved": true,
+        "presetLayerChecks": 246,
+        "foldableGeometryCases": 90,
+        "authoredUiChecks": 40,
+        "offscreenWidthFeedbackRegressionPassed": true,
+        "firstLineIndentRegressionPassed": true
+      },
+      "limits": [
+        "Preset scripts and external assets were not executed or loaded.",
+        "Shared-performance legacy harness has a stale repaintVisible instrumentation hook."
+      ]
+    },
+    "limits": [
+      "Physical OPPO N6 Edge acceptance covers the test.20 flicker fix, not this formal package.",
+      "Complete third-party preset scripts and remote assets were not run."
+    ],
+    "formalCandidateVerification": {
+      "rootJavaScriptSyntaxFiles": 34,
+      "formalManifestAndInstallerSource": true,
+      "localSillyTavernFoldableEdgeChecks": 51,
+      "presetLayerChecks": 246,
+      "foldableGeometryCases": 90,
+      "messageResizeLoopPassed": true,
+      "androidFontFirstFramePassed": true,
+      "baibaiLongChatCompatibilityPassed": true,
+      "settingsWithHostSourcePassed": true,
+      "isolatedRegressions": [
+        "first-line-indent",
+        "form-resize",
+        "surface-policy",
+        "popup-material"
+      ],
+      "legacyHarnessLimits": [
+        "webview-message-guard: incomplete classList stub on both test and formal",
+        "keyboard-lifecycle, tt-compat, first-open-material: stale source-slicing fixtures; not counted as passing"
+      ]
     }
   }
 }

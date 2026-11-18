@@ -375,11 +375,11 @@ html.ilg:is([data-ilg-reading-style="moon"],[data-ilg-reading-style="sunny"]) #i
 #ilg-studio #ilg-capture-steps {margin:0;padding-inline-start:1.65em;color:var(--s-fg);font-size:13px;line-height:1.7;}
 #ilg-studio #ilg-capture-steps li + li {margin-top:7px;}
 #ilg-studio #ilg-capture-steps li::marker {color:var(--s-muted);font-weight:600;}
-#ilg-studio #ilg-capture-start {appearance:none;-webkit-appearance:none;display:block;width:100%;min-height:44px;margin:0;padding:11px 16px;border:1px solid transparent;border-radius:12px;background:var(--s-accent);color:#1d1d1f;-webkit-text-fill-color:currentColor;font:inherit;font-weight:600;line-height:1.45;white-space:normal;box-shadow:none;opacity:1;cursor:pointer;}
-#ilg-studio[data-tone="light"] #ilg-capture-start {color:#fff;}
-#ilg-studio #ilg-capture-start:hover {filter:brightness(1.06);}
-#ilg-studio #ilg-capture-start:active {filter:brightness(.94);}
-#ilg-studio #ilg-capture-start:focus-visible {outline:2px solid var(--s-accent);outline-offset:3px;}
+#ilg-studio :is(#ilg-capture-start, #ilg-flicker-start) {appearance:none;-webkit-appearance:none;display:block;width:100%;min-height:44px;margin:0;padding:11px 16px;border:1px solid transparent;border-radius:12px;background:var(--s-accent);color:#1d1d1f;-webkit-text-fill-color:currentColor;font:inherit;font-weight:600;line-height:1.45;white-space:normal;box-shadow:none;opacity:1;cursor:pointer;}
+#ilg-studio[data-tone="light"] :is(#ilg-capture-start, #ilg-flicker-start) {color:#fff;}
+#ilg-studio :is(#ilg-capture-start, #ilg-flicker-start):hover {filter:brightness(1.06);}
+#ilg-studio :is(#ilg-capture-start, #ilg-flicker-start):active {filter:brightness(.94);}
+#ilg-studio :is(#ilg-capture-start, #ilg-flicker-start):focus-visible {outline:2px solid var(--s-accent);outline-offset:3px;}
 #ilg-studio #ilg-interaction-diagnostics .ilg-capture-privacy {color:var(--s-muted);font-size:12px;}
 @media(max-width:560px) {#ilg-studio #ilg-interaction-diagnostics {padding:14px 15px;}}
 
@@ -406,3 +406,16 @@ html.ilg:is([data-ilg-reading-style="moon"],[data-ilg-reading-style="sunny"]) #i
 #ilg-studio .ilg-composer-preview-send { fill:#1677e8;stroke:rgba(255,255,255,.15); }
 #ilg-studio[data-tone=light] .ilg-composer-preview-send { fill:#17191e; }
 #ilg-studio .ilg-composer-preview-send-arrow { stroke:#fff; }
+
+/* The on-page witness is opaque and never filters the chat. */
+#ilg-flicker-badge {position:fixed;inset:calc(env(safe-area-inset-top, 0px) + 68px) max(8px, env(safe-area-inset-right, 0px)) auto auto;z-index:100000;max-width:calc(100vw - 16px);background:#202630;color:#fff;border:1px solid #788495;border-radius:12px;padding:5px 6px;display:grid;gap:4px;font:12px/1.35 system-ui;}
+#ilg-flicker-badge span {padding-inline:4px;}
+#ilg-flicker-badge div {display:flex;flex-wrap:wrap;gap:4px;}
+#ilg-flicker-badge button {min-height:36px;padding:4px 8px;border:0;border-radius:6px;background:#edf1f9;color:#202630;font:inherit;font-weight:600;cursor:pointer;}
+#ilg-flicker-badge button:focus-visible {outline:2px solid #89bdff;outline-offset:2px;}
+#ilg-flicker-badge [hidden] {display:none;}
+#ilg-flicker-controls {display:grid;gap:10px;font-size:13px;line-height:1.6;}
+#ilg-flicker-controls p,#ilg-flicker-controls ol {margin:0;}
+#ilg-flicker-controls ol {padding-inline-start:1.65em;}
+#ilg-flicker-controls li+li {margin-top:5px;}
+#ilg-flicker-hint {color:var(--s-muted);font-size:12px;}

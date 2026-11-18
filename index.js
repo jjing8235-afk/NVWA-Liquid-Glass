@@ -7,6 +7,8 @@ import { createIOSWallpaperRefraction } from './ios-wallpaper-refraction.js';
 import { createBundledWallpapers } from './bundled-wallpapers.js';
 import { largeWebViewMessage } from './surface-policy.js';
 import { createInteractionDiagnostics } from './interaction-diagnostics.js';
+import { armFlickerCapture, takeFlickerArm, createFlickerCapture, filterFamily } from './flicker-diagnostics.js';
+import { externalMessageRendering, externalScrollControl } from './chat-compat.js';
 import { positionFixed } from './fixed-position.js';
 import { createMessageRendering } from './message-rendering.js';
 import { createHostInteractionState } from './host-interaction-state.js';
@@ -31,8 +33,9 @@ if (window.__ilgLoaded) throw new Error('[NVWA 液态玻璃] 已经有一份在�
 window.__ilgLoaded = new URL('.', import.meta.url).pathname;
 
 let studioUI = null;
+let flickerCapture = null, flickerReport = null;
 const MODULE = 'iosLiquidGlass';
-const BUILD_VERSION = '2.0.4';
+const BUILD_VERSION = '2.0.5';
 const ENGINE_NAMES = Object.freeze({performance:'御风性能引擎',refraction:'棱光折射引擎'});
 const NS = 'http://www.w3.org/2000/svg';
 const ctx = SillyTavern.getContext();
@@ -657,7 +660,7 @@ const TOGGLES = [
     ['iosMaterial', 'iOS 兼容玻璃（推荐）'],
     ['refractMes', '消息卡片也折射（长聊天卡顿时关掉）'],
     ['mobileTilt', '手机姿态高光'],
-    ['font', '统一字体：思源黑体（苹果设备用苹方）'],
+    ['font', '统一字体：安卓用系统字体，其他设备用思源黑体或苹方'],
     ['firstLineIndent', '普通正文首行缩进两个汉字（不影响列表、代码和自带样式面板）'],
     ['justifyText', '正文两端对齐（右边不参差；关掉是左对齐，右边缘会自然留白）'],
     ['islands', '顶栏拆成三个分组的悬浮岛'],
@@ -751,7 +754,14 @@ const isIOS = window.__TAURITAVERN_HOST__?.platform === 'ios'
     || /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const supportsFilter = value => { try { return CSS.supports('backdrop-filter', value); } catch { return false; } };
 const canFull = !isIOS && !!window.chrome && !/Firefox\//.test(ua) && supportsFilter('blur(1px)');
-const androidWebView = !isIOS && /Android/i.test(ua) && /\bwv\b/.test(ua) && /Chrome\//.test(ua) && !/Firefox\//.test(ua);
+const androidHost = !isIOS && /Android/i.test(ua);
+const fontActivity = { loadingCycles: 0, loadedFaces: 0, failedFaces: 0 };
+for (const type of ['loading', 'loadingdone', 'loadingerror']) document.fonts?.addEventListener(type, event => {
+    if (type === 'loading') fontActivity.loadingCycles++;
+    else if (type === 'loadingdone') fontActivity.loadedFaces += event.fontfaces?.length || 0;
+    else fontActivity.failedFaces += event.fontfaces?.length || 0;
+});
+const androidWebView = androidHost && /\bwv\b/.test(ua) && /Chrome\//.test(ua) && !/Firefox\//.test(ua);
 const androidWebViewEligible = androidWebView && supportsFilter('blur(1px)') && supportsFilter('url(#ilg-capability-probe)');
 const supportsPrefixedFilter = value => { try { return CSS.supports('-webkit-backdrop-filter', value); } catch { return false; } };
 const iosBlurEligible = isIOS && (supportsFilter('blur(1px)') || supportsPrefixedFilter('blur(1px)'));
@@ -853,7 +863,7 @@ const defs = svg.firstChild;
 const iosWallpaper=createIOSWallpaperRefraction({background:()=>{
     for(const id of ['bg_custom','bg1']){const el=document.getElementById(id);if(el&&/^url\(/.test(getComputedStyle(el).backgroundImage))return el;}
     return null;
-},onReady:()=>requestAnimationFrame(()=>{repaintVisible();const status=document.getElementById('ilg-status');if(status)status.textContent=statusText();})});
+},onReady:()=>requestAnimationFrame(()=>{repaintVisible('wallpaper');const status=document.getElementById('ilg-status');if(status)status.textContent=statusText();})});
 const iosWallpaperRequested=()=>isIOS&&S.refract&&S.compatibilityMode!=='blur'&&webStyleEnabled()&&!document.body.classList.contains('no-blur');
 const items = new Map();
 // Host UI state changes only need surfaces near the viewport; other messages update on intersection.
@@ -917,8 +927,9 @@ function filterOf(it, w, h, slot = 'filter') {
     f.setAttribute('primitiveUnits', 'userSpaceOnUse');
     f.setAttribute('color-interpolation-filters', 'sRGB');
     f.setAttribute('x', '0'); f.setAttribute('y', '0');
-    // 滤镜区域比元素多留 200px：流式输出时卡片变高，下一帧重建前不会露出空洞
-    f.setAttribute('width', w); f.setAttribute('height', h + 200);
+    // Only streaming messages need growth headroom. A 54px input must not
+    // allocate a 254px SVG surface over the scrolling chat behind it.
+    f.setAttribute('width', w); f.setAttribute('height', h + (it.kind === 'mes' ? 200 : 0));
     return f;
 }
 
@@ -954,6 +965,7 @@ for (const type of ['compositionstart', 'compositionupdate', 'compositionend']) 
 }, true);
 document.addEventListener('focusin', e => { if (e.target.id === 'send_textarea') syncInputMaterial(); });
 function surfaceBlur(it, el) {
+    if (el.matches(HOST_MENU_SEL)) return 10;
     if (composerGlassSurface(el)) return 6;
     if (it.kind === 'mes' && S.chatBackground === 'transparent') return 0;
     const blur = KIND[it.kind].blur();
@@ -1028,20 +1040,38 @@ function refractAllowed(it) {
 // Cards keep their fixed-position descendants outside the filter's containing block.
 // The independent layer uses the same filter builder as ordinary message and input glass.
 function messageSurface(el, it) {
-    const separate = el.classList.contains('ilg-content-overlay') || el.classList.contains('ilg-card-renderer');
+    // Prepare the owned wrapper before folding. CSS switches at the width breakpoint,
+    // so an expanded frame does not wait for a resize callback to bound its backdrop.
+    const viewportReady = androidHost && it.largeWebView && CSS.supports('overflow', 'clip');
+    // The wide Android split needs the preset marker on its very first paint,
+    // not after the debounced color pass changes the message's stacking context.
+    if (viewportReady && !it.widePresetPrepared && innerWidth >= 600) {
+        it.widePresetPrepared = true;
+        const text = el.querySelector('.mes_text');
+        if (!el.classList.contains('ilg-card-renderer') && text?.querySelector(CARD_RENDERER_CANDIDATES)) applyCardMarkers(text);
+    }
+    const separate = viewportReady || el.classList.contains('ilg-content-overlay') || el.classList.contains('ilg-card-renderer');
     el.classList.toggle('ilg-message-backdrop', separate);
+    el.classList.toggle('ilg-message-viewport', viewportReady);
     if (!separate) {
-        it.backdrop?.remove();
-        it.backdrop = null;
+        it.backdrop?.remove(); it.backdropClip?.remove();
+        it.backdrop = it.backdropClip = null;
         return el;
     }
     if (!it.backdrop) {
-        const layer = document.createElement('div');
-        layer.className = 'ilg-message-glass';
-        layer.setAttribute('aria-hidden', 'true');
-        el.prepend(layer);
-        it.backdrop = layer;
+        it.backdrop = document.createElement('div');
+        it.backdrop.className = 'ilg-message-glass';
+        it.backdrop.setAttribute('aria-hidden', 'true');
     }
+    if (viewportReady && !it.backdropClip) {
+        it.backdropClip = document.createElement('div');
+        it.backdropClip.className = 'ilg-message-clip';
+        it.backdropClip.setAttribute('aria-hidden', 'true');
+        el.prepend(it.backdropClip);
+    }
+    const parent = viewportReady ? it.backdropClip : el;
+    if (it.backdrop.parentElement !== parent) parent.prepend(it.backdrop);
+    if (!viewportReady && it.backdropClip) { it.backdropClip.remove(); it.backdropClip = null; }
     el.style.backdropFilter = 'none';
     el.style.webkitBackdropFilter = 'none';
     return it.backdrop;
@@ -1052,7 +1082,7 @@ function measure(el) {
     const w = el.offsetWidth, h = el.offsetHeight;
     return { w, h, r: w && h ? radiusOf(el, w, h) : 0 };
 }
-function paintMany(list, measured = null) {
+function paintMany(list, reason, measured = null) {
     const jobs = [];
     for (const el of list) {
         const it = items.get(el);
@@ -1065,6 +1095,7 @@ function paintMany(list, measured = null) {
         }
         jobs.push(el);
     }
+    if (flickerCapture) flickerCapture.messagePaints(reason, jobs.filter(el => items.get(el).kind === 'mes').length);
     const geo = jobs.map(el => measured?.get(el) || measure(el));
     jobs.forEach((el, i) => paint(el, geo[i]));
 }
@@ -1085,9 +1116,23 @@ function paint(el, geo) {
     if (it.kind !== 'mes') {
         it.visible = !!geo.w && !!geo.h;
         lightScope.visibility(el, it.visible);
-        if (it.visible) visibleItems.add(el); else { visibleItems.delete(el); iosWallpaper.release(el); return; }
+        if (it.visible) visibleItems.add(el);
+        else {
+            visibleItems.delete(el); iosWallpaper.release(el);
+            if (it.kind === 'panel' || it.kind === 'clearPanel') {
+                reflections.release(el); webGlass.release(el);
+                it.filter?.remove(); it.filter = null; it.physical = null;
+                el.style.backdropFilter = ''; el.style.webkitBackdropFilter = '';
+                setPhys(el, it, false); it.renderPath = 'hidden';
+            }
+            return;
+        }
     }
+    it.largeWebView = largeWebViewMessage({webView:androidHost,kind:it.kind,width:geo.w,height:geo.h,dpr:devicePixelRatio,previous:it.largeWebView});
     const surface = it.kind === 'mes' ? messageSurface(el, it) : el;
+    // Keep only the empty composer glass planes on stable compositor layers.
+    // Never transform the message/form ancestors of authored fixed-position UI.
+    el.classList.toggle('ilg-stable-composer', androidHost && el.classList.contains('ilg-composer-glass'));
     const control = it.kind === 'bar' && controlSurface(el);
     el.classList.toggle('ilg-control-surface', control);
     el.classList.toggle('ilg-control-readable', control && controlReadable(el));
@@ -1096,7 +1141,9 @@ function paint(el, geo) {
     el.classList.toggle('ilg-composer-liquid', composer);
     const cssMode = cssGlassActive();
     el.classList.toggle('ilg-css-surface', cssMode);
-    const useWeb = (it.kind === 'bar' || composer) && webStyleEnabled();
+    // Scrollable Android panels share the compositor with chat; avoid retaining an SVG backdrop across popup transitions.
+    const stablePanel = androidHost && (it.kind === 'panel' || it.kind === 'clearPanel');
+    const useWeb = !stablePanel && (it.kind === 'bar' || composer) && webStyleEnabled();
     if (!useWeb) webGlass.release(el);
     if (!useWeb||!iosWallpaperRequested()) iosWallpaper.release(el);
     if (document.body.classList.contains('no-blur')) {
@@ -1126,8 +1173,10 @@ function paint(el, geo) {
         surface.style.webkitBackdropFilter = filter;
         return;
     }
-    // Offscreen messages retain their CSS material; rasterise their contour on entry.
-    if (composer || (it.kind === 'mes' && !it.visible)) reflections.release(el);
+    // Apply the large-surface budget before allocating either reflections or SVG maps.
+    const guarded = it.largeWebView || stablePanel;
+    // Offscreen and guarded Android messages retain their CSS material.
+    if (composer || guarded || (it.kind === 'mes' && !it.visible)) reflections.release(el);
     else reflections.paint(el, w, h, r);
     if (useWeb) {
         it.renderPath = 'web-compatible';
@@ -1141,11 +1190,9 @@ function paint(el, geo) {
         if(iosWallpaperRequested()&&el.querySelector(':scope > .ilg-ios-wallpaper-plane'))it.renderPath='web-wallpaper';
         return;
     }
-    it.largeWebView = largeWebViewMessage({webView:androidWebView,kind:it.kind,width:w,height:h,dpr:devicePixelRatio,previous:it.largeWebView});
-    const guarded = it.largeWebView;
     const phys = refractAllowed(it) && S.engine === 'physical' && !guarded;
     if (guarded && refractAllowed(it)) {
-        it.fallbackReason = 'large-webview-message';
+        it.fallbackReason = stablePanel ? 'webview-panel' : 'large-android-message';
         // Legacy displacement still allocates a full-size filtered surface. Release it as well.
         it.filter?.remove(); it.filter = null; it.physical = null;
     }
@@ -1181,7 +1228,7 @@ function setPhys(el, it, on) {
 const MES_STREAM_GAP = 250;
 const mesLate = new Set();
 let mesLateTimer = 0;
-const flushMesLate = () => { mesLateTimer = 0; const list = [...mesLate]; mesLate.clear(); if (list.length) paintMany(list); };
+const flushMesLate = () => { mesLateTimer = 0; const list = [...mesLate]; mesLate.clear(); if (list.length) paintMany(list, 'stream'); };
 const ro = new ResizeObserver(entries => {
     const now = [], measured = new Map();
     const streaming = document.body.dataset.generating === 'true';
@@ -1200,7 +1247,8 @@ const ro = new ResizeObserver(entries => {
         if (streaming && items.get(e.target)?.kind === 'mes') { mesLate.add(e.target); continue; }
         now.push(e.target);
     }
-    if (now.length) paintMany(now, measured);
+    if (now.length) paintMany(now, 'resize', measured);
+    flickerCapture?.geometry(measured);
     if (mesLate.size && !mesLateTimer) mesLateTimer = setTimeout(flushMesLate, MES_STREAM_GAP);
 });
 new MutationObserver(() => { if (document.body.dataset.generating !== 'true' && mesLate.size) { clearTimeout(mesLateTimer); flushMesLate(); } })
@@ -1216,12 +1264,20 @@ const io = new IntersectionObserver(entries => {
         else visibleItems.delete(e.target);
         changed.push(e.target);
     }
-    if (changed.length) paintMany(changed);
+    if (changed.length) paintMany(changed, 'intersection');
+    flickerCapture?.intersections(entries);
 }, { root: document.getElementById('chat'), rootMargin: '200px 0px' });
 
 function track(el, kind) {
     if (items.has(el) || !trackable(el)) return;
-    const it = { id: `ilg-f${++uid}`, kind, visible: kind !== 'mes' };
+    // Match the observer's 200px prewarm margin before the first material paint.
+    const rect = kind === 'mes' ? el.getBoundingClientRect() : null;
+    const viewport = rect ? document.getElementById('chat')?.getBoundingClientRect() : null;
+    const initiallyVisible = !!(rect && viewport && rect.width > 0 && rect.height > 0
+        && viewport.width > 0 && viewport.height > 0
+        && rect.bottom > viewport.top - 200 && rect.top < viewport.bottom + 200
+        && rect.right > viewport.left && rect.left < viewport.right);
+    const it = { id: `ilg-f${++uid}`, kind, visible: kind !== 'mes' || initiallyVisible };
     items.set(el, it);
     if (it.visible) visibleItems.add(el);
     el.classList.add('ilg-glass');
@@ -1242,7 +1298,10 @@ function track(el, kind) {
         }
     }
     ro.observe(el);
-    if (kind === 'mes') { messageRendering.track(el); io.observe(el); }
+    if (kind === 'mes') {
+        messageRendering.track(el); io.observe(el);
+        flickerCapture?.messagePaints('mount', 1);
+    }
     paint(el);
 }
 
@@ -1259,9 +1318,10 @@ function untrack(el) {
     it.contentObserver?.disconnect();
     it.filter?.remove();
     it.backdrop?.remove();
+    it.backdropClip?.remove();
     ro.unobserve(el);
     io.unobserve(el);
-    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys', 'ilg-adapted', 'ilg-message-backdrop', 'ilg-control-surface', 'ilg-control-readable', 'ilg-css-surface', 'ilg-composer-liquid');
+    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys', 'ilg-adapted', 'ilg-message-backdrop', 'ilg-message-viewport', 'ilg-control-surface', 'ilg-control-readable', 'ilg-css-surface', 'ilg-composer-liquid', 'ilg-stable-composer');
     if (el.id === 'nonQRFormItems') el.querySelectorAll('[data-ilg-input-tone]').forEach(action => delete action.dataset.ilgInputTone);
     el.style.backdropFilter = '';
     el.style.webkitBackdropFilter = '';
@@ -1281,8 +1341,8 @@ function scan() {
 
 // 悬浮小球的融合玻璃不走 items，由它自己的钩子重画（小球那段代码在后面，这里只留个空位）
 let ballRefresh = null;
-function repaintAll() { paintMany([...items.keys()]); ballRefresh?.(); }
-function repaintVisible() { paintMany([...visibleItems]); ballRefresh?.(); }
+function repaintAll() { paintMany([...items.keys()], 'global'); ballRefresh?.(); }
+function repaintVisible(reason) { paintMany([...visibleItems], reason); ballRefresh?.(); }
 function clearAll() { [...items.keys()].forEach(untrack); cache.clear(); clearMaps(); }
 
 // 顶栏分组悬浮岛：图标按功能分三组，每组后面画一块独立的玻璃。图标和抽屉面板都不动，抽屉是按整个图标区定位的
@@ -2471,8 +2531,13 @@ function setRecent(on, refocus) {
     on = on && homeOn && !!panel;
     if (on === recentOn) return;
     recentOn = on;
-    if (on) mountRecent(panel);
+    // Measure with the final display state, before focus or the first visible frame.
     root.classList.toggle('ilg-recent-open', on);
+    if (on) {
+        const mounted = recentPanel === panel && items.has(panel);
+        mountRecent(panel);
+        if (mounted) paint(panel);
+    }
     recentBtn.setAttribute('aria-expanded', String(on));
     if (recentPanel) {
         recentPanel.setAttribute('aria-hidden', String(!on));
@@ -2673,6 +2738,10 @@ function applyChatFontSize() {
 
 let glassSettingsRaf = 0;
 function applySurfaceSettings() {
+    // Keep the first Android glyphs: downloading CJK subsets must not replace visible text.
+    root.style.setProperty('--ilg-unified-font', androidHost ? 'system-ui, sans-serif' : '-apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC Variable", "Microsoft YaHei", sans-serif');
+    root.style.setProperty('--ilg-panel-filter', `blur(${KIND.panel.blur()}px) saturate(${S.saturate}) brightness(${S.brightness})`);
+    root.style.setProperty('--ilg-menu-filter', `blur(10px) saturate(${S.saturate}) brightness(${S.brightness})`);
     root.style.setProperty('--ilg-hl', S.highlight);
     root.style.setProperty('--ilg-radius', `${S.radius}px`);
     root.style.setProperty('--ilg-shadow-k', S.pShadow);
@@ -2693,13 +2762,16 @@ function queueGlassSettings() {
         glassSettingsRaf = 0;
         if (!S.enabled) return;
         applySurfaceSettings();
-        repaintVisible();
+        repaintVisible('settings');
     });
 }
 
 function applyRoot() {
     if (!S.enabled) hideRangeValue();
-    if (!S.enabled) interactionDiagnostics.stop('disabled');
+    if (!S.enabled) {
+        interactionDiagnostics.stop('disabled');
+        flickerCapture?.finish('disabled');
+    }
     hostInteractionState.setEnabled(S.enabled);
     normalizeTopStyleSettings(S);
     syncInputMaterial(false);
@@ -2762,7 +2834,10 @@ function applyRoot() {
 // 输入框高度变化时同步底部留白；仅在扩展启用且宿主允许自动滚动时保持贴底
 const form = document.getElementById('form_sheld');
 const chatEl = document.getElementById('chat');
-const messageRendering = createMessageRendering(chatEl, { onReset(el) { if (items.has(el)) { ro.unobserve(el); ro.observe(el); } } });
+const messageRendering = createMessageRendering(chatEl, {
+    onReset(el) { if (items.has(el)) { ro.unobserve(el); ro.observe(el); } },
+    onWidthFeedback(reason) { flickerCapture?.widthFeedback(reason); },
+});
 const cardClarity = createCardTextClarity(chatEl);
 let formResizeRaf = 0;
 function updateFormSpace() {
@@ -2792,7 +2867,7 @@ new MutationObserver(muts => {
         if (bubble) m.addedNodes.forEach(n => n.nodeType === 1 && n.matches(MES_SEL) && added.push(n));
     }
     added.forEach(n => track(n, 'mes'));
-    if (added.length > 0 && added.length <= 2 && performance.now() > riseQuietUntil) {
+    if (!androidHost && added.length > 0 && added.length <= 2 && performance.now() > riseQuietUntil) {
         added.forEach(n => {
             n.classList.add('ilg-rise');
             n.addEventListener('animationend', () => n.classList.remove('ilg-rise'), { once: true });
@@ -2824,7 +2899,7 @@ new MutationObserver(muts => {
     if (rescan) {
         if (isIOS) { const status = document.getElementById('ilg-status'); if (status) status.textContent = statusText(); }
         if (bubbleChanged) scan();
-        repaintVisible();
+        repaintVisible('bodyClass');
     }
 }).observe(document.body, { childList: true, attributes: true, attributeFilter: ['class'] });
 // 第三方弹窗不参与扫描：这里只监听酒馆核心弹窗和本扩展自己的宿主节点。
@@ -2892,12 +2967,14 @@ function statusText() {
 function viewportDiagnostic() {
     const vv=window.visualViewport;
     const rect=id=>{const el=document.getElementById(id);if(!el)return null;const r=el.getBoundingClientRect();return{x:Math.round(r.x),y:Math.round(r.y),width:Math.round(r.width),height:Math.round(r.height)};};
-    const paths={},surfaces=[];let large=0;
-    for(const [el,it] of items){const path=it.renderPath||'pending';paths[path]=(paths[path]||0)+1;if(it.fallbackReason==='large-webview-message')large++;
-        if(surfaces.length<3&&it.visible&&el.matches('.mes')){const r=el.getBoundingClientRect();surfaces.push({width:Math.round(r.width),height:Math.round(r.height),path,fallbackReason:it.fallbackReason||''});}}
+    const paths={},surfaces=[];let large=0,bounded=0;
+    for(const [el,it] of items){const path=it.renderPath||'pending';paths[path]=(paths[path]||0)+1;if(it.fallbackReason==='large-android-message'||it.fallbackReason==='large-webview-message')large++;
+        if(it.backdropClip&&innerWidth>=600)bounded++;
+        if(surfaces.length<3&&it.visible&&el.matches('.mes')){const r=el.getBoundingClientRect(),b=(it.backdrop||el).getBoundingClientRect();surfaces.push({width:Math.round(r.width),height:Math.round(r.height),backdropWidth:Math.round(b.width),backdropHeight:Math.round(b.height),boundedBackdrop:!!it.backdropClip&&innerWidth>=600,path,fallbackReason:it.fallbackReason||''});}}
     return{layout:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},visual:vv?{width:vv.width,height:vv.height,offsetTop:vv.offsetTop,offsetLeft:vv.offsetLeft,scale:vv.scale}:null,
         composerFocused:document.activeElement===document.getElementById('send_textarea'),keyboard:keyboard.status(),chat:{scrollTop:chatEl.scrollTop,scrollHeight:chatEl.scrollHeight,clientHeight:chatEl.clientHeight,readingAnchor:readingAnchor.status()},composer:rect('nonQRFormItems'),form:rect('form_sheld'),ball:{shown:S.enabled&&S.floatBall,keyboardHidden:root.classList.contains('ilg-kb-open'),rect:rect('ilg-ball')},
-        rendering:{iosCompatible:iosMaterialActive(),engineRequested:S.engine,largeWebViewMessages:large,paths,surfaces},
+        rendering:{iosCompatible:iosMaterialActive(),engineRequested:S.engine,largeWebViewMessages:large,largeAndroidMessages:large,boundedMessageBackdrops:bounded,paths,surfaces},
+        typography:{mode:!S.enabled||!S.font?'host':androidHost?'system':'unified',status:document.fonts?.status||'unavailable',...fontActivity},
         appearance:{requested:S.tone,actual:appearanceMode(),lightThumbnail:!!wallThumb('light'),darkThumbnail:!!wallThumb('dark'),customThumbnail:!!customWallThumb(),chatBackgroundLocked:chatBgLocked(),lastAction:lastAppearanceAction},
         wallpapers:bundledWallpapers.status(),wallpaperRefraction:iosWallpaper.status(),workers:{reflections:reflections.status(),ball:((({mode,reason,suspended,pending,failures})=>({mode,reason,suspended,pending,failures}))(ballGlass.status()))},lighting:lighting.status(),captureNote:'Frame intervals describe page callbacks, not display flicker detection'};
 }
@@ -2939,6 +3016,99 @@ const interactionDiagnostics=createInteractionDiagnostics({snapshot:viewportDiag
     const button=document.getElementById('ilg-capture-start');if(button)button.textContent='重新采集 15 秒';
     const badge=captureBadge();badge.querySelector('span').textContent=missing?'采集结束 · 有未测操作':'采集结束';badge.querySelector('[data-action="main"]').textContent='导出诊断';badge.querySelector('[data-action="close"]').hidden=false;
 }});
+
+function describeFlickerState(nodeNumber, sizeOf, intersectionOf) {
+    function surface(el, it) {
+        const plane = it?.backdrop || el;
+        return {node:nodeNumber(el), path:it?.renderPath || 'untracked', filter:filterFamily(plane.style),
+            size:sizeOf(el) || null, layer:it?.backdropClip ? 'clipped-plane' : it?.backdrop ? 'separate-plane' : 'root'};
+    }
+    const messages = [], poses = [];
+    for (const el of visibleItems) {
+        const it = items.get(el);
+        if (!el.isConnected || it.kind !== 'mes') continue;
+        const card = el.classList.contains('ilg-card-renderer'), view = intersectionOf(el) || 'unmeasured';
+        poses.push({el,it,card,view});
+        if (poses.length === 24) break;
+    }
+    // Prefer messages actually intersecting the chat and authored / large surfaces.
+    const priority = row => (row.view === 'visible' ? 4 : 0) + (row.card ? 2 : 0) + (row.it.largeWebView ? 1 : 0);
+    poses.sort((a,b) => priority(b) - priority(a));
+    for (const {el,it,card,view} of poses.slice(0,6)) {
+        messages.push({...surface(el,it), lastIntersection:view, guarded:!!it.largeWebView, card,
+            presetSplit:innerWidth >= 600 && card && el.classList.contains('ilg-message-viewport'),
+            fixedChild:el.classList.contains('ilg-content-overlay'), culled:el.classList.contains('ilg-render-away'),
+            iframe:!!el.querySelector('.mes_text iframe'), hidden:el.hidden || el.style.display === 'none'});
+    }
+    const controls = {};
+    for (const [key,id] of [['composer','nonQRFormItems'],['input','ilg-composer-input-glass'],['plus','ilg-composer-plus-glass'],['bar','top-bar']]) {
+        const el = document.getElementById(id);
+        if (el) controls[key] = surface(el,items.get(el));
+    }
+    return {chat:{children:chatEl.childElementCount, size:sizeOf(chatEl) || null, bubble:document.body.classList.contains('bubblechat'),
+            noBlur:document.body.classList.contains('no-blur'), home:homeOn, owner:externalMessageRendering(chatEl) ? 'baibai' : 'nvwa',
+            externalScroll:externalScrollControl(chatEl), readingAnchor:readingAnchor.status()},
+        formSize:sizeOf(form) || null, fontsLoading:document.fonts?.status === 'loading', messages, controls};
+}
+function startFlickerCapture() {
+    const badge = document.createElement('aside');
+    badge.id = 'ilg-flicker-badge'; badge.setAttribute('aria-label', '内屏闪烁对照');
+    badge.innerHTML = '<span role="status" aria-live="polite">① 首次进入并滑动</span><div><button type="button" data-action="mark">刚才闪了</button><button type="button" data-action="next">② 去重进</button><button type="button" data-action="export">导出</button><button type="button" data-action="dismiss" aria-label="关闭诊断提示" hidden>×</button></div>';
+    const label = badge.querySelector('span');
+    const button = name => badge.querySelector('[data-action="'+name+'"]');
+    flickerReport = null;
+    const ownPath = new URL('.',import.meta.url).pathname;
+    flickerCapture = createFlickerCapture({chat:chatEl, form, describe:describeFlickerState, currentChat:() => ctx.getCurrentChatId(),
+        scriptOwner(source) {
+            if (!source) return 'unknown';
+            let url;
+            try { url = new URL(source,location.href); } catch { return 'unknown'; }
+            if (url.origin !== location.origin) return 'external';
+            if (url.pathname.startsWith(ownPath)) return 'nvwa';
+            const extension = /^\/scripts\/extensions\/third-party\/([^/]+)\//.exec(url.pathname);
+            if (extension) return /^st-baibai-tools$/i.test(extension[1]) ? 'baibai' : 'other-extension';
+            return /^\/(?:script\.js$|scripts\/|lib\/)/.test(url.pathname) ? 'host' : 'unknown';
+        },
+        environment:{version:BUILD_VERSION, android:androidHost, webview:androidWebView,
+            edgeAndroid:/\bEdgA\//.test(ua), browserMajor:Number(ua.match(/\b(?:EdgA|Chrome)\/(\d+)/)?.[1]) || null,
+            floating:!!S.float, refraction:!!S.refract, messageRefraction:!!S.refractMes, cssGlass:cssGlassActive(),
+            physical:S.engine === 'physical', clearChat:S.chatBackground === 'transparent'},
+        onFinish(report) {
+            flickerReport = report; flickerCapture = null;
+            label.textContent = report.coverage[1]?.scrolled ? '对照已结束'
+                : report.coverage[0].scrolled ? '首进采集已结束 · 可导出' : '采集已结束 · 未记录到聊天滑动';
+            button('mark').hidden = button('next').hidden = true;
+            button('dismiss').hidden = false;
+        }});
+    button('mark').addEventListener('click', () => {
+        if (!flickerCapture) return;
+        flickerCapture.mark(); button('mark').textContent = '已标记 · 再闪可点';
+    });
+    button('next').addEventListener('click', () => {
+        if (!flickerCapture?.next()) return;
+        label.textContent = '② 返回后重进同一聊天';
+        button('next').hidden = true; button('mark').textContent = '刚才闪了';
+    });
+    button('export').addEventListener('click', () => {
+        flickerCapture?.finish();
+        if (flickerReport) downloadDiagnostic(JSON.stringify(flickerReport,null,2), '内屏闪烁对照');
+    });
+    button('dismiss').addEventListener('click', () => { badge.remove(); flickerReport = null; });
+    document.body.append(badge);
+}
+function createFlickerControls() {
+    const controls = document.createElement('div');
+    controls.id = 'ilg-flicker-controls';
+    controls.innerHTML = '<p>用折叠机内屏采集。点击后会刷新本页；不会改玻璃设置。若有未发送的文字，先自行保存。</p><ol id="ilg-flicker-steps"><li>刷新后第一次打开问题聊天并滑动；若自动进入，直接滑动。看到闪就点「刚才闪了」。</li><li>只测首次进入，可以直接导出；若要对照，再点「② 去重进」，返回并重开同一聊天滑动。</li><li>点「导出」，发送这份 TXT。两轮合计最多 60 秒。若方便，可在开始前打开系统录屏。</li></ol><button type="button" id="ilg-flicker-start" aria-describedby="ilg-flicker-steps ilg-flicker-hint">刷新并采集首进 / 重进</button><p id="ilg-flicker-hint" role="status">只记时间、尺寸与绘制状态，不采集正文、聊天标识、链接或画面。</p>';
+    controls.querySelector('button').addEventListener('click', () => {
+        if (flickerCapture || interactionDiagnostics.status().recording || !S.enabled) {
+            controls.querySelector('#ilg-flicker-hint').textContent = S.enabled ? '请先结束正在进行的采集。' : '请先开启液态玻璃，再开始对照。';
+            return;
+        }
+        if (!armFlickerCapture(window)) controls.querySelector('#ilg-flicker-hint').textContent = '浏览器禁止页面暂存，无法跨刷新开始采集。';
+    });
+    return controls;
+}
 
 function iosTrialReport() {
     const rows = [
@@ -3139,7 +3309,7 @@ function buildPanel() {
     captureControls.querySelector('select').addEventListener('change',updateCaptureInstructions);
     captureControls.querySelector('button').addEventListener('click',()=>{
         if(interactionDiagnostics.status().recording){interactionDiagnostics.stop('manual');return;}
-        if(!S.enabled)return;
+        if(!S.enabled || flickerCapture)return;
         if(interactionDiagnostics.start({scenario:captureControls.querySelector('select').value})){
             captureControls.querySelector('select').disabled=true;
             captureControls.querySelector('button').textContent='提前结束采集';
@@ -3147,7 +3317,7 @@ function buildPanel() {
             studioUI?.close(false);
         }
     });
-    wrap.querySelector('.inline-drawer-content').append(captureControls);
+    wrap.querySelector('.inline-drawer-content').append(createFlickerControls(), captureControls);
     studioUI = createSettingsPanel({ host, content: wrap, appearance: appearancePanel, version: BUILD_VERSION, settings: S, engines: ENGINE_NAMES });
     updateCaptureInstructions();
 
@@ -3864,7 +4034,7 @@ function cardDisplayReport({includeCapture=true}={}) {
             after: style(win.getComputedStyle(el, '::after')),
             solid: el.classList.contains('ilg-solid'),
         };
-        if (el.matches('.mes')) { result.glass = style(win.getComputedStyle(el.querySelector(':scope > .ilg-message-glass') || el)); const it=items.get(el);result.rendering={path:it?.renderPath||'not-tracked',fallbackReason:it?.fallbackReason||'',nearViewport:it?.visible===true}; }
+        if (el.matches('.mes')) { const it=items.get(el); result.glass = style(win.getComputedStyle(it?.backdrop || el.querySelector(':scope > .ilg-message-glass') || el));result.rendering={path:it?.renderPath||'not-tracked',fallbackReason:it?.fallbackReason||'',nearViewport:it?.visible===true}; }
         if (el.tagName === 'IFRAME') {
             try {
                 const doc = el.contentDocument;
@@ -3936,7 +4106,10 @@ const cardColors = el => {
     }
     return { best };
 };
-function tagCard(text) {
+const CARD_PANELS = 'div, section, article, aside, details, summary, dialog, button, [role="dialog"], [role="button"], [role="menu"], [role="listbox"], [role="option"]';
+const CARD_CHOICES = 'button, select, option, input[type="button"], input[type="submit"], [role="button"], [role="option"]';
+const CARD_RENDERER_CANDIDATES = 'iframe, ' + CARD_PANELS + ', ' + CARD_CHOICES;
+function applyCardMarkers(text) {
     // 以 <html> 上的 class 为准：CSS 也是按它配色的
     const light = root.classList.contains('ilg-light');
     let fixedOverlay = false, cardRenderer = false;
@@ -3951,8 +4124,8 @@ function tagCard(text) {
             if (k.matches('img, video, svg, canvas, q, em, i, b, strong, br')) continue;
             const c = blockBg(k, cs);
             const frame = k.matches('iframe');
-            const panel = frame || k.matches('div, section, article, aside, details, summary, dialog, button, [role="dialog"], [role="button"], [role="menu"], [role="listbox"], [role="option"]');
-            const choice = k.matches('button, select, option, input[type="button"], input[type="submit"], [role="button"], [role="option"]');
+            const panel = frame || k.matches(CARD_PANELS);
+            const choice = k.matches(CARD_CHOICES);
             // 底色也可能画在 ::before / ::after 上（模板常用这招），这种情况元素自身读不到背景，得一起算进来
             const card = panel ? cardColors(k) : { best: null };
             // 自绘卡片走独立的模糊底层，避开整条消息的 SVG 合成（见 paint()）。
@@ -3980,8 +4153,12 @@ function tagCard(text) {
     if (message && (message.classList.contains('ilg-content-overlay') !== fixedOverlay || message.classList.contains('ilg-card-renderer') !== cardRenderer)) {
         message.classList.toggle('ilg-content-overlay', fixedOverlay);
         message.classList.toggle('ilg-card-renderer', cardRenderer);
-        paint(message);
+        return message;
     }
+}
+function tagCard(text) {
+    const changed = applyCardMarkers(text);
+    if (changed) { flickerCapture?.messagePaints('card', 1); paint(changed); }
 }
 // 普通正文段落标记：阅读配色（.ilg-prose）和首行缩进（.ilg-indentable）只给“没有自带 class/style、里面没有图片/控件/div 等”的直接段落。
 // 原来 CSS 用 :not(:has(...)) 现场判断，可 :has() 让流式输出每次改字都要重查（每次约 3ms 样式重算）。
@@ -4110,9 +4287,11 @@ function watchCharList() {
 watchCharList();
 ctx.eventSource.on(ctx.eventTypes.APP_READY, watchCharList);
 
+if (takeFlickerArm(window) && S.enabled) startFlickerCapture();
 applyRoot();
 paintRanges();
 ctx.eventSource.on(ctx.eventTypes.APP_READY, applyRoot);
+ctx.eventSource.on(ctx.eventTypes.CHAT_CHANGED, () => flickerCapture?.chatChanged());
 
 // Check the real library on startup and when an explicit appearance selection needs repair.
 // The old wallsReady flag survives reinstalling the extension, so it is not proof of file presence.
@@ -4135,7 +4314,12 @@ queueEnsureWalls();
 ctx.eventSource.on(ctx.eventTypes.CHAT_CHANGED, () => {
     inputCompositionText = '';
     riseQuietUntil = performance.now() + 1500;
-    requestAnimationFrame(applyRoot);
+    requestAnimationFrame(() => {
+        if (!S.enabled) return;
+        // A chat change does not change the global material or toolbar layout.
+        syncInputMaterial(); syncHome(); scan();
+        applyTone(); queueThink(); scheduleFloor();
+    });
 });
 // 只有宽度变了才整页重画：手机键盘弹出/收起只改高度，靠 ResizeObserver 重画真正变了尺寸的玻璃就够了
 onViewportChange(v => { if (v.widthChanged) repaintAll(); });

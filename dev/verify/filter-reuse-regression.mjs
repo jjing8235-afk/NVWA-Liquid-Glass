@@ -45,7 +45,7 @@ const lights = [{ dataset: { light: '1' }, setAttribute() { lightWrites++; } }];
 const it = { kind: 'panel' }, plainElement={matches:()=>false};
 const surfaceBlur = source.match(/function surfaceBlur\(it, el\) \{[\s\S]*?\n\}/)[0];
 const build = vm.runInNewContext(surfaceBlur + '\n(function(it,el,w,h,r){' + body + '})', {
-    HOST_MENU_SEL:'host-menu', controlReadable: () => false, foldedMenuSurface: () => false, composerGlassSurface: el => el.composer === true,
+    HOST_MENU_SEL:'host-menu', inputGlass:()=>false, controlReadable: () => false, foldedMenuSurface: () => false, composerGlassSurface: el => el.composer === true,
     ARC_ONLY: { specular: 0, sharp: 4, edgeShade: 0, fresnel: 0, caustic: 0 },
     S: settings, KIND: { panel: { blur: () => 8, k: 0.7, bezelK: 1.1, thickK: 1.5 } },
     getMaps: (_w,_h,_r,options) => {lastOptions=options;return currentMap;}, lightAngle: () => angle, lightRow: () => 'matrix',
@@ -74,7 +74,7 @@ build(it, plainElement, 374, 600, 20);
 assert.equal(builds, 4);
 passed.push('Unchanged material reuses nodes; resize only patches bounds; parameter, map and engine changes rebuild; arc-only light changes do not rebuild');
 
-const composerItem={kind:'panel'},composerElement={composer:true};
+const composerItem={kind:'panel'},composerElement={composer:true,matches:()=>false};
 build(composerItem,composerElement,344,478,30);
 const composerBuilds=builds;
 assert.equal(lastOptions.profile,'lens');assert.equal(lastOptions.magnify,1.35);assert.equal(lastOptions.blur,6);

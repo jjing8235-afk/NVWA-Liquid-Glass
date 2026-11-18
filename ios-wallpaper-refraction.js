@@ -19,7 +19,7 @@ export function createIOSWallpaperRefraction({background,onReady=()=>{},win=wind
     const entries=new Map();let enabled=false,source=null,raf=0,listening=false,reason='disabled';
     const events=[[win,'resize'],[win.visualViewport,'resize'],[win.visualViewport,'scroll'],[doc,'scroll']];
     const listen=on=>{if(on===listening)return;listening=on;for(const [target,type]of events)target?.[on?'addEventListener':'removeEventListener'](type,schedule,{capture:true,passive:true});};
-    function release(el){const item=entries.get(el);item?.plane.remove();entries.delete(el);el.classList.remove('ilg-ios-wallpaper-host');if(!entries.size){listen(false);if(raf)win.cancelAnimationFrame(raf);raf=0;}}
+    function release(el){const item=entries.get(el);item?.plane.remove();entries.delete(el);el.classList.toggle('ilg-ios-wallpaper-host',false);if(!entries.size){listen(false);if(raf)win.cancelAnimationFrame(raf);raf=0;}}
     function queuePaint(){if(enabled)onReady();}
     function getSource(){
         const el=background?.();if(!el){reason='no-wallpaper';return null;}

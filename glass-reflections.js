@@ -32,7 +32,10 @@ export function createGlassReflections() {
     function release(el) {
         if (active?.el === el) reset();
         const key=wanted.get(el);jobs.get(key)?.clients.delete(el);wanted.delete(el);
-        known.delete(el); el.classList.remove('ilg-reflection', 'ilg-reflection-pressed');
+        known.delete(el);
+        if (el.classList.contains('ilg-reflection') || el.classList.contains('ilg-reflection-pressed')) {
+            el.classList.remove('ilg-reflection', 'ilg-reflection-pressed');
+        }
         for (const key of ['--ilg-reflection-map', '--ilg-reflection-x', '--ilg-reflection-y']) el.style.removeProperty(key);
     }
     const wanted=new Map(),jobs=new Map();

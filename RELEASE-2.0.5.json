@@ -1,0 +1,73 @@
+{
+  "version": "2.0.5",
+  "date": "2026-11-18",
+  "stablePreviousCommit": "e936802b28acae4785d96723af4c6a60912c6693",
+  "testSourceCommit": "632e4a049ec4261dfe2f1225ac9555d05ca99aec",
+  "testVersion": "2.0.10-test.21",
+  "runtimeParity": {
+    "files": 39,
+    "except": [
+      "index.js BUILD_VERSION",
+      "manifest.json formal metadata"
+    ]
+  },
+  "preserved": [
+    "install/",
+    "wallpaper and font assets",
+    "iosLiquidGlass namespace",
+    "settings schema v9"
+  ],
+  "testEvidence": {
+    "version": "2.0.10-test.21",
+    "baseline": "627aa366ed4ef0c9f48ddce065675ece4f489e35",
+    "date": "2026-11-18",
+    "deviceEvidence": "User confirmed test.20 stopped the inner-screen flicker on OPPO N6 Edge; test.21 itself has not been tested on the phone.",
+    "desktopEdge": {
+      "widths": [
+        360,
+        691
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "baselineOverrodeInlinePresetForeground": true,
+      "authoredForegroundPreserved": true,
+      "unstyledContrastFallbackPreserved": true,
+      "presetLayerChecks": 246,
+      "foldableGeometryCases": 90,
+      "authoredUiChecks": 40,
+      "offscreenWidthFeedbackRegressionPassed": true,
+      "firstLineIndentRegressionPassed": true
+    },
+    "limits": [
+      "Preset scripts and external assets were not executed or loaded.",
+      "Shared-performance legacy harness has a stale repaintVisible instrumentation hook."
+    ]
+  },
+  "limits": [
+    "Physical OPPO N6 Edge acceptance covers the test.20 flicker fix, not this formal package.",
+    "Complete third-party preset scripts and remote assets were not run."
+  ],
+  "formalCandidateVerification": {
+    "rootJavaScriptSyntaxFiles": 34,
+    "formalManifestAndInstallerSource": true,
+    "localSillyTavernFoldableEdgeChecks": 51,
+    "presetLayerChecks": 246,
+    "foldableGeometryCases": 90,
+    "messageResizeLoopPassed": true,
+    "androidFontFirstFramePassed": true,
+    "baibaiLongChatCompatibilityPassed": true,
+    "settingsWithHostSourcePassed": true,
+    "isolatedRegressions": [
+      "first-line-indent",
+      "form-resize",
+      "surface-policy",
+      "popup-material"
+    ],
+    "legacyHarnessLimits": [
+      "webview-message-guard: incomplete classList stub on both test and formal",
+      "keyboard-lifecycle, tt-compat, first-open-material: stale source-slicing fixtures; not counted as passing"
+    ]
+  }
+}

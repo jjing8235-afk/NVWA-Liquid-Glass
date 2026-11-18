@@ -13,7 +13,7 @@ assert(style, 'Use the production message containment rule');
 const html = '<!doctype html><html class="ilg"><style>*{box-sizing:border-box}body{margin:0;font:16px Arial}#chat{display:flex;flex-direction:column;overflow:auto;width:390px;height:240px;margin:10px}.mes{display:flex;align-items:flex-start;width:100%;padding:12px 10px;border:1px solid #aaa;margin-bottom:8px}.mes_block{width:100%}.mes_text p{margin:6px 0;line-height:1.7}' + style + '</style><body class="bubblechat"><div id="chat"></div></body></html>';
 const server = http.createServer(async (req, res) => {
     if (req.url === '/') { res.setHeader('content-type', 'text/html'); res.end(html); return; }
-    if (req.url === '/message-rendering.js') { res.setHeader('content-type', 'text/javascript'); res.end(await fs.readFile(path.join(root, 'message-rendering.js'))); return; }
+    if (['/message-rendering.js', '/chat-compat.js'].includes(req.url)) { res.setHeader('content-type', 'text/javascript'); res.end(await fs.readFile(path.join(root, req.url.slice(1)))); return; }
     res.writeHead(404); res.end();
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -53,6 +53,51 @@ try {
         if (idleCallbacks) throw Error('An idle message continues to resize');
         if (resizeErrors.length) return { resizeErrors, messages: 10, widthChanges: 4, naturalHeightPreserved: true, idleCallbacks };
 
+        // Five offscreen rows whose measured widths change only while skipped.
+        // This models the trace's paired class/style changes and resize-driven
+        // paints without requiring a physically folded Android display.
+        const ownStyle = document.createElement('style');
+        ownStyle.textContent = '.width-shift.ilg-render-away { width: calc(100% - 2px) } .mes { flex-shrink: 0 }';
+        document.head.append(ownStyle);
+        chat.insertAdjacentHTML('afterbegin', '<div class="mes ilg-card-renderer" style="min-height:3698px"><section>Preset panel</section></div>');
+        const far = list.slice(-5);
+        const feedback = createMessageRendering(chat, { onReset(el) { widthObserver.unobserve(el); widthObserver.observe(el); } });
+        let deliveries = 0, writes = 0;
+        const widths = new Set();
+        const widthObserver = new ResizeObserver(entries => {
+            deliveries += entries.length;
+            for (const e of entries) {
+                widths.add(e.contentRect.width);
+                feedback.resize(e.target, e.contentRect.height, e.contentRect.width);
+            }
+        });
+        const monitor = new MutationObserver(entries => { writes += entries.length; });
+        try {
+            for (const el of far) {
+                el.classList.add('width-shift');
+                feedback.track(el); feedback.visibility(el, false); widthObserver.observe(el);
+                monitor.observe(el, { attributes:true, attributeFilter:['class','style'] });
+            }
+            await settle();
+            const initialFeedback = { widths:[...widths], deliveries, writes, culled:feedback.status().culled };
+            if (widths.size !== 2 || writes < 20) throw Error('Width-feedback fixture did not exercise both geometries: ' + JSON.stringify(initialFeedback));
+            deliveries = writes = 0;
+            await settle();
+            if (deliveries || writes || feedback.status().culled) throw Error('Offscreen width feedback did not settle: ' + JSON.stringify({ initialFeedback, deliveries, writes }));
+            // A real layout change must refresh the natural measurement and
+            // permit culling again if the conflicting geometry is gone.
+            ownStyle.textContent = '.mes { flex-shrink: 0 }';
+            chat.style.width = '310px';
+            await settle();
+            if (feedback.status().culled !== 5) throw Error('A real width change did not resume safe culling');
+            feedback.visibility(far[0], true);
+            if (far[0].classList.contains('ilg-render-away')) throw Error('A newly visible message stayed contained');
+        } finally {
+            monitor.disconnect(); widthObserver.disconnect();
+            for (const el of far) feedback.release(el);
+            chat.firstElementChild.remove(); ownStyle.remove();
+        }
+
         // Real DOM probes for latest-wins, invalidation and release between a
         // measurement delivery and its delayed containment update.
         const pending = createMessageRendering(chat);
@@ -72,7 +117,7 @@ try {
         pending.resize(target, 320, 350); pending.release(target); await frames();
         if (target.classList.contains('ilg-render-away') || target.style.getPropertyValue('--ilg-message-height') || pending.status().tracked) throw Error('A delayed update survived release');
         await settle();
-        return { resizeErrors, messages: 10, widthChanges: 4, naturalHeightPreserved: true, idleCallbacks, latestMeasurementWins: true, noSynchronousContainmentWrites: true, invalidatedMeasurementDiscarded: true, pendingReleaseClean: true };
+        return { resizeErrors, messages: 10, widthChanges: 4, naturalHeightPreserved: true, idleCallbacks, latestMeasurementWins: true, noSynchronousContainmentWrites: true, invalidatedMeasurementDiscarded: true, pendingReleaseClean: true, offscreenWidthFeedbackSettles: true, safeCullingResumesAfterWidthChange: true };
     });
     if (process.env.NVWA_RESULT_FILE) await fs.writeFile(process.env.NVWA_RESULT_FILE, JSON.stringify({ engine, ...result, pageErrors }, null, 2));
     assert.deepEqual(result.resizeErrors, [], 'Message resize processing must not emit ResizeObserver loop errors');
