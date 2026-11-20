@@ -18,7 +18,7 @@ const handler=source.match(/if \(k === 'firstLineIndent'\) \{([\s\S]*?)\n       
 let saves=0;const classes=new Set();
 const fake={classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);}}};
 for(const [enabled,preference,expected] of [[true,true,true],[true,false,false],[false,true,false]]){
- vm.runInNewContext('(function(){'+handler+'})()',{root:fake,S:{enabled,firstLineIndent:preference},ctx:{saveSettingsDebounced(){saves++;}}});
+ vm.runInNewContext('(function(){'+handler+'})()',{root:fake,typographyStudio:{sync(){}},S:{enabled,firstLineIndent:preference},ctx:{saveSettingsDebounced(){saves++;}}});
  assert.equal(classes.has('ilg-indent'),expected);
 }
 assert.equal(saves,3);assert(!/applyRoot|repaintAll|clearAll/.test(handler));

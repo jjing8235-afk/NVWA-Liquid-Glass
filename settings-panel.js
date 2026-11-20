@@ -14,7 +14,7 @@ export function downloadDiagnostic(text, kind = '兼容诊断') {
  const link = document.createElement('a');link.href=url;link.download='NVWA-'+kind+'-'+new Date().toISOString().slice(0,19).replaceAll(':','-')+'.txt';link.hidden=true;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 const copy={mobileTilt:['手机姿态高光','开启后自动申请并恢复；倾斜手机时边缘反光随之变化'],enabled:['启用',''],float:['悬浮输入区','顶栏与输入框浮在聊天内容上方'],icons:['简洁图标','使用统一风格的线性图标'],refract:['边缘折射','按当前环境能力启用折射；iOS 漾卿直接启用壁纸折射'],refractMes:['消息折射','长聊天性能不足时可关闭'],font:['统一字体','安卓使用系统字体，避免加载后换字；其他设备使用思源黑体或苹方'],firstLineIndent:['首行缩进','普通段落缩进两个汉字'],justifyText:['两端对齐','只调整普通正文的左右边缘'],islands:['分组悬浮岛','把顶栏按功能分组'],fold:['收起顶栏设置','设置图标归入左上角菜单'],qrFold:['折叠快捷回复','收进输入框左侧按钮'],toneBtn:['显示外观切换','顶栏单击循环白天、黑夜、自定义'],home:['简洁首页','保留问候语与最近聊天入口'],orb:['思考提示','生成时显示点阵小球'],panelRead:['面板加厚','抽屉和弹窗底色更实、模糊更重，花壁纸上也看得清字'],floatBall:['显示悬浮小球','液态玻璃小球，点一下打开本面板；不喜欢就关掉'],ballSnap:['松手吸边','拖到中间松开会回到最近的左 / 右边；关掉就停在原地'],ballFuse:['边缘融合','拖到顶栏或输入框旁边，两块玻璃之间长出液体颈部并贴住'],iosMaterial:['iOS 兼容材质','使用系统模糊，不依赖 SVG 折射'],iosSvgTrial:['iOS 折射实验','仅用于映卿的 SVG 背景实验，可能无效；漾卿壁纸折射无需开启此项']};
-export function createSettingsPanel({host, content, appearance, version, settings, engines = {}}) {
+export function createSettingsPanel({host, content, appearance, typography, version, settings, engines = {}}) {
  const dialog=document.createElement('dialog');dialog.id='ilg-studio';dialog.className='ilg-studio';dialog.setAttribute('aria-labelledby','ilg-studio-title');
  dialog.innerHTML='<div class="ilg-studio-layout"><aside class="ilg-studio-rail"><div class="ilg-studio-brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 14Q16 1 28 14Q16 27 4 14Zm0 5Q16 6 28 19Q16 32 4 19Z"/></svg><div><h1 id="ilg-studio-title">液态玻璃</h1><p>NVWA 外观工作台</p></div></div><nav class="ilg-studio-nav" role="tablist" aria-label="设置分类"></nav><div class="ilg-studio-power"><span class="ilg-studio-state" role="status"></span><div class="ilg-studio-master"></div></div></aside><main class="ilg-studio-body"></main></div><button type="button" class="ilg-appearance-close ilg-studio-close" aria-label="关闭玻璃设置"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button>';
  dialog.querySelector('.ilg-studio-brand p').textContent='NVWA · '+(engines.performance||'外观工作台');
@@ -36,7 +36,6 @@ export function createSettingsPanel({host, content, appearance, version, setting
  const master=staging.querySelector('#ilg-opt-enabled')?.closest('label');if(master)dialog.querySelector('.ilg-studio-master').append(master);
  // Appearance panel (tone modes, material, Web presets, custom wallpaper) keeps its own nodes and sync code.
  appearance.querySelector('.ilg-appearance-heading')?.remove();appearance.hidden=false;appearance.removeAttribute('style');
- const reading=appearance.querySelector('.ilg-reading-section');
  // index.js still writes this status line; keep the node but hide it (the footer says the same).
  const appearanceStatus=appearance.querySelector('.ilg-appearance-status');if(appearanceStatus)appearanceStatus.hidden=true;
  const material=document.createElement('div');material.className='ilg-group ilg-material-group';
@@ -80,9 +79,9 @@ export function createSettingsPanel({host, content, appearance, version, setting
  card('layout','顶栏',[topChoice,staging.querySelector('#ilg-opt-topShortcuts'),opt('toneBtn'),legacyTop]);
  card('layout','输入框样式',[appearance.querySelector('.ilg-composer-choice'),opt('qrFold')]);
  card('layout','首页与聊天',[opt('home'),opt('homeName'),opt('avatar'),opt('orb')]);
- if(reading){const style=reading.querySelector('.ilg-reading-choice');style?.querySelector('legend')?.classList.add('ilg-sr-only');const g=card('text','文字风格',[reading]);g?.classList.add('ilg-reading-group');}
- const fontRow=opt('chatFontSize');
- card('text','排版',[opt('firstLineIndent'),opt('justifyText'),fontRow],pickHint(fontRow,'ilg-chat-font-hint'));
+ const fontRow=opt('chatFontSize'), nativeText=[opt('firstLineIndent'),opt('justifyText'),fontRow], nativeHint=pickHint(fontRow,'ilg-chat-font-hint');
+ pages.get('text').append(typography);
+ disclosure('text','酒馆原有排版',nativeText,nativeHint);
  const status=['ilg-status','ilg-opt-themeStatus'].map(id=>staging.querySelector('#'+id));
  disclosure('diagnostics',engines.performance||'基础效果与性能',[opt('refract'),opt('refractMes'),opt('engine'),opt('icons'),opt('float'),opt('font')],'优先响应交互，复用玻璃资源；基础效果和回退选项也可在这里调整。');
  card('diagnostics','当前状态',status);
@@ -100,7 +99,7 @@ export function createSettingsPanel({host, content, appearance, version, setting
 let active=typeof memo.tab==='string'?memo.tab:'glass',opener=null;const scrolls=memo.scrolls&&typeof memo.scrolls==='object'?memo.scrolls:{};
 const saveMemo=()=>{try{sessionStorage.setItem(MEMO,JSON.stringify({tab:active,scrolls}));}catch{}};
  const originalOnly=[...dialog.querySelectorAll('.ilg-studio-original-presets, .ilg-tuning-group')];
- function select(key){if(!pages.has(key))key='glass';if(dialog.open)scrolls[active]=main.scrollTop;active=key;for(const button of nav.children){const selected=button.dataset.studioTab===key;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;}for(const[k,page]of pages)page.hidden=k!==key;main.scrollTop=Number(scrolls[key])||0;saveMemo();}
+ function select(key){if(!pages.has(key))key='glass';if(dialog.open)scrolls[active]=main.scrollTop;active=key;for(const button of nav.children){const selected=button.dataset.studioTab===key;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;}for(const[k,page]of pages)page.hidden=k!==key;meta.firstElementChild.textContent=key==='text'&&typography?'字体工坊 · 应用后生效':'即时生效，自动保存';main.scrollTop=Number(scrolls[key])||0;saveMemo();}
  // The custom tile previews the last chosen custom wallpaper (or the current one when it isn't a bundled tone wall).
  // Relative url() inside a custom property resolves against settings-panel.css, so pass an absolute URL.
  function wallThumb(){let path=settings.customWallpaper||'';if(!path){const bg=document.getElementById('bg_custom')||document.getElementById('bg1');const m=bg&&/url(["']?(.*?)["']?)/.exec(bg.style.backgroundImage||getComputedStyle(bg).backgroundImage||'');if(m&&!/liquid(%20| )glass/i.test(m[1]))path=m[1];}if(path)dialog.style.setProperty('--s-wall','url('+JSON.stringify(new URL(path,document.baseURI).href)+')');else dialog.style.removeProperty('--s-wall');}

@@ -6,11 +6,11 @@ const source=fs.readFileSync(new URL('../../index.js',import.meta.url),'utf8');
 const begin=source.indexOf('function paint(el, geo) {'),end=source.indexOf('// .ilg-phys',begin);
 assert(begin>=0&&end>begin);const paintSource=source.slice(begin,end);
 function run({webView=true,android=webView,engine='physical',width=349,height=3000,dpr=3.25,kind='mes',refract=true,previous=false}={}){
- const styles={},it={kind,visible:true,largeWebView:previous},calls={physical:0,legacy:0,removed:0,reflections:0};
- const el={id:kind==='mes'?'fixture-message':'fixture-bar',classList:{toggle(){}},matches:()=>false,style:styles};
+ const vars=new Map(),styles={getPropertyValue:k=>vars.get(k)||'',setProperty:(k,v)=>vars.set(k,v)},it={kind,visible:true,largeWebView:previous},calls={physical:0,legacy:0,removed:0,reflections:0};
+ const el={id:kind==='mes'?'fixture-message':'fixture-bar',classList:{toggle(){},contains:()=>false},matches:()=>false,style:styles};
  const context={items:new Map([[el,it]]),document:{body:{classList:{contains:()=>false}}},S:{engine,refract,saturate:1.1,brightness:1.02},devicePixelRatio:dpr,androidWebView:webView,androidHost:android,isIOS:false,
   HOST_MENU_SEL:'#options',messageSurface:()=>el,controlSurface:()=>false,controlReadable:()=>false,composerGlassSurface:()=>false,cssGlassActive:()=>false,webStyleEnabled:()=>false,iosWallpaperRequested:()=>false,
-  webGlass:{release(){}},iosWallpaper:{release(){}},reflections:{release(){},paint(){calls.reflections++}},lightScope:{visibility(){}},visibleItems:new Set(),surfaceBlur:()=>.5,canRefract:()=>true,iosMaterialActive:()=>false,
+  webGlass:{release(){}},iosWallpaper:{release(){}},reflections:{release(){},paint(){calls.reflections++},paintMessage(){calls.reflections++}},lightScope:{visibility(){}},visibleItems:new Set(),surfaceBlur:()=>.5,canRefract:()=>true,iosMaterialActive:()=>false,
   largeWebViewMessage,refractAllowed:()=>refract,setPhys(){},buildPhysical(){calls.physical++},buildFilter(){calls.legacy++},inputGlass:()=>false,
  };
  it.filter={remove(){calls.removed++}};it.id='test-filter';

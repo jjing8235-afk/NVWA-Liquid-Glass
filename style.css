@@ -1,4 +1,5 @@
 @import url('./settings-panel.css');
+@import url('./typography.css');
 @import url('./composer-icons.css');
 /* iOS 液态玻璃 · 所有规则都挂在 html.ilg 下，关掉扩展开关即全部失效 */
 html.ilg {
@@ -2450,12 +2451,12 @@ html.ilg.ilg-icons body #nonQRFormItems #send_but { margin: 0; }
     html.ilg body #chat .mes .mes_reasoning_details:where(:not(.mes_text *, .mes_reasoning *, [data-nvwa-style="author"], [data-nvwa-style="author"] *)) .mes_reasoning_summary:where(:not(.mes_text *, .mes_reasoning *, [data-nvwa-style="author"], [data-nvwa-style="author"] *)) { margin-right: 0; }
     /* 消息卡片自己左右各 18px：手机上这是「不挤」最直观的一半，原来 10px 太贴边了 */
     html.ilg body #chat .mes:not(.smallSysMes) { padding-left: 18px; padding-right: 18px; }
-    /* 右边这一列必须跟左边一模一样。宿主把翻页箭头的留白记在 padding-right 上，
-       第三方预设（比如前端美化里的段落规则）还可能再补一层，两边一叠加，整段正文就往左歪。
-       这里把右内侧留白全部清零，并且加了 !important：谁的规则更靠后都盖不掉。
-       这样正文盒子左右各 18px，和自己的头像、名字行对得上。 */
+    /* 保留旧布局的右侧归零，但不要覆盖字体工坊正文的双侧留白或段宽居中。 */
     html.ilg body #chat .mes .mes_text { padding-right: 0 !important; margin-right: 0 !important; }
-    html.ilg body #chat .mes .mes_text > p { padding-right: 0 !important; margin-right: 0 !important; }
+    html.ilg body #chat .mes .mes_text > p:not(:where(html[data-ilg-typography] #chat:is([data-ilg-type-inset], [data-ilg-type-measure], [data-ilg-type-body-mark]) .mes:not(.smallSysMes):not([is_system="true"]) .mes_text:not([style]) > .ilg-type-prose)) {
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+    }
     /* 段落改回左对齐。两端对齐会把每一行都顶到盒子右边，右边只要多出一像素就成一条空列，
        看着就是「整体偏左」；左对齐的参差边缘反而看不出这点偏差。
        想要它顶满盒子的人，可以在设置里打开「正文两端对齐」。 */
@@ -3977,24 +3978,6 @@ html.ilg body #ilg-appearance-panel .ilg-appearance-modes input:checked + span {
 html.ilg body #ilg-appearance-panel .ilg-appearance-modes input:checked + span > svg { color: var(--ilg-panel-accent); }
 html.ilg body #ilg-appearance-panel label:hover > span { color: var(--ilg-panel-fg); }
 html.ilg body #ilg-appearance-panel :is(input:focus-visible + span, button:focus-visible) { outline: 2px solid var(--ilg-panel-accent); outline-offset: 2px; }
-html.ilg body #ilg-appearance-panel .ilg-reading-section { margin-top: 24px; }
-html.ilg body #ilg-appearance-panel .ilg-reading-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; background: var(--ilg-panel-well); border-radius: 14px; }
-html.ilg body #ilg-appearance-panel .ilg-reading-choice label > span { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-height: 64px; padding: 9px 10px; border-radius: 10px; }
-html.ilg body #ilg-appearance-panel .ilg-reading-choice input:checked + span { background: var(--ilg-panel-selected); }
-html.ilg body #ilg-appearance-panel .ilg-style-name { display: flex; align-items: center; gap: 6px; color: var(--ilg-panel-fg); font-size: 14px; font-weight: 500; }
-html.ilg body #ilg-appearance-panel .ilg-reading-choice input:checked + span .ilg-style-name { color: var(--ilg-panel-accent); font-weight: 600; }
-html.ilg body #ilg-appearance-panel .ilg-style-name small { padding: 1px 4px; border-radius: 4px; background: var(--ilg-panel-well); color: var(--ilg-panel-muted); font-size: 10px; font-weight: 500; line-height: 1.5; }
-html.ilg body #ilg-appearance-panel .ilg-style-detail { color: var(--ilg-panel-muted); font-size: 11px; line-height: 1.6; }
-html.ilg body #ilg-appearance-panel .ilg-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 8px; color: var(--ilg-panel-muted); font-size: 11px; }
-html.ilg body #ilg-appearance-panel .ilg-preview-tone { color: var(--ilg-panel-accent); }
-html.ilg body #ilg-appearance-panel .ilg-reading-preview { padding: 15px 16px; border-radius: 12px; background: var(--ilg-preview-bg); color: var(--ilg-prose-text); font-size: 14px; font-weight: 400; letter-spacing: var(--ilg-prose-tracking); }
-html.ilg body #ilg-appearance-panel .ilg-reading-preview p { margin: 0 0 6px; padding: 0; }
-html.ilg body #ilg-appearance-panel .ilg-reading-preview p:last-child { margin-bottom: 0; }
-html.ilg body #ilg-appearance-panel .ilg-reading-preview strong { color: var(--ilg-prose-strong); font-weight: 600; }
-html.ilg body #ilg-appearance-panel .ilg-reading-preview em { color: var(--ilg-prose-muted); font-style: var(--ilg-prose-em-style); }
-html.ilg body #ilg-appearance-panel .ilg-reading-preview q { color: var(--ilg-prose-quote); font-weight: var(--ilg-prose-quote-weight); background: var(--ilg-prose-quote-fill); padding: var(--ilg-prose-quote-pad, 0); border-radius: var(--ilg-prose-quote-radius, 0); text-decoration: var(--ilg-prose-quote-decoration); text-decoration-color: var(--ilg-prose-quote-line); text-decoration-thickness: 1px; text-underline-offset: .23em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-html.ilg body #ilg-appearance-panel .ilg-reading-preview q::before,
-html.ilg body #ilg-appearance-panel .ilg-reading-preview q::after { content: none; }
 html.ilg body #ilg-appearance-panel .ilg-appearance-custom { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--ilg-panel-line); }
 html.ilg body #ilg-appearance-panel .ilg-text-choice { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; padding: 3px; background: var(--ilg-panel-well); border-radius: 12px; }
 html.ilg body #ilg-appearance-panel .ilg-text-choice label > span { display: grid; place-items: center; min-height: 44px; border-radius: 9px; color: var(--ilg-panel-muted); font-size: 13px; }
@@ -4015,7 +3998,7 @@ html.ilg body.reduced-motion #ilg-appearance-panel { animation: none; }
 /* Typography palettes affect eligible native prose; all chat surfaces stay host-owned.
    默认款“青瓷”（设置值仍叫 warm，旧存档不用迁移）：与栖暖各有自己的节奏，
    对白是青瓷绿 + 一层很淡的圆角底（不是荧光笔条、也不是下划线），心声是偏冷的灰蓝正体，行距更松。 */
-html.ilg {
+:is(html.ilg, .ilg-type-page) {
     --ilg-prose-text: #e4e7e5;
     --ilg-prose-muted: #9fadb5;
     --ilg-prose-quote: #8fd3bf;
@@ -4034,7 +4017,7 @@ html.ilg {
     --ilg-prose-quote-pad: .06em .3em;
     --ilg-prose-quote-radius: .3em;
 }
-html.ilg.ilg-light {
+:is(html.ilg, .ilg-type-page).ilg-light {
     --ilg-prose-text: #262b2a;
     --ilg-prose-muted: #5f6d75;
     --ilg-prose-quote: #1f6f5c;
@@ -4046,7 +4029,7 @@ html.ilg.ilg-light {
     --ilg-preview-bg: rgba(246,252,249,.76);
 }
 /* 栖暖 keeps the classic storage key and the warmth of the original orange palette. */
-html.ilg[data-ilg-reading-style="classic"] {
+:is(html.ilg, .ilg-type-page)[data-ilg-reading-style="classic"] {
     --ilg-prose-text:#e9e3db;--ilg-prose-muted:#bdada0;--ilg-prose-quote:#edc196;
     --ilg-prose-link:#b8cbe1;--ilg-prose-strong:#faf2e8;
     --ilg-prose-leading:1.9;--ilg-prose-tracking:.015em;--ilg-prose-gap:.76em;
@@ -4055,14 +4038,14 @@ html.ilg[data-ilg-reading-style="classic"] {
     --ilg-prose-quote-fill:linear-gradient(transparent 68%,rgba(237,193,150,.13) 68%,rgba(237,193,150,.13) 93%,transparent 93%);
     --ilg-prose-rule:rgba(237,193,150,.28);--ilg-preview-bg:rgba(33,24,18,.64);
 }
-html.ilg.ilg-light[data-ilg-reading-style="classic"] {
+:is(html.ilg, .ilg-type-page).ilg-light[data-ilg-reading-style="classic"] {
     --ilg-prose-text:#302b27;--ilg-prose-muted:#6d5e52;--ilg-prose-quote:#9a4f23;
     --ilg-prose-link:#4b6485;--ilg-prose-strong:#211d19;
     --ilg-prose-quote-fill:linear-gradient(transparent 68%,rgba(213,145,82,.14) 68%,rgba(213,145,82,.14) 93%,transparent 93%);
     --ilg-prose-rule:rgba(154,79,35,.22);--ilg-preview-bg:rgba(255,248,237,.8);
 }
 /* Optional reading presets: local typefaces, no remote font request. */
-html.ilg[data-ilg-reading-style="moon"] {
+:is(html.ilg, .ilg-type-page)[data-ilg-reading-style="moon"] {
     --ilg-prose-font:"Songti SC","STSong","Noto Serif CJK SC","Noto Serif SC","SimSun","宋体",serif;
     --ilg-prose-text:#e9e3d8;--ilg-prose-muted:#b8ada1;--ilg-prose-quote:#c4b4e4;
     --ilg-prose-link:#adc8e8;--ilg-prose-strong:#f9f0df;
@@ -4072,11 +4055,11 @@ html.ilg[data-ilg-reading-style="moon"] {
     --ilg-prose-quote-pad:0;--ilg-prose-quote-radius:0;
     --ilg-preview-bg:rgba(16,20,31,.64);--ilg-prose-rule:rgba(196,180,228,.25);
 }
-html.ilg.ilg-light[data-ilg-reading-style="moon"] {
+:is(html.ilg, .ilg-type-page).ilg-light[data-ilg-reading-style="moon"] {
     --ilg-prose-text:#342d2a;--ilg-prose-muted:#71635a;--ilg-prose-quote:#635084;
     --ilg-prose-link:#3a5c85;--ilg-prose-strong:#251e1b;--ilg-preview-bg:rgba(255,251,241,.76);--ilg-prose-rule:rgba(99,80,132,.22);
 }
-html.ilg[data-ilg-reading-style="sunny"] {
+:is(html.ilg, .ilg-type-page)[data-ilg-reading-style="sunny"] {
     --ilg-prose-font:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC Variable","Microsoft YaHei",sans-serif;
     --ilg-prose-text:#e0eaf4;--ilg-prose-muted:#a6b9cd;--ilg-prose-quote:#9dc8ff;
     --ilg-prose-link:#9cd8df;--ilg-prose-strong:#f6faff;
@@ -4086,7 +4069,7 @@ html.ilg[data-ilg-reading-style="sunny"] {
     --ilg-prose-quote-pad:.04em .22em;--ilg-prose-quote-radius:.25em;
     --ilg-preview-bg:rgba(15,27,39,.64);--ilg-prose-rule:rgba(157,200,255,.25);
 }
-html.ilg.ilg-light[data-ilg-reading-style="sunny"] {
+:is(html.ilg, .ilg-type-page).ilg-light[data-ilg-reading-style="sunny"] {
     --ilg-prose-text:#263b4f;--ilg-prose-muted:#5d7084;--ilg-prose-quote:#205d95;
     --ilg-prose-link:#226d77;--ilg-prose-strong:#172b3e;
     --ilg-prose-quote-fill:rgba(32,93,149,.06);--ilg-preview-bg:rgba(242,248,253,.8);--ilg-prose-rule:rgba(32,93,149,.2);
@@ -4178,13 +4161,13 @@ html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :
     text-autospace: normal;
 }
 html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose :is(em,i) { font-family: var(--ilg-prose-em-font, inherit); }
-html.ilg body #ilg-appearance-panel .ilg-reading-preview em { font-family: var(--ilg-prose-em-font, inherit); }
-html.ilg.ilg-light { --ilg-prose-muted: #56646c; }
-html.ilg.ilg-light[data-ilg-reading-style="classic"] { --ilg-prose-muted: #655649; }
-html.ilg.ilg-light[data-ilg-reading-style="moon"] { --ilg-prose-muted: #675a51; }
-html.ilg.ilg-light[data-ilg-reading-style="sunny"] { --ilg-prose-muted: #52657a; }
-html.ilg[data-ilg-reading-style="moon"] {
+:is(html.ilg, .ilg-type-page).ilg-light { --ilg-prose-muted: #56646c; }
+:is(html.ilg, .ilg-type-page).ilg-light[data-ilg-reading-style="classic"] { --ilg-prose-muted: #655649; }
+:is(html.ilg, .ilg-type-page).ilg-light[data-ilg-reading-style="moon"] { --ilg-prose-muted: #675a51; }
+:is(html.ilg, .ilg-type-page).ilg-light[data-ilg-reading-style="sunny"] { --ilg-prose-muted: #52657a; }
+:is(html.ilg, .ilg-type-page)[data-ilg-reading-style="moon"] {
     --ilg-prose-font:"Songti SC","STSong","Noto Serif CJK SC","Noto Serif SC","SimSun","宋体",serif;
+    --ilg-prose-strong-weight: 700;
     --ilg-prose-em-font:"Kaiti SC","STKaiti","KaiTi","楷体","LXGW WenKai","霞鹜文楷",var(--ilg-prose-font);
 }
 html.ilg[data-ilg-reading-style="moon"] body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose :is(strong,b) { font-weight: 700; }
@@ -4966,17 +4949,13 @@ html.ilg.ilg-kb-open body #ilg-ball { visibility: hidden; }
     html.ilg body #top-settings-holder > .drawer > .drawer-content *::-webkit-scrollbar { display: none; }
 }
 
-/* 2026-11-09 阅读页的行距 / 左右留白滑杆：没设置时变量不存在，沿用风格自己的值（含窄屏 −.1）。 */
+/* Uncustomized text follows the active reading preset, including the narrow-screen rhythm. */
 html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol,blockquote).ilg-prose {
-    line-height: var(--ilg-prose-leading-user, var(--ilg-prose-leading-eff, var(--ilg-prose-leading)));
+    line-height: var(--ilg-prose-leading-eff, var(--ilg-prose-leading));
 }
-/* 留白只在用户拖过滑杆后才加（html.ilg-prose-inset-on），叠加在段落原有内边距上，引文的 .85em 不丢 */
-html.ilg.ilg-prose-inset-on body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :is(p,ul,ol).ilg-prose { padding-inline: var(--ilg-prose-inset); }
-html.ilg.ilg-prose-inset-on body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > blockquote.ilg-prose { margin-inline: var(--ilg-prose-inset); }
 @media (max-width: 600px) {
-    html.ilg { --ilg-prose-leading-eff: calc(var(--ilg-prose-leading) - .1); }
+    :is(html.ilg, .ilg-type-page) { --ilg-prose-leading-eff: calc(var(--ilg-prose-leading) - .1); }
 }
-html.ilg body #ilg-appearance-panel .ilg-reading-preview { line-height: var(--ilg-prose-leading-user, var(--ilg-prose-leading)); }
 
 /* Plain messages outside the existing 200px visibility margin keep their measured
    content height. Flex items must not shrink when their contents are skipped.
@@ -4986,6 +4965,18 @@ html.ilg body #chat > .mes.ilg-render-away:not(.last_mes):not(.ilg-content-overl
     content-visibility: auto;
     contain-intrinsic-block-size: auto var(--ilg-message-height);
 }
+
+/* Bounded static rows only, strictly outside the existing 200px prewarm band.
+   The boundary is larger than the checked geometry and is absent on visible glass. */
+@media screen {
+    :where(html.ilg body.bubblechat:not(.no-blur) #chat > .mes.ilg-bounded-hit.ilg-message-backdrop:not(.ilg-phys, .last_mes, .ilg-content-overlay, :focus-within)) {
+        clip-path: inset(-160px -100vw);
+    }
+}
+
+/* The material switch does not rewrite a message's inline filter on scroll. */
+html.ilg body #chat .mes.ilg-glass { --ilg-message-active-filter: var(--ilg-message-away-filter); }
+html.ilg body #chat .mes.ilg-glass.ilg-phys { --ilg-message-active-filter: var(--ilg-message-near-filter); }
 
 /* Small, bounded overlay layers stay ready for direct manipulation. */
 html.ilg body > :is(#ilg-ball, #ilg-ball-glass, #ilg-ball-glass-shade, #ilg-ball-bridge, #ilg-ball-shade) { will-change: transform; }

@@ -30,6 +30,16 @@ try{
   const release=()=>list.forEach(el=>{ro.unobserve(el);io.unobserve(el);manager.release(el)});
   const natural=async label=>{const before=chat.scrollHeight;release();const after=chat.scrollHeight;if(Math.abs(before-after)>1)throw Error(label+' height changed '+before+' '+after);start();await settle();return after};
   const initialHeight=chat.scrollHeight;start();await settle();const initial=manager.status();if(!initial.supported||initial.culled<200)throw Error('No meaningful culling');if(chat.scrollHeight!==initialHeight)throw Error('Initial scroll geometry changed');
+  const reused=chat.querySelector('[data-fixture="20"]');
+  reused.scrollIntoView({block:'center'});await settle();chat.scrollTop=0;await settle();
+  const prop='--ilg-message-height', height=reused.style.getPropertyValue(prop);
+  if(!height||!reused.classList.contains('ilg-render-away'))throw Error('No measured placeholder to reuse');
+  const changes=[];const watch=new MutationObserver(items=>changes.push(...items));
+  watch.observe(reused,{attributes:true,attributeFilter:['style']});
+  reused.scrollIntoView({block:'center'});await settle();
+  if(reused.classList.contains('ilg-render-away')||reused.style.getPropertyValue(prop)!==height)throw Error('Reveal changed the measured placeholder');
+  chat.scrollTop=0;await settle();changes.push(...watch.takeRecords());watch.disconnect();
+  if(changes.length||!reused.classList.contains('ilg-render-away'))throw Error('Viewport crossing rewrote the same inline height');
   const fontEvent=range=>{const e=new Event('loadingdone');Object.defineProperty(e,'fontfaces',{value:[{unicodeRange:range}]});document.fonts.dispatchEvent(e)};const beforeFont=resets;const beforeCulled=manager.status().culled;fontEvent('U+9FFF');await settle();if(resets!==beforeFont||manager.status().culled!==beforeCulled)throw Error('Unrelated font subset exposed distant messages');fontEvent('U+0050');if(resets<=beforeFont)throw Error('Relevant font subset did not invalidate metrics');await settle();const afterRelevant=resets;document.fonts.dispatchEvent(new Event('loadingdone'));if(resets<=afterRelevant)throw Error('Unknown font event must remain conservative');await settle();
   if(rich.classList.contains('ilg-render-away')||frame.classList.contains('ilg-render-away'))throw Error('Custom renderers must stay live');const fixed=rich.querySelector('[style]').getBoundingClientRect();if(fixed.left!==650||fixed.top!==25)throw Error('Fixed card moved');
   chat.scrollTop=chat.scrollHeight;await settle();await natural('scroll to bottom');if(chat.querySelector('.last_mes').classList.contains('ilg-render-away'))throw Error('Latest message was culled');
@@ -45,6 +55,6 @@ try{
   const a=document.createElement('div'),b=document.createElement('div');for(const e of[a,b]){e.style.cssText='position:fixed;width:48px;height:48px;scale:1.08;transform:scale(1.1,.955)';document.body.append(e)}a.style.left='123px';a.style.top='157px';positionFixed(b,123,157);const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();if(Math.abs(ar.left-br.left)>.01||Math.abs(ar.top-br.top)>.01||Math.abs(ar.width-br.width)>.01)throw Error('Translation changed scale geometry');a.remove();b.remove();
   mutations.disconnect();release();resets=0;root.dataset.ilgReadingStyle='sunny';document.body.style.fontSize='17px';await settle();if(resets||manager.status().tracked||chat.querySelector('.ilg-render-away')||chat.querySelector('[style*="--ilg-message-height"]'))throw Error('Cleanup leaked state');
   const original=CSS.supports;CSS.supports=()=>false;const unsupported=createMessageRendering(chat);unsupported.track(first);CSS.supports=original;if(unsupported.status().supported||unsupported.status().tracked)throw Error('Unsupported browser fallback failed');
-  return{messages:list.length,initialCulled:initial.culled,exactInitialHeight:true,naturalHeightChecks:12,offscreenEdit:true,characterDataEdit:true,containerResize:true,fontChanges:true,fontSubsetRelevance:true,unknownFontConservative:true,richAndIframeExclusion:true,lateFixedPopup:true,nativeFind:true,newReplyLifecycle:true,translatedScaleGeometry:true,cleanup:true,unsupportedFallback:true,domPreserved:chat.children.length===list.length};
+  return{messages:list.length,initialCulled:initial.culled,exactInitialHeight:true,cacheAcrossViewportCrossings:true,naturalHeightChecks:12,offscreenEdit:true,characterDataEdit:true,containerResize:true,fontChanges:true,fontSubsetRelevance:true,unknownFontConservative:true,richAndIframeExclusion:true,lateFixedPopup:true,nativeFind:true,newReplyLifecycle:true,translatedScaleGeometry:true,cleanup:true,unsupportedFallback:true,domPreserved:chat.children.length===list.length};
  });assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:true,...result,errors},null,2));
 }finally{await browser?.close();await new Promise(r=>server.close(r));}

@@ -15,7 +15,7 @@ for(const [first,second,expected]of[
 ['x'.repeat(121),42,['','']],
 ]){const s={topShortcut1:first,topShortcut2:second};normalize(s);assert.deepEqual([s.topShortcut1,s.topShortcut2],expected)}
 const defaults=vm.runInNewContext('('+source.match(/const DEFAULTS = (\{[^]*?\n\});/)[1]+')',{PRESETS:{depth:['',{}],natural:['',{}]}});
-const bookmarkSrc=fs.readFileSync(new URL('../../appearance-bookmark.js',import.meta.url),'utf8').replace(/^export /gm,'');const bookmark=vm.runInNewContext(bookmarkSrc+';createAppearanceBookmark')(defaults);
+const {createAppearanceBookmark}=await import('../../appearance-bookmark.js');const bookmark=createAppearanceBookmark(defaults);
 const snapshot=bookmark.capture({...defaults,topShortcut1:'WI-SP-button',topShortcut2:'extensions-settings-button'});const restored=bookmark.read(snapshot);normalize(restored);assert.equal(restored.topShortcut1,'WI-SP-button');assert.equal(restored.topShortcut2,'extensions-settings-button');
 const legacy=bookmark.read({...snapshot,values:{dock:true,fold:false,islands:true}});normalize(legacy);assert(legacy.fold&&!legacy.dock);
 assert(!source.includes('name="ilg-top-style"'));assert(!source.includes('TOP_STYLES'));assert(!source.includes('applyTopStyle'));

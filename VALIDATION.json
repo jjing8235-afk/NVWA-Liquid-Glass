@@ -1,6 +1,44 @@
 {
-  "currentVersion": "2.0.5",
-  "currentDisplayVersion": "2.0.5",
+  "currentVersion": "2.0.6",
+  "currentDisplayVersion": "2.0.6",
+  "verification2_0_6": {
+    "version": "2.0.6",
+    "date": "2026-11-20",
+    "formalBase": "36c3c5d0147adf3e4b807f9478df7c2744a42257",
+    "testSource": "067c13130ef97ecb7209c79bc7a70e54ab7c447d",
+    "manifestAndSyntax": "passed",
+    "offlineRegressions": [
+      "card-solid-regression",
+      "chat-background-regression",
+      "filter-reuse-regression",
+      "first-line-indent-regression",
+      "first-open-material-regression",
+      "mobile-performance-regression",
+      "mobile-tilt-permission-regression",
+      "mobile-tilt-response-regression",
+      "reflection-queue-regression",
+      "settings-regression",
+      "top-shortcuts-regression",
+      "tt-compat-regression",
+      "typography-regression",
+      "webview-message-guard-regression"
+    ],
+    "browserSuites": [
+      "typography-host-browser",
+      "message-rendering-browser",
+      "authored-ui-browser",
+      "reading-anchor-browser",
+      "mobile-adaptation-browser (Chromium and WebKit)",
+      "foldable-backdrop-browser"
+    ],
+    "isolatedTavernMobileChecks": {
+      "androidBrowser": 35,
+      "ttWebView": 35,
+      "androidFoldable": 51,
+      "ttFoldable": 51
+    },
+    "scope": "Browser fixtures and local SillyTavern with disposable test data. Mobile profiles use desktop Chromium/WebKit; no physical-device, sustained FPS or third-party card runtime acceptance."
+  },
   "date": "2026-11-05",
   "version": "1.4.4-local.9",
   "baseline": "1.4.4-local.8",

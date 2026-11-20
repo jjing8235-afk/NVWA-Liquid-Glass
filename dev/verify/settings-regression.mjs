@@ -19,10 +19,13 @@ const defaults = {
     cssReset: true, cssCleaned: false, cssBackup: '', cssBackupAt: '',
     lookBackup: '', themeBackup: '', radius: 22,
 };
+let resetDraft = false;
 vm.runInNewContext(resetBody, {
     S: settings, DEFAULTS: defaults,
-    clearAll() {}, applyRoot() {}, sync() {}, ctx: { saveSettingsDebounced() {} },
+    clearAll() {}, applyRoot() {}, sync() {}, syncAppearancePanel() {}, ctx: { saveSettingsDebounced() {} },
+    typographyStudio: { sync({reset}) { resetDraft = reset; } },
 });
+assert.equal(resetDraft, true);
 assert.equal(settings.radius, 22);
 assert.equal(settings.cssBackup, 'original-css');
 assert.equal(settings.cssBackupAt, 'date');

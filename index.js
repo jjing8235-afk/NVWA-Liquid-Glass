@@ -26,6 +26,7 @@ import { createGlassLighting } from './glass-lighting.js';
 import { createLightScope } from './light-scope.js';
 import { wallpaperLayout, wallpaperPoint, topTone } from './wallpaper-sampling.js';
 import { createAppearanceBookmark } from './appearance-bookmark.js';
+import { createTypographyStudio, migrateProseSpacing } from './typography.js';
 import { onViewportChange, createKeyboard, createReadingAnchor } from './viewport.js';
 
 // 同一个酒馆里装了两份（比如手动拷的一份 + 从 GitHub 装的一份）时只跑先加载的那份，不然顶栏、面板会出两套
@@ -35,7 +36,7 @@ window.__ilgLoaded = new URL('.', import.meta.url).pathname;
 let studioUI = null;
 let flickerCapture = null, flickerReport = null;
 const MODULE = 'iosLiquidGlass';
-const BUILD_VERSION = '2.0.5';
+const BUILD_VERSION = '2.0.6';
 const ENGINE_NAMES = Object.freeze({performance:'御风性能引擎',refraction:'棱光折射引擎'});
 const NS = 'http://www.w3.org/2000/svg';
 const ctx = SillyTavern.getContext();
@@ -615,7 +616,7 @@ const PRESETS_PREVIOUS = {
 const DEFAULTS = {
     chatBackground: 'glass', chatVeil: 45, chatFontSize: 0, firstLineIndent: false, justifyText: false, compatibilityMode: 'auto', androidWebViewRefract: false, iosSvgTrial: false, iosMaterial: true,
     enabled: true, float: true, islands: true, fold: true, topShortcut1: '', topShortcut2: '', qrFold: true, composerLayout: 'split', home: true, toneBtn: true, homeName: 'NVWA 用户', icons: true, refract: true, refractMes: true, font: true, tone: 'time', dayStart: 7, dayEnd: 19, avatar: 'line', orb: true, panelRead: true, dock: false, floatBall: true, ballSnap: true, ballFuse: true, ballSide: 'right', ballY: 0.62, ballFx: 0.92, ballFy: 0.6, ballDock: false,
-    webPreset: 'clear', mobileTilt: false, glassStyle: 'original', engine: 'physical', follow: true, pLight: 135, customTextTone: 'auto', customWallpaper: '', readingStyle: 'warm', proseLeading: 0, proseInset: 0,
+    webPreset: 'clear', mobileTilt: false, glassStyle: 'original', engine: 'physical', follow: true, pLight: 135, customTextTone: 'auto', customWallpaper: '', readingStyle: 'warm', proseLeading: 0, proseInset: 0, typography: null,
     // 自然弧度没写的参数（厚度、折射率等，只给物理折射截面用）沿用清透立体的
     ...PRESETS.depth[1], ...PRESETS.natural[1],
     scale: 95, bevel: 30, curve: 2.2, aberration: 8,
@@ -684,8 +685,7 @@ const S = ctx.extensionSettings[MODULE];
 if (Object.hasOwn(S, 'cardSolid')) { delete S.cardSolid; ctx.saveSettingsDebounced(); }
 S.chatVeil = normalizeChatVeil(S.chatVeil);
 S.chatFontSize = normalizeChatFontSize(S.chatFontSize);
-S.proseLeading = normalizeProseLeading(S.proseLeading);
-S.proseInset = normalizeProseInset(S.proseInset);
+migrateProseSpacing(S);
 S.chatBackground = S.chatBackground === 'transparent' ? 'transparent' : 'glass';
 S.readingStyle = normalizeReadingStyle(S.readingStyle);
 S.iosMaterial = S.iosMaterial === true;
@@ -1048,7 +1048,7 @@ function messageSurface(el, it) {
     if (viewportReady && !it.widePresetPrepared && innerWidth >= 600) {
         it.widePresetPrepared = true;
         const text = el.querySelector('.mes_text');
-        if (!el.classList.contains('ilg-card-renderer') && text?.querySelector(CARD_RENDERER_CANDIDATES)) applyCardMarkers(text);
+        if (!el.classList.contains('ilg-card-renderer') && text?.querySelector(CARD_RENDERER_CANDIDATES)) applyCardMarkers([text]);
     }
     const separate = viewportReady || el.classList.contains('ilg-content-overlay') || el.classList.contains('ilg-card-renderer');
     el.classList.toggle('ilg-message-backdrop', separate);
@@ -1176,7 +1176,9 @@ function paint(el, geo) {
     // Apply the large-surface budget before allocating either reflections or SVG maps.
     const guarded = it.largeWebView || stablePanel;
     // Offscreen and guarded Android messages retain their CSS material.
-    if (composer || guarded || (it.kind === 'mes' && !it.visible)) reflections.release(el);
+    const stableMessage = it.kind === 'mes' && !androidHost && !isIOS && canRefract() && S.engine === 'physical';
+    if (stableMessage) reflections.paintMessage(el, w, h, r, it.visible);
+    else if (composer || guarded || (it.kind === 'mes' && !it.visible)) reflections.release(el);
     else reflections.paint(el, w, h, r);
     if (useWeb) {
         it.renderPath = 'web-compatible';
@@ -1197,6 +1199,19 @@ function paint(el, geo) {
         it.filter?.remove(); it.filter = null; it.physical = null;
     }
     setPhys(el, it, phys);
+    if (stableMessage) {
+        // Blink can invalidate the whole chat for a descendant's style attribute
+        // change (host :has() rules). Bind both filters once; only the material
+        // class changes when a message crosses the existing visibility band.
+        const near = `url(#${it.id})` + reading;
+        if (el.style.getPropertyValue('--ilg-message-near-filter') !== near) el.style.setProperty('--ilg-message-near-filter', near);
+        if (el.style.getPropertyValue('--ilg-message-away-filter') !== tail) el.style.setProperty('--ilg-message-away-filter', tail);
+        if (phys) buildPhysical(it, el, w, h, r);
+        const filter = 'var(--ilg-message-active-filter)';
+        if (surface.style.backdropFilter !== filter) surface.style.backdropFilter = filter;
+        it.renderPath = phys ? 'physical' : 'blur';
+        return;
+    }
     if (canRefract() && !isIOS) surface.style.webkitBackdropFilter = '';
     if (phys) {
         it.renderPath = 'physical';
@@ -1268,25 +1283,26 @@ const io = new IntersectionObserver(entries => {
     flickerCapture?.intersections(entries);
 }, { root: document.getElementById('chat'), rootMargin: '200px 0px' });
 
-function track(el, kind) {
-    if (items.has(el) || !trackable(el)) return;
-    // Match the observer's 200px prewarm margin before the first material paint.
-    const rect = kind === 'mes' ? el.getBoundingClientRect() : null;
-    const viewport = rect ? document.getElementById('chat')?.getBoundingClientRect() : null;
-    const initiallyVisible = !!(rect && viewport && rect.width > 0 && rect.height > 0
-        && viewport.width > 0 && viewport.height > 0
+// Match the same prewarm margin as the message IntersectionObserver.
+function nearMessageViewport(rect, viewport) {
+    return rect.width > 0 && rect.height > 0 && viewport.width > 0 && viewport.height > 0
         && rect.bottom > viewport.top - 200 && rect.top < viewport.bottom + 200
-        && rect.right > viewport.left && rect.left < viewport.right);
-    const it = { id: `ilg-f${++uid}`, kind, visible: kind !== 'mes' || initiallyVisible };
+        && rect.right > viewport.left && rect.left < viewport.right;
+}
+function registerSurface(el, kind, visible) {
+    const it = { id: `ilg-f${++uid}`, kind, visible };
     items.set(el, it);
-    if (it.visible) visibleItems.add(el);
+    if (visible) visibleItems.add(el);
     el.classList.add('ilg-glass');
     // 表面光泽只给不会内部滚动的表面，抽屉这类会滚的容器里光泽会跟着内容跑
     if (kind === 'bar' || kind === 'mes' || kind === 'toast') el.classList.add('ilg-sheen');
-    if (getComputedStyle(el).position === 'static') {
-        el.style.position = 'relative';
-        it.posFixed = true;
-    }
+    return it;
+}
+function positionSurface(el, it) {
+    el.style.position = 'relative';
+    it.posFixed = true;
+}
+function observeSurface(el, it) {
     if (isNativePopup(el)) {
         const content = el.querySelector(':scope > .popup-body > .popup-content');
         if (content) {
@@ -1298,11 +1314,42 @@ function track(el, kind) {
         }
     }
     ro.observe(el);
-    if (kind === 'mes') {
+    if (it.kind === 'mes') {
         messageRendering.track(el); io.observe(el);
         flickerCapture?.messagePaints('mount', 1);
     }
+}
+function track(el, kind) {
+    if (items.has(el) || !trackable(el)) return;
+    const viewport = kind === 'mes' ? document.getElementById('chat')?.getBoundingClientRect() : null;
+    const visible = kind !== 'mes' || !!viewport && nearMessageViewport(el.getBoundingClientRect(), viewport);
+    const it = registerSurface(el, kind, visible);
+    if (getComputedStyle(el).position === 'static') positionSurface(el, it);
+    observeSurface(el, it);
     paint(el);
+}
+function trackMessages(elements) {
+    // Chat history can arrive in one DOM mutation. Install material classes and
+    // positioning as groups, then measure and paint without a forced layout per row.
+    const list = [...new Set(elements)].filter(el => !items.has(el) && trackable(el));
+    if (list.length < 2) {
+        if (list.length) track(list[0], 'mes');
+        return;
+    }
+    const states = list.map(el => registerSurface(el, 'mes', false));
+    const staticRows = list.map(el => getComputedStyle(el).position === 'static');
+    list.forEach((el, i) => { if (staticRows[i]) positionSurface(el, states[i]); });
+    const viewport = document.getElementById('chat').getBoundingClientRect();
+    const geometries = list.map((el, i) => {
+        const it = states[i];
+        it.visible = nearMessageViewport(el.getBoundingClientRect(), viewport);
+        if (it.visible) visibleItems.add(el);
+        return measure(el);
+    });
+    list.forEach((el, i) => {
+        observeSurface(el, states[i]);
+        paint(el, geometries[i]);
+    });
 }
 
 function untrack(el) {
@@ -1321,10 +1368,14 @@ function untrack(el) {
     it.backdropClip?.remove();
     ro.unobserve(el);
     io.unobserve(el);
-    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys', 'ilg-adapted', 'ilg-message-backdrop', 'ilg-message-viewport', 'ilg-control-surface', 'ilg-control-readable', 'ilg-css-surface', 'ilg-composer-liquid', 'ilg-stable-composer');
+    el.classList.remove('ilg-glass', 'ilg-sheen', 'ilg-clear', 'ilg-phys', 'ilg-adapted', 'ilg-message-backdrop', 'ilg-message-viewport', 'ilg-bounded-hit', 'ilg-control-surface', 'ilg-control-readable', 'ilg-css-surface', 'ilg-composer-liquid', 'ilg-stable-composer');
     if (el.id === 'nonQRFormItems') el.querySelectorAll('[data-ilg-input-tone]').forEach(action => delete action.dataset.ilgInputTone);
     el.style.backdropFilter = '';
     el.style.webkitBackdropFilter = '';
+    if (it.kind === 'mes') {
+        el.style.removeProperty('--ilg-message-near-filter');
+        el.style.removeProperty('--ilg-message-away-filter');
+    }
     if (it.posFixed) el.style.position = '';
     visibleItems.delete(el);
     items.delete(el);
@@ -1336,7 +1387,9 @@ function scan() {
     document.querySelectorAll(S.islands ? inputSurfaces : '#top-bar, ' + inputSurfaces).forEach(el => track(el, 'bar'));
     document.querySelectorAll(PANEL_SEL).forEach(el => track(el, 'panel'));
     const bubble = document.body.classList.contains('bubblechat');
-    document.querySelectorAll(`#chat ${MES_SEL}`).forEach(el => bubble ? track(el, 'mes') : untrack(el));
+    const messages = document.querySelectorAll(`#chat ${MES_SEL}`);
+    if (bubble) trackMessages(messages);
+    else messages.forEach(untrack);
 }
 
 // 悬浮小球的融合玻璃不走 items，由它自己的钩子重画（小球那段代码在后面，这里只留个空位）
@@ -1349,7 +1402,20 @@ function clearAll() { [...items.keys()].forEach(untrack); cache.clear(); clearMa
 const holder = document.getElementById('top-settings-holder');
 const GROUP_START = ['user-settings-button', 'persona-management-button'];
 const islands = [];
-const islandRO = new ResizeObserver(() => requestAnimationFrame(layoutIslands));
+let islandLayoutFrame = 0;
+const islandRO = new ResizeObserver(scheduleIslandLayout);
+function scheduleIslandLayout() {
+    if (!S.enabled || !S.islands || islandLayoutFrame) return;
+    islandLayoutFrame = requestAnimationFrame(() => {
+        islandLayoutFrame = 0;
+        layoutIslands();
+    });
+}
+function cancelIslandLayout() {
+    if (!islandLayoutFrame) return;
+    cancelAnimationFrame(islandLayoutFrame);
+    islandLayoutFrame = 0;
+}
 function iconGroups() {
     // 全部铺开：所有图标一座岛
     if (dockOn()) return [[...holder.children]];
@@ -1367,16 +1433,28 @@ function iconGroups() {
     return groups.filter(g => !S.fold || g.some(d => !d.classList.contains('ilg-folded')));
 }
 function layoutIslands() {
+    // 视口回调已在帧内；设置变更仍即时落位，不再补跑排队的测量。
+    cancelIslandLayout();
     if (!S.enabled || !S.islands) return;
     const bar = document.getElementById('top-bar');
     const groups = iconGroups();
-    // 分组留白先排好，再量玻璃边界。
+    // 先更新分组留白，再一次读完各组边界，避免玻璃写入打断下一组测量。
     const dock = dockOn(), seps = dock ? dockSeparators() : [];
-    for (const d of holder.children) d.classList.toggle('ilg-dock-sep', seps.includes(d));
-    holder.querySelectorAll(':scope > .ilg-group-start').forEach(d => d.classList.remove('ilg-group-start'));
-    groups.slice(1).forEach(g => g[0].classList.add('ilg-group-start'));
-    for (const d of holder.children) islandRO.observe(d);
-    const br = bar.getBoundingClientRect();
+    const starts = new Set(groups.slice(1).map(g => g[0]));
+    for (const d of holder.children) {
+        d.classList.toggle('ilg-dock-sep', seps.includes(d));
+        d.classList.toggle('ilg-group-start', starts.has(d));
+        islandRO.observe(d);
+    }
+    const barLeft = bar.getBoundingClientRect().left;
+    const borderLeft = bar.clientLeft;
+    const bounds = groups.map(g => {
+        const rects = g.map(d => d.getBoundingClientRect()).filter(r => r.width > 0);
+        if (!rects.length) return null;
+        const left = Math.min(...rects.map(r => r.left)) - 6;
+        const right = Math.max(...rects.map(r => r.right)) + 6;
+        return { left: `${left - barLeft - borderLeft}px`, width: `${right - left}px` };
+    });
     groups.forEach((g, i) => {
         let isl = islands[i];
         if (!isl) {
@@ -1386,21 +1464,21 @@ function layoutIslands() {
             bar.appendChild(isl);
         }
         isl.icons = g;
-        const rects = g.map(d => d.getBoundingClientRect()).filter(r => r.width > 0);
-        isl.hidden = !rects.length;
-        if (isl.hidden) return;
-        const left = Math.min(...rects.map(r => r.left)) - 6;
-        const right = Math.max(...rects.map(r => r.right)) + 6;
-        isl.style.left = `${left - br.left - bar.clientLeft}px`;
-        isl.style.width = `${right - left}px`;
-        if (!items.has(isl)) track(isl, 'bar');
+        const box = bounds[i];
+        if (isl.hidden !== !box) isl.hidden = !box;
+        if (!box) return;
+        if (isl.style.left !== box.left) isl.style.left = box.left;
+        if (isl.style.width !== box.width) isl.style.width = box.width;
     });
+    bounds.forEach((box, i) => { if (box && !items.has(islands[i])) track(islands[i], 'bar'); });
     for (let i = groups.length; i < islands.length; i++) { untrack(islands[i]); islands[i].remove(); }
     islands.length = groups.length;
     if (dock) layoutDock(); else clearDock();
     scheduleAdapt();
 }
 function removeIslands() {
+    cancelIslandLayout();
+    islandRO.disconnect();
     clearDock();
     islands.forEach(isl => { untrack(isl); isl.remove(); });
     islands.length = 0;
@@ -1710,7 +1788,7 @@ new MutationObserver(muts => {
     if (!S.enabled || !S.fold || dockOn()) return;
     const structure = muts.some(m => m.type === 'childList' &&
         (m.target === holder || (m.target.parentElement === holder && m.target.classList.contains('drawer'))));
-    if (structure) { applyFold(); requestAnimationFrame(layoutIslands); return; }
+    if (structure) { applyFold(); scheduleIslandLayout(); return; }
     if (muts.some(m => m.type === 'attributes' &&
         (m.target.parentElement?.parentElement === holder || m.target.closest('.drawer-toggle')?.parentElement?.parentElement === holder))) syncFold();
 }).observe(holder, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
@@ -1747,10 +1825,6 @@ appearancePanel.innerHTML = `<div class="ilg-appearance-heading"><div><strong>�
   <fieldset class="ilg-appearance-modes"><legend class="ilg-sr-only">界面外观</legend>${[['light','白天'],['dark','黑夜'],['custom','自定义']].map(([value,label]) => `<label><input type="radio" name="ilg-appearance-mode" value="${value}"><span>${appearanceSvg(value)}<span>${label}</span></span></label>`).join('')}</fieldset>
   <fieldset class="ilg-glass-choice"><legend>玻璃材质</legend><label><input type="radio" name="ilg-glass-style" value="original"><span><strong>映卿</strong><small>清透弧面 · 安静轻盈</small></span></label><label><input type="radio" name="ilg-glass-style" value="liquid-web"><span><strong>漾卿</strong><small>柔润折射 · 轻弹流动</small></span></label></fieldset><p class="ilg-web-style-hint"></p><fieldset class="ilg-glass-choice ilg-web-presets"><legend>漾卿 · 质感</legend>${Object.entries(WEB_PRESETS).map(([value,p]) => `<label><input type="radio" name="ilg-web-preset" value="${value}"><span><strong>${p.label}</strong><small>${p.detail}</small></span></label>`).join('')}</fieldset>
   ${composerLayoutPicker()}
-  <div class="ilg-reading-section"><fieldset class="ilg-reading-choice"><legend>文字风格</legend>${[['warm','青瓷','青绿对白 · 留白排版'],['classic','栖暖','柔琥珀色 · 安静叙事'],['moon','笺月','宋体优先 · 疏朗书卷'],['sunny','晴笺','清爽黑体 · 蓝调对白']].map(([value,label,detail]) => `<label data-reading-style="${value}"><input type="radio" name="ilg-reading-style" value="${value}"><span><span class="ilg-style-name">${label}</span><span class="ilg-style-sample" aria-hidden="true"><span>微光落在纸上</span><q>故事慢慢说</q></span><span class="ilg-style-detail">${detail}</span></span></label>`).join('')}</fieldset>
-  <p class="ilg-reading-font-note">字体优先使用设备已有字库；缺少时由系统回退。样式只调整普通正文。</p>
-  <div class="ilg-preview-heading"><span>阅读预览</span><span class="ilg-preview-tone"></span></div>
-  <div class="ilg-reading-preview" aria-label="当前文字风格预览"><p>暮色落在书页上，<strong>故事还很长。</strong></p><p><q>“把故事，慢慢说给我听。”</q></p><p><em>她把书签，轻轻留在这一页。</em></p></div></div>
   <div class="ilg-appearance-custom"><fieldset class="ilg-text-choice"><legend>自定义壁纸字色</legend>${[['auto','自动'],['dark','深色'],['light','浅色']].map(([value,label]) => `<label><input type="radio" name="ilg-custom-text" value="${value}"><span>${label}</span></label>`).join('')}</fieldset><p class="ilg-appearance-hint">自动按壁纸选字色；首页保留柔白效果。</p><button type="button" class="ilg-choose-wallpaper"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 3-3 5 5"/></svg>更换壁纸</span><svg class="ilg-wallpaper-arrow" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button></div>
   <p class="ilg-appearance-status" role="status"></p>`;
 document.body.appendChild(appearancePanel);
@@ -1783,13 +1857,9 @@ function syncAppearancePanel() {
     const mode = appearanceMode();
     appearancePanel.querySelectorAll('[name="ilg-appearance-mode"]').forEach(el => { el.checked = el.value === mode; });
 appearancePanel.querySelectorAll('[name="ilg-custom-text"]').forEach(el => { el.checked = el.value === normalizeCustomTextTone(S.customTextTone); });
-    document.querySelectorAll('[name="ilg-reading-style"]').forEach(el => { el.checked = el.value === normalizeReadingStyle(S.readingStyle); });
     appearancePanel.querySelector('.ilg-appearance-custom').hidden = mode !== 'custom';
-    const readingName = { warm: '青瓷', classic: '栖暖', moon: '笺月', sunny: '晴笺' }[normalizeReadingStyle(S.readingStyle)];
-    document.querySelector('.ilg-preview-heading > span').textContent = readingName + ' · 阅读预览';
-    document.querySelector('.ilg-reading-preview').setAttribute('aria-label', readingName + '文字风格预览');
-    document.querySelector('.ilg-preview-tone').textContent = lightBg ? '日间字色' : '夜间字色';
     appearancePanel.querySelector('.ilg-appearance-status').textContent = '即时生效，自动保存';
+    typographyStudio.sync();
     studioUI?.sync();
 }
 function syncToneBtn() {
@@ -2239,12 +2309,6 @@ async function selectAppearance(mode) {
 toneIcon.addEventListener('click', () => { void selectAppearance(nextAppearanceMode()); });
 appearancePanel.querySelector('.ilg-choose-wallpaper').addEventListener('click', openWallpaperPicker);
 appearancePanel.querySelectorAll('[name="ilg-appearance-mode"]').forEach(el => el.addEventListener('change', () => selectAppearance(el.value)));
-appearancePanel.querySelectorAll('[name="ilg-reading-style"]').forEach(el => el.addEventListener('change', () => {
-    S.readingStyle = normalizeReadingStyle(el.value);
-    applyReadingStyle();
-    syncAppearancePanel();
-    ctx.saveSettingsDebounced();
-}));
 appearancePanel.querySelectorAll('[name="ilg-composer-layout"]').forEach(el => el.addEventListener('change', () => {
     if (!el.checked) return;
     S.composerLayout = normalizeComposerLayout(el.value);
@@ -2568,7 +2632,7 @@ document.addEventListener('pointerdown', e => {
     setRecent(false);
 }, true);
 
-new ResizeObserver(() => requestAnimationFrame(layoutIslands)).observe(holder);
+new ResizeObserver(scheduleIslandLayout).observe(holder);
 onViewportChange(layoutIslands);
 
 // 明暗判定：浅色壁纸配白字会看不清，所以按壁纸平均亮度切换
@@ -2710,23 +2774,6 @@ function normalizeChatFontSize(value) {
     const numeric = Number(value);
     return Number.isFinite(numeric) && numeric > 0 ? Math.min(32, Math.max(12, Math.round(numeric))) : 0;
 }
-// 行距 / 左右留白：0 = 跟随当前阅读风格的推荐值；只作用于 .ilg-prose 普通正文
-function normalizeProseLeading(value) {
-    const n = Number(value);
-    return Number.isFinite(n) && n > 0 ? Math.min(2.6, Math.max(1.4, Math.round(n * 20) / 20)) : 0;
-}
-function normalizeProseInset(value) {
-    const n = Number(value);
-    return Number.isFinite(n) && n > 0 ? Math.min(48, Math.max(1, Math.round(n))) : 0;
-}
-function applyProseSpacing() {
-    S.proseLeading = normalizeProseLeading(S.proseLeading);
-    S.proseInset = normalizeProseInset(S.proseInset);
-    const on = S.enabled;
-    if (on && S.proseLeading) root.style.setProperty('--ilg-prose-leading-user', String(S.proseLeading)); else root.style.removeProperty('--ilg-prose-leading-user');
-    if (on && S.proseInset) root.style.setProperty('--ilg-prose-inset', S.proseInset + 'px'); else root.style.removeProperty('--ilg-prose-inset');
-    root.classList.toggle('ilg-prose-inset-on', on && S.proseInset > 0);
-}
 function applyChatFontSize() {
     const size = normalizeChatFontSize(S.chatFontSize);
     S.chatFontSize = size;
@@ -2778,7 +2825,6 @@ function applyRoot() {
     if (glassSettingsRaf) { cancelAnimationFrame(glassSettingsRaf); glassSettingsRaf = 0; }
     if (!S.enabled) { cardTone = null; clearTopTones(); }
     applyChatFontSize();
-    applyProseSpacing();
     root.classList.toggle('ilg', S.enabled);
     S.composerLayout = normalizeComposerLayout(S.composerLayout);
     composerTools.setEnabled(S.enabled && S.composerLayout !== 'classic');
@@ -2799,6 +2845,7 @@ function applyRoot() {
     root.classList.toggle('ilg-font', S.enabled && S.font);
     cardClarity.setEnabled(S.enabled);
     applyReadingStyle();
+    typographyStudio.sync();
     root.classList.toggle('ilg-islands', S.enabled && S.islands);
     root.classList.toggle('ilg-dock', dockOn());
     root.classList.toggle('ilg-avline', S.enabled && S.avatar === 'line');
@@ -2854,6 +2901,8 @@ new ResizeObserver(() => {
 }).observe(form);
 const keyboard = createKeyboard({ root, enabled: () => S.enabled && S.float, input: () => document.getElementById('send_textarea') });
 const readingAnchor = createReadingAnchor({ chat: chatEl, enabled: () => S.enabled });
+const typographyStudio = createTypographyStudio({root, chat:chatEl, settings:S, save:()=>ctx.saveSettingsDebounced(),
+    setBase:()=>{ applyReadingStyle(); syncAppearancePanel(); typographyStudio.ui.dispatchEvent(new Event('ilg-type-applied',{bubbles:true})); }});
 
 // 新消息、删除消息、切换聊天
 // 切换聊天后 1.5 秒内不加入场动画：酒馆是一条条插入消息的，那段时间插进来的都是旧消息
@@ -2866,7 +2915,7 @@ new MutationObserver(muts => {
         m.removedNodes.forEach(n => n.nodeType === 1 && (items.has(n) ? untrack(n) : n.querySelectorAll?.('.ilg-glass').forEach(untrack)));
         if (bubble) m.addedNodes.forEach(n => n.nodeType === 1 && n.matches(MES_SEL) && added.push(n));
     }
-    added.forEach(n => track(n, 'mes'));
+    trackMessages(added);
     if (!androidHost && added.length > 0 && added.length <= 2 && performance.now() > riseQuietUntil) {
         added.forEach(n => {
             n.classList.add('ilg-rise');
@@ -3200,19 +3249,6 @@ function buildPanel() {
       </div>
       <p class="ilg-hint" id="ilg-chat-font-hint">12–32 像素，自动保存。只调整聊天正文；菜单、输入框及 iframe 内的字号不变，自带固定字号的卡片样式不强制改动。</p>
     </div>
-    <div class="ilg-row ilg-chat-font-row ilg-prose-spacing-row">
-      <label for="ilg-opt-proseLeading"><span>正文行距</span><output id="ilg-opt-proseLeading-v" for="ilg-opt-proseLeading">跟随风格</output></label>
-      <div class="ilg-chat-font-controls">
-        <input type="range" id="ilg-opt-proseLeading" min="1.4" max="2.6" step="0.05" aria-describedby="ilg-prose-spacing-hint">
-        <button type="button" id="ilg-prose-leading-reset" class="menu_button">跟随风格</button>
-      </div>
-      <label for="ilg-opt-proseInset"><span>正文左右留白</span><output id="ilg-opt-proseInset-v" for="ilg-opt-proseInset">跟随风格</output></label>
-      <div class="ilg-chat-font-controls">
-        <input type="range" id="ilg-opt-proseInset" min="1" max="48" step="1" aria-describedby="ilg-prose-spacing-hint">
-        <button type="button" id="ilg-prose-inset-reset" class="menu_button">跟随风格</button>
-      </div>
-      <p class="ilg-hint" id="ilg-prose-spacing-hint">只调整普通正文段落；卡片自绘内容、代码与 iframe 不变。点“跟随风格”恢复当前阅读风格的推荐值。</p>
-    </div>
     <div class="ilg-row"><label for="ilg-opt-homeName"><span>首页问候里的称呼</span></label>
       <input type="text" id="ilg-opt-homeName" class="text_pole" maxlength="20" placeholder="留空就只显示“晚上好”"></div>
     <div class="ilg-row"><label for="ilg-opt-tone"><span>明暗</span></label>
@@ -3284,7 +3320,7 @@ function buildPanel() {
         bookmarkNotice = ''; undoAppearance = null; queueMicrotask(syncSavedAppearance);
     });
     function applySavedAppearance(patch) {
-        Object.assign(S, patch); normalizeTopStyleSettings(S); clearAll(); applyRoot(); sync(); queueCards(true); ctx.saveSettingsDebounced();
+        Object.assign(S, patch); normalizeTopStyleSettings(S); clearAll(); applyRoot(); typographyStudio.sync({reset:true}); syncAppearancePanel(); sync(); queueCards(true); ctx.saveSettingsDebounced();
     }
     saveLookButton.addEventListener('click', () => {
         S.savedAppearance = bookmark.capture(S); undoAppearance = null; bookmarkNotice = ''; syncSavedAppearance(); ctx.saveSettingsDebounced();
@@ -3318,7 +3354,8 @@ function buildPanel() {
         }
     });
     wrap.querySelector('.inline-drawer-content').append(createFlickerControls(), captureControls);
-    studioUI = createSettingsPanel({ host, content: wrap, appearance: appearancePanel, version: BUILD_VERSION, settings: S, engines: ENGINE_NAMES });
+    typographyStudio.ui.addEventListener('ilg-type-applied', () => { bookmarkNotice = ''; undoAppearance = null; syncSavedAppearance(); });
+    studioUI = createSettingsPanel({ host, content: wrap, appearance: appearancePanel, typography: typographyStudio.ui, version: BUILD_VERSION, settings: S, engines: ENGINE_NAMES });
     updateCaptureInstructions();
 
     document.getElementById('ilg-opt-iosReportCopy').textContent = '导出兼容诊断 TXT';
@@ -3350,6 +3387,7 @@ function buildPanel() {
     const saveChatFont = value => {
         S.chatFontSize = value;
         applyChatFontSize();
+        typographyStudio.sync();
         syncChatFont();
         ctx.saveSettingsDebounced();
     };
@@ -3361,20 +3399,6 @@ function buildPanel() {
         saveChatFont(Math.min(32, Math.max(12, Math.round(value))));
     });
     document.getElementById('ilg-chat-font-reset').addEventListener('click', () => saveChatFont(0));
-    const leadRange = document.getElementById('ilg-opt-proseLeading'), insetRange = document.getElementById('ilg-opt-proseInset');
-    const syncProseSpacing = () => {
-        const styleLead = parseFloat(getComputedStyle(root).getPropertyValue('--ilg-prose-leading')) || 1.9;
-        leadRange.value = S.proseLeading || styleLead;
-        insetRange.value = S.proseInset || 1;
-        const lv = S.proseLeading ? S.proseLeading.toFixed(2) : '跟随风格', iv = S.proseInset ? S.proseInset + ' px' : '跟随风格';
-        document.getElementById('ilg-opt-proseLeading-v').textContent = lv; leadRange.setAttribute('aria-valuetext', lv);
-        document.getElementById('ilg-opt-proseInset-v').textContent = iv; insetRange.setAttribute('aria-valuetext', iv);
-    };
-    const saveProse = (key, value) => { S[key] = value; applyProseSpacing(); syncProseSpacing(); ctx.saveSettingsDebounced(); };
-    leadRange.addEventListener('input', () => saveProse('proseLeading', Number(leadRange.value)));
-    insetRange.addEventListener('input', () => saveProse('proseInset', Number(insetRange.value)));
-    document.getElementById('ilg-prose-leading-reset').addEventListener('click', () => saveProse('proseLeading', 0));
-    document.getElementById('ilg-prose-inset-reset').addEventListener('click', () => saveProse('proseInset', 0));
     const veilRange = document.getElementById('ilg-opt-chatVeil');
     const syncChatVeil = () => {
         veilRange.value = S.chatVeil;
@@ -3390,7 +3414,6 @@ function buildPanel() {
     const sync = () => {
         syncChatVeil();
         syncChatFont();
-        syncProseSpacing();
         document.getElementById('ilg-opt-chatBackground').value = S.chatBackground;
         TOGGLES.forEach(([k]) => { document.getElementById(`ilg-opt-${k}`).checked = !!S[k]; });
         // 小球关着时，吸边 / 融合两个子开关变灰
@@ -3511,12 +3534,14 @@ function buildPanel() {
         }
         if (k === 'firstLineIndent') {
             root.classList.toggle('ilg-indent', S.enabled && !!S.firstLineIndent);
+            typographyStudio.sync();
             ctx.saveSettingsDebounced();
             return;
         }
         // Text alignment does not require rebuilding glass.
         if (k === 'justifyText') {
             root.classList.toggle('ilg-justify', S.enabled && !!S.justifyText);
+            typographyStudio.sync();
             ctx.saveSettingsDebounced();
             return;
         }
@@ -3535,7 +3560,7 @@ function buildPanel() {
         const retained = Object.fromEntries(['cssReset', 'cssCleaned', 'cssBackup', 'cssBackupAt', 'lookBackup', 'themeBackup']
             .map(k => [k, S[k]]));
         Object.assign(S, DEFAULTS, retained);
-        clearAll(); applyRoot(); sync(); ctx.saveSettingsDebounced();
+        clearAll(); applyRoot(); typographyStudio.sync({reset:true}); syncAppearancePanel(); sync(); ctx.saveSettingsDebounced();
     };
     const btn = document.getElementById('ilg-reset');
     btn.addEventListener('click', reset);
@@ -3546,7 +3571,6 @@ function buildPanel() {
 }
 
 // Top controls sample visible card surfaces first, then the cached wallpaper crop.
-let wallpaperBackdrop = null;
 const isTopSurface = bar => bar.id === 'top-bar' || bar.id === 'ilg-floor' || bar.classList.contains('ilg-island');
 function readWallpaperBackdrop() {
     if (!currentWallpaperSample) return null;
@@ -3564,7 +3588,7 @@ function applyTopTone(el, appearance) {
     if (!appearance) { if (el.dataset?.ilgTopTone) delete el.dataset.ilgTopTone; return; }
     if (el.dataset.ilgTopTone !== appearance.tone) el.dataset.ilgTopTone = appearance.tone;
 }
-function topIconTones(bars) {
+function topIconTones(bars, lumAt) {
     const result = [], noBlur = document.body.classList.contains('no-blur');
     for (const bar of bars) for (const wrapper of bar?.icons || []) {
         const icon = wrapper.querySelector('.drawer-icon'); if (!icon) continue;
@@ -3578,71 +3602,109 @@ function topIconTones(bars) {
     return result;
 }
 function clearTopTones() { document.querySelectorAll('[data-ilg-top-tone]').forEach(el => applyTopTone(el,null)); }
-function surfaceLuminance(el, onColor) {
-    const view = el.ownerDocument.defaultView;
-    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
-        if (n === document.body || n.id === 'chat' || n.id === 'sheld') return null;
-        const m = /rgba?\(([^)]+)\)/.exec(view.getComputedStyle(n).backgroundColor);
-        if (!m) continue;
-        const [r, g, b, a = 1] = m[1].split(',').map(Number);
-        if (a < 0.5) continue;
-        onColor?.([r,g,b]);
-        return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-    }
-    return null;
-}
-function lumAt(x, y, bar, onColor) {
-    for (const el of document.elementsFromPoint(x, y)) {
-        if (bar.contains(el) || el.closest('#top-bar, #top-settings-holder, #form_sheld')) continue;
-        if (el.tagName === 'IFRAME') {
-            try {
-                const r = el.getBoundingClientRect();
-                const inner = el.contentDocument?.elementFromPoint(x - r.left, y - r.top);
-                if (inner) return surfaceLuminance(inner,onColor);
-            } catch { /* 跨域 iframe 读不到，跳过 */ }
-            return null;
+// A pass reads all surfaces before any tone writes. Reuse only within that pass:
+// a subsequent sample must see new scroll positions, iframe geometry and authored colors.
+function createBackdropSampler(wallpaper) {
+    const surfaces = new WeakMap(), frameRects = new WeakMap(), chrome = new WeakMap();
+    function surfaceColor(el) {
+        let color = null, path = null;
+        for (let n = el; n; n = n.parentElement) {
+            const cached = surfaces.get(n);
+            if (cached !== undefined) { color = cached; break; }
+            if (n === document.body || n.id === 'chat' || n.id === 'sheld') break;
+            const m = /rgba?\(([^)]+)\)/.exec(n.ownerDocument.defaultView.getComputedStyle(n).backgroundColor);
+            if (m) {
+                const [r, g, b, a = 1] = m[1].split(',').map(Number);
+                if (!(a < .5)) {
+                    color = { rgb:[r,g,b], luminance:(0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 };
+                    surfaces.set(n,color);
+                    break;
+                }
+            }
+            (path ??= []).push(n);
         }
-        const luminance = surfaceLuminance(el,onColor);
-        // Transparent chat/layout containers do not hide the actual card underneath.
-        if (luminance !== null) return luminance;
+        if (path) for (const n of path) surfaces.set(n,color);
+        return color;
     }
-    const point = isTopSurface(bar) ? wallpaperPoint(wallpaperBackdrop,x,y) : null;
-    if (point) onColor?.([point.r,point.g,point.b]);
-    return point?.luminance ?? null;
+    function luminance(color, onColor) {
+        if (!color) return null;
+        onColor?.(color.rgb);
+        return color.luminance;
+    }
+    return function lumAt(x, y, bar, onColor) {
+        for (const el of document.elementsFromPoint(x, y)) {
+            if (bar.contains(el)) continue;
+            let isChrome = chrome.get(el);
+            if (isChrome === undefined) {
+                isChrome = !!el.closest('#top-bar, #top-settings-holder, #form_sheld');
+                chrome.set(el,isChrome);
+            }
+            if (isChrome) continue;
+            if (el.tagName === 'IFRAME') {
+                let rect = frameRects.get(el);
+                if (!rect) { rect = el.getBoundingClientRect(); frameRects.set(el,rect); }
+                const inner = el.contentDocument?.elementFromPoint(x - rect.left, y - rect.top);
+                // Cross-origin or empty frames remain unknown, never borrow an underlying card's color.
+                return inner ? luminance(surfaceColor(inner),onColor) : null;
+            }
+            const color = surfaceColor(el);
+            if (color) return luminance(color,onColor);
+        }
+        const point = isTopSurface(bar) ? wallpaperPoint(wallpaper,x,y) : null;
+        if (point) onColor?.([point.r,point.g,point.b]);
+        return point?.luminance ?? null;
+    };
 }
-function adaptBar(bar) {
+function backdropPassesThreshold(bar, r, xs, ys, lumAt, threshold, brighter, fallback) {
+    let sum = 0, count = 0, remaining = xs.length * ys.length;
+    for (const x of xs) for (const y of ys) {
+        const sample = lumAt(r.left + r.width * x, r.top + r.height * y, bar);
+        remaining--;
+        if (sample !== null) { sum += sample; count++; }
+        if (!count || !remaining) continue;
+        // CSS RGB and wallpaper samples are in [0, 1]. Even if every unread
+        // point is present and all-black/all-white, the decision may be fixed.
+        // Null samples fall inside these bounds; close ties take the full pass.
+        const worstCount = count + remaining;
+        if (sum > (threshold + 1e-9) * worstCount) return brighter;
+        if (sum + remaining < (threshold - 1e-9) * worstCount) return !brighter;
+    }
+    if (!count) return fallback;
+    const avg = sum / count;
+    return brighter ? avg > threshold : avg < threshold;
+}
+function adaptBar(bar, lumAt) {
     if (!bar || bar.hidden) return null;
     const top = isTopSurface(bar);
     if (top && bar.id !== 'ilg-floor') return {bar,light:false,dark:false,top:null};
+    if (top && document.body.classList.contains('no-blur')) return { bar, light: false, dark: false, top: { tone: lightBg ? 'dark' : 'light' } };
     const r = bar.getBoundingClientRect();
-    const ys = top ? [r.top+r.height*.5] : [r.top+r.height*.35,r.top+r.height*.7];
-    let sum = 0, n = 0; const colors = [];
-    for (const f of top ? [.2,.5,.8] : [.15,.38,.62,.85]) for (const y of ys) {
-        const l = lumAt(r.left + r.width * f, y, bar,c => colors.push(c));
+    if (!top) {
+        const contrasting = backdropPassesThreshold(bar, r, [.15, .38, .62, .85], [.35, .7], lumAt, lightBg ? .38 : .62, !lightBg, false);
+        return { bar, light: !lightBg && contrasting, dark: lightBg && contrasting, top: null };
+    }
+    let sum = 0, n = 0;
+    const colors = [];
+    for (const f of [.2, .5, .8]) {
+        const l = lumAt(r.left + r.width * f, r.top + r.height * .5, bar, c => colors.push(c));
         if (l !== null) { sum += l; n++; }
     }
-    const avg = n ? sum / n : null;
-    return { bar, light: !top && !lightBg && avg !== null && avg > .62, dark: !top && lightBg && avg !== null && avg < .38, top: top ? (document.body.classList.contains('no-blur') ? {tone:lightBg?'dark':'light'} : topTone(avg,bar.dataset?.ilgTopTone,colors)) : null };
+    return { bar, light: false, dark: false, top: topTone(n ? sum / n : null, bar.dataset?.ilgTopTone, colors) };
 }
 // Each input action reads its own backdrop: a bright card in the text area must
 // not turn icons over dark wallpaper dark as well. Unknown pixels use the page tone.
 const INPUT_ACTIONS = '#leftSendForm > div, #rightSendForm > div:not(#mes_stop):not(.mes_stop):not(.stscript_btn)';
-function inputActionTones(bar) {
+function inputActionTones(bar, lumAt) {
     if (!bar) return [];
     return [...bar.querySelectorAll(INPUT_ACTIONS)].map(el => {
         const r = el.getBoundingClientRect();
         if (!r.width || !r.height || getComputedStyle(el).visibility === 'hidden') return { el, tone: null };
         if (document.body.classList.contains('no-blur')) return { el, tone: lightBg ? 'dark' : 'light' };
-        let sum = 0, count = 0;
-        for (const x of [.3, .5, .7]) for (const y of [.35, .65]) {
-            const l = lumAt(r.left + r.width * x, r.top + r.height * y, bar);
-            if (l !== null) { sum += l; count++; }
-        }
         const previous = el.dataset.ilgInputTone;
-        const avg = count ? sum / count : null;
         // A small dead band keeps text/edge crossings from flickering between tones.
         const threshold = previous === 'dark' ? .46 : previous === 'light' ? .58 : .52;
-        return { el, tone: (avg === null ? lightBg : avg > threshold) ? 'dark' : 'light' };
+        const darkInk = backdropPassesThreshold(bar, r, [.3, .5, .7], [.35, .65], lumAt, threshold, true, lightBg);
+        return { el, tone: darkInk ? 'dark' : 'light' };
     });
 }
 // 合并滚动与流式输出的采样；最后一次请求仍会补采，先读完所有表面再更新样式。
@@ -3662,10 +3724,10 @@ function scheduleAdapt(interval) {
             adaptLast = performance.now();
             const bars = S.islands && islands.length ? islands : [document.getElementById('top-bar')];
             const input = document.querySelector(PILL_SEL);
-            wallpaperBackdrop = readWallpaperBackdrop();
+            const lumAt = createBackdropSampler(readWallpaperBackdrop());
             const floor = document.getElementById('ilg-floor');
-            const samples = [...bars, ...(floor && !floor.hidden ? [floor] : []), input].map(adaptBar);
-            const actionTones = inputActionTones(input), iconTones = topIconTones(bars);
+            const samples = [...bars, ...(floor && !floor.hidden ? [floor] : []), input].map(bar => adaptBar(bar,lumAt));
+            const actionTones = inputActionTones(input,lumAt), iconTones = topIconTones(bars,lumAt);
             for (const sample of samples) {
                 if (!sample) continue;
                 const { bar, light, dark, top } = sample;
@@ -3758,11 +3820,14 @@ function paintFloor() {
     track(floorChip, 'bar');
     const id = visibleFloor();
     root.classList.toggle('ilg-dock-floor', dockOn() && id !== null);
-    if (id === null) { floorChip.hidden = true; return; }
-    floorChip.hidden = false;
+    if (floorChip.hidden !== (id === null)) floorChip.hidden = id === null;
+    if (id === null) return;
     const label = `第 ${id} 楼`;
-    floorChip.setAttribute('aria-label', `当前读到第 ${id} 楼，点击回到最新一楼`);
-    if (floorChip.textContent !== label) { floorChip.textContent = label; flashFloor(); }
+    if (floorChip.textContent !== label) {
+        floorChip.setAttribute('aria-label', `当前读到第 ${id} 楼，点击回到最新一楼`);
+        floorChip.textContent = label;
+        flashFloor();
+    }
 }
 function scheduleFloor() { if (!floorRaf) floorRaf = requestAnimationFrame(paintFloor); }
 // 滚动时才亮出来（1.6 秒后自己淡下去）：常驻会正好压在消息头上那行名字和日期上
@@ -4080,8 +4145,7 @@ function blockBg(el, cs = getComputedStyle(el)) {
     return c && c.a >= 0.05 ? c : null;
 }
 // Inspect authored colors, including pseudo-element panels, without replacing their backgrounds.
-const cardColors = el => {
-    const cs = getComputedStyle(el);
+const cardColors = (el, cs) => {
     const layers = [
         [el.style.backgroundColor, 'color'],
         [cs.backgroundColor, 'color'],
@@ -4109,34 +4173,34 @@ const cardColors = el => {
 const CARD_PANELS = 'div, section, article, aside, details, summary, dialog, button, [role="dialog"], [role="button"], [role="menu"], [role="listbox"], [role="option"]';
 const CARD_CHOICES = 'button, select, option, input[type="button"], input[type="submit"], [role="button"], [role="option"]';
 const CARD_RENDERER_CANDIDATES = 'iframe, ' + CARD_PANELS + ', ' + CARD_CHOICES;
-function applyCardMarkers(text) {
-    // 以 <html> 上的 class 为准：CSS 也是按它配色的
+function applyCardMarkers(texts) {
+    // Read one whole level, then write its markers. Children still see their
+    // parent's resolved colors, without forcing style/layout once per card.
     const light = root.classList.contains('ilg-light');
-    let fixedOverlay = false, cardRenderer = false;
-    const walk = (el, base) => {
-        // Read siblings together, then apply markers before inspecting their children.
-        // Child panels can inherit colors changed by the parent markers.
-        const updates = [];
-        for (const k of el.children) {
+    const messages = texts.map(text => ({ message: text.closest('.mes'), fixedOverlay: false, cardRenderer: false }));
+    let level = texts.map((text, i) => ({ parent: text, base: light ? 0.95 : 0.08, state: messages[i] }));
+    while (level.length) {
+        const updates = [], next = [];
+        for (const { parent, base, state } of level) for (const k of parent.children) {
             const cs = getComputedStyle(k);
-            if (cs.position === 'fixed' && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getClientRects().length) fixedOverlay = true;
-            if (k.matches('iframe') && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getBoundingClientRect().width > 0 && k.getBoundingClientRect().height > 0) cardRenderer = true;
+            const visible = cs.display !== 'none' && cs.visibility !== 'hidden';
+            if (cs.position === 'fixed' && visible && k.getClientRects().length) state.fixedOverlay = true;
+            const frame = k.matches('iframe');
+            if (frame && visible) {
+                const { width, height } = k.getBoundingClientRect();
+                if (width > 0 && height > 0) state.cardRenderer = true;
+            }
             if (k.matches('img, video, svg, canvas, q, em, i, b, strong, br')) continue;
             const c = blockBg(k, cs);
-            const frame = k.matches('iframe');
             const panel = frame || k.matches(CARD_PANELS);
-            const choice = k.matches(CARD_CHOICES);
-            // 底色也可能画在 ::before / ::after 上（模板常用这招），这种情况元素自身读不到背景，得一起算进来
-            const card = panel ? cardColors(k) : { best: null };
-            // 自绘卡片走独立的模糊底层，避开整条消息的 SVG 合成（见 paint()）。
-            // 保持既有判据，避免普通正文因伪元素底色而进入额外的卡片兼容路径。
-            const renderer = choice || (panel && (!!c || cs.backgroundImage !== 'none' || cs.position === 'fixed'));
-            const surface = frame || choice || (panel && (!!c || cs.backgroundImage !== 'none' || !!card.best || cs.position === 'fixed'));
-            if (renderer && cs.display !== 'none' && cs.visibility !== 'hidden' && k.getClientRects().length) cardRenderer = true;
-
-            let lum = base;
-            if (c) lum = lumOf(c) * c.a + base * (1 - c.a);
-            updates.push({ element: k, surface, lit: !!c && lum > 0.62 && !light, dim: !!c && lum < 0.38 && light, lum });
+            const renderer = k.matches(CARD_CHOICES) || (panel && (!!c || cs.backgroundImage !== 'none' || cs.position === 'fixed'));
+            // A pseudo-element may provide the apparent color. It alone does
+            // not opt ordinary paragraphs into the separate glass path.
+            const surface = frame || renderer || (panel && !!cardColors(k, cs).best);
+            if (renderer && visible && k.getClientRects().length) state.cardRenderer = true;
+            const lum = c ? lumOf(c) * c.a + base * (1 - c.a) : base;
+            updates.push({ element: k, surface, lit: !!c && lum > 0.62 && !light, dim: !!c && lum < 0.38 && light });
+            if (k.children.length) next.push({ parent: k, base: lum, state });
         }
         for (const { element, surface, lit, dim } of updates) {
             element.classList.toggle('ilg-card-surface', surface);
@@ -4146,24 +4210,86 @@ function applyCardMarkers(text) {
             if (element.style.getPropertyValue('--ilg-card-solid')) element.style.removeProperty('--ilg-card-solid');
             element.classList.toggle('ilg-solid', false);
         }
-        for (const { element, lum } of updates) if (element.children.length) walk(element, lum);
-    };
-    walk(text, light ? 0.95 : 0.08);
-    const message = text.closest('.mes');
-    if (message && (message.classList.contains('ilg-content-overlay') !== fixedOverlay || message.classList.contains('ilg-card-renderer') !== cardRenderer)) {
+        level = next;
+    }
+    const repaint = [];
+    for (const { message, fixedOverlay, cardRenderer } of messages) {
+        if (!message || (message.classList.contains('ilg-content-overlay') === fixedOverlay && message.classList.contains('ilg-card-renderer') === cardRenderer)) continue;
         message.classList.toggle('ilg-content-overlay', fixedOverlay);
         message.classList.toggle('ilg-card-renderer', cardRenderer);
-        return message;
+        repaint.push(message);
     }
+    return repaint;
 }
-function tagCard(text) {
-    const changed = applyCardMarkers(text);
-    if (changed) { flickerCapture?.messagePaints('card', 1); paint(changed); }
+// The full native hit stack is still authoritative. On a demonstrably flat,
+// static panel, give Blink a distant-row boundary so it can skip traversing
+// its positioned paint layers. Never contain the author's layout or iframe.
+const BOUNDED_PANEL_TAGS = new Set('div section article aside p br span q em i b strong s del u ul ol li'.split(' '));
+// Host decoration may overhang slightly; the CSS boundary has a wider reserve.
+const HIT_GEOMETRY_SLOP = 20;
+// In small chats the extra paint boundaries cost more than a short native walk.
+const MIN_HIT_ROWS = 64, MIN_HIT_LAYERS = 2;
+const HIT_SHELL = '.mes_block, .mesAvatarWrapper, .for_checkbox, .del_checkbox, .swipe_left, .swipeRightBlock, .ilg-message-glass';
+const HIT_BLOCK_SHELL = '.mes_text, .ch_name, .mes_reasoning_details, .mes_media_wrapper, .mes_file_wrapper, .mes_bias';
+function boundedCardHit(row, text) {
+    if (!row.matches('#chat > .mes.ilg-message-backdrop:not(.ilg-content-overlay):not(.last_mes)')) return false;
+    // Only the normal in-flow message shell, an opaque/colored panel and its sibling prose.
+    const block = text.parentElement;
+    if (block.parentElement !== row || !block.classList.contains('mes_block') || !text.querySelector('.ilg-card-surface')) return false;
+    if ([...row.children].some(el => !el.matches(HIT_SHELL)) || [...block.children].some(el => !el.matches(HIT_BLOCK_SHELL))) return false;
+    if (text.querySelectorAll(':is(div, span):empty').length < MIN_HIT_LAYERS) return false;
+    if (text.querySelector('[contenteditable], [tabindex], [role], [id], [popover], [data-nvwa-style="author"]')) return false;
+    if (row.querySelector('iframe, dialog, [popover], [contenteditable], .edit_textarea, .reasoning_edit_textarea')) return false;
+    // Scope this to an intact native shell; themes with an unbounded message
+    // block or their own row clip keep the original path.
+    const blockStyle = getComputedStyle(block);
+    const clipped = value => value === 'hidden' || value === 'clip';
+    if (!clipped(blockStyle.overflowX) || !clipped(blockStyle.overflowY)) return false;
+    const box = row.getBoundingClientRect();
+    if (!box.width || !box.height) return false;
+    let layers = 0;
+    const within = el => {
+        const rect = el.getBoundingClientRect();
+        return rect.top >= box.top - HIT_GEOMETRY_SLOP && rect.bottom <= box.bottom + HIT_GEOMETRY_SLOP;
+    };
+    const local = cs => cs.transform === 'none' && cs.translate === 'none' && cs.rotate === 'none'
+        && cs.scale === 'none' && cs.offsetPath === 'none' && cs.filter === 'none' && cs.perspective === 'none'
+        && cs.backdropFilter === 'none' && cs.clipPath === 'none' && cs.animationName === 'none'
+        && cs.transitionDuration === '0s' && cs.boxShadow === 'none' && cs.outlineStyle === 'none'
+        && cs.mixBlendMode === 'normal';
+    const zero = v => v === '0px' || v === 'auto';
+    const rowStyle = getComputedStyle(row);
+    if (rowStyle.position !== 'relative' || rowStyle.isolation !== 'isolate' || rowStyle.transform !== 'none'
+        || rowStyle.clipPath !== 'none') return false;
+    for (const el of [text, ...text.querySelectorAll('*')]) {
+        if (!BOUNDED_PANEL_TAGS.has(el.localName) || [...el.attributes].some(a => a.name.startsWith('on'))) return false;
+        const cs = getComputedStyle(el);
+        if (!local(cs) || !within(el)) return false;
+        if (cs.position === 'absolute') {
+            if (el.childNodes.length || [cs.top, cs.right, cs.bottom, cs.left].some(v => v !== '0px')) return false;
+            const parent = el.offsetParent;
+            if (!text.contains(parent) || !within(parent)) return false;
+            layers++;
+        } else if (cs.position !== 'static' && !(cs.position === 'relative' && [cs.top, cs.right, cs.bottom, cs.left].every(zero))) return false;
+        for (const pseudo of ['::before', '::after']) {
+            const part = getComputedStyle(el, pseudo);
+            if (part.content !== 'none' && part.content !== 'normal' && !(el.localName === 'q'
+                && part.position === 'static' && local(part) && /^".{0,3}"$/u.test(part.content))) return false;
+        }
+    }
+    if (layers < MIN_HIT_LAYERS) return false;
+    // Check the native controls too; fixed/sticky or overflowing chrome is
+    // not a candidate. The owned glass is tied to the row rectangle in CSS.
+    for (const host of row.querySelectorAll(':scope :not(.mes_text, .mes_text *, .ilg-message-glass)')) {
+        const { position } = getComputedStyle(host);
+        if (position === 'fixed' || position === 'sticky' || (host.getClientRects().length && !within(host))) return false;
+    }
+    return true;
 }
 // 普通正文段落标记：阅读配色（.ilg-prose）和首行缩进（.ilg-indentable）只给“没有自带 class/style、里面没有图片/控件/div 等”的直接段落。
 // 原来 CSS 用 :not(:has(...)) 现场判断，可 :has() 让流式输出每次改字都要重查（每次约 3ms 样式重算）。
 // 改为在 MutationObserver 里打标记：它在本次脚本改完 DOM 后、页面重算样式前执行，标记和新文字同一帧生效，不会闪。
-const PROSE_MARKS = ['ilg-prose', 'ilg-indentable'];
+const PROSE_MARKS = ['ilg-prose', 'ilg-indentable', 'ilg-type-prose'];
 const PROSE_SEL = ':scope > :is(p, ul, ol, blockquote)';
 const RICH_PROSE = 'img, iframe, video, audio, svg, canvas, button, input, select, textarea, table, details, div, [class], [style], [role]';
 const RICH_INDENT = 'img, iframe, video, audio, svg, canvas, button, input, select, textarea, table, details, div, [role="button"]';
@@ -4174,6 +4300,8 @@ function markProse(text) {
         const prose = bare && !el.querySelector(RICH_PROSE);
         const indent = bare && el.localName === 'p' && !el.querySelector(RICH_INDENT);
         if (el.classList.contains('ilg-prose') !== prose) el.classList.toggle('ilg-prose', prose);
+        const typeset = prose && !el.hasAttribute('id') && !el.hasAttribute('role') && !el.querySelector('code, pre, kbd, samp, [id]');
+        if (el.classList.contains('ilg-type-prose') !== typeset) el.classList.toggle('ilg-type-prose', typeset);
         if (el.classList.contains('ilg-indentable') !== indent) el.classList.toggle('ilg-indentable', indent);
         // 我们的标记都去掉后，把空的 class 属性也拿掉，和原来一样
         if (!el.classList.length && el.hasAttribute('class')) el.removeAttribute('class');
@@ -4192,33 +4320,73 @@ new MutationObserver(muts => {
         m.addedNodes.forEach(n => { if (n.nodeType === 1) (n.matches('.mes_text') ? [n] : n.querySelectorAll('.mes_text')).forEach(t => dirty.add(t)); });
     }
     dirty.forEach(text => { markProse(text); messageRendering.invalidate(text.closest('.mes')); });
-}).observe(chatEl, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'role'], attributeOldValue: true });
+}).observe(chatEl, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'role', 'id'], attributeOldValue: true });
 chatEl.querySelectorAll('.mes_text').forEach(markProse);
+const CARD_MARK_CLASSES = new Set(['ilg-lit', 'ilg-dim', 'ilg-card-surface', ...PROSE_MARKS]);
+const ROW_HIT_CLASSES = new Set(['ilg-bounded-hit', 'ilg-phys', 'ilg-reflection']);
 function queueCards(all) {
     if (!S.enabled) { clearTimeout(cardTimer); cardDirty.clear(); return; }
-    if (all) chatEl.querySelectorAll('.mes_text').forEach(t => cardDirty.add(t));
+    if (all) {
+        chatEl.querySelectorAll('.ilg-bounded-hit').forEach(row => row.classList.remove('ilg-bounded-hit'));
+        chatEl.querySelectorAll('.mes_text').forEach(t => cardDirty.add(t));
+    }
     clearTimeout(cardTimer);
     cardTimer = setTimeout(() => {
-        if (S.enabled) cardDirty.forEach(t => t.isConnected && tagCard(t));
+        const texts = [...cardDirty].filter(t => t.isConnected);
         cardDirty.clear();
+        if (!S.enabled) return;
+        // Don't measure a new glass surface between every pair of card scans.
+        // Repaint the entire batch after all author markers have been resolved.
+        const repaint = applyCardMarkers(texts);
+        if (repaint.length) paintMany(repaint, 'card');
+        // Read all candidate boundaries before committing any new styles.
+        if (!isIOS && !androidHost && S.refract && S.refractMes && S.engine === 'physical' && canRefract() && chatEl.childElementCount >= MIN_HIT_ROWS) {
+            const rows = texts.map(text => text.closest('.mes'));
+            const bounded = rows.map((row, i) => row && boundedCardHit(row, texts[i]));
+            rows.forEach((row, i) => row?.classList.toggle('ilg-bounded-hit', !!bounded[i]));
+        }
     }, 200);
 }
 new MutationObserver(muts => {
     if (!S.enabled) return;
     let hit = false;
     for (const m of muts) {
-        // Ignore our luminance markers; host/card style and visibility changes still rescan the message.
+        const el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+        // Scrolling only toggles our material classes. A real author or host
+        // change on the row itself must retire the old geometry boundary too.
         if (m.type === 'attributes' && m.attributeName === 'class') {
-            const clean = value => (value || '').split(/\s+/).filter(c => c && !['ilg-lit', 'ilg-dim', 'ilg-card-surface', ...PROSE_MARKS].includes(c)).sort().join(' ');
-            if (clean(m.oldValue) === clean(m.target.className)) continue;
+            const rowTarget = el.matches('.mes');
+            const clean = value => (value || '').split(/\s+/).filter(c => c && !CARD_MARK_CLASSES.has(c)
+                && !(rowTarget && ROW_HIT_CLASSES.has(c))).sort().join(' ');
+            if (clean(m.oldValue) === clean(el.getAttribute('class'))) continue;
         }
-        // Only message content and its visibility changes belong to this pass.
-        const t = (m.target.nodeType === 1 ? m.target : m.target.parentElement)?.closest?.('.mes_text');
-        if (t) { cardDirty.add(t); hit = true; continue; }
+        const t = el?.closest('.mes_text');
+        if (t) {
+            t.closest('.ilg-bounded-hit')?.classList.remove('ilg-bounded-hit');
+            cardDirty.add(t); hit = true; continue;
+        }
+        const row = el?.closest('.ilg-bounded-hit');
+        if (row && !el.classList.contains('ilg-message-glass')) {
+            row.classList.remove('ilg-bounded-hit');
+            const text = row.querySelector('.mes_text');
+            if (text) { cardDirty.add(text); hit = true; }
+        }
         m.addedNodes.forEach(n => { if (n.nodeType === 1) (n.matches('.mes_text') ? [n] : n.querySelectorAll('.mes_text')).forEach(x => { cardDirty.add(x); hit = true; }); });
     }
     if (hit) queueCards(false);
-}).observe(chatEl, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['style', 'class', 'hidden', 'open'], attributeOldValue: true });
+}).observe(chatEl, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['style', 'class', 'hidden', 'open', 'contenteditable', 'tabindex', 'role', 'id', 'popover'], attributeOldValue: true });
+// Discard geometry certificates when the viewport or stylesheet inputs change.
+function refreshBoundedCards() {
+    if (chatEl.querySelector('.ilg-bounded-hit')) queueCards(true);
+}
+if (canFull && !androidHost) {
+    onViewportChange(v => { if (v.widthChanged || v.heightChanged) refreshBoundedCards(); });
+    document.fonts?.addEventListener('loadingdone', refreshBoundedCards);
+    new MutationObserver(records => {
+        if (records.some(record => record.target.parentElement?.matches('style') || record.target.matches?.('style, link[rel="stylesheet"]')
+            || [...record.addedNodes, ...record.removedNodes].some(node => node.matches?.('style, link[rel="stylesheet"]')))) refreshBoundedCards();
+    }).observe(document.head, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['href', 'media', 'disabled'] });
+}
 
 // 世界书多选框“还没选任何一本”：原来 CSS 用 :not(:has(.select2-selection__choice)) 判断，
 // 但 :has() 让聊天里每次改字都要重查一遍（流式输出时每次更新约多 3ms 样式重算）。改为只盯 #WorldInfo 里的变化打标记。

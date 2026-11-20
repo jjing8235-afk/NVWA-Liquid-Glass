@@ -1,5 +1,7 @@
 // A single local appearance bookmark. Only known visual settings are copied;
 // credentials, host wallpaper, backups, master power and migration state stay outside it.
+import { migrateProseSpacing, normalizeTypography } from './typography.js';
+
 const OMIT = new Set(['enabled','customWallpaper','cssCleaned','cssBackup','cssBackupAt','lookBackup','themeBackup']);
 const ENUMS = {
     chatBackground:['glass','transparent'], compatibilityMode:['auto','blur'],
@@ -15,6 +17,7 @@ export function createAppearanceBookmark(defaults, sliders = []) {
     const keys = Object.keys(defaults).filter(key => !OMIT.has(key));
     const bounds = new Map(sliders.map(([key,,min,max]) => [key,[min,max]]));
     function valueOf(key, value) {
+        if (key === 'typography') return value === null ? null : normalizeTypography(value) ?? undefined;
         if (typeof value !== typeof defaults[key]) return undefined;
         if (typeof value === 'boolean') return value;
         if (typeof value === 'number') {
@@ -52,8 +55,12 @@ export function createAppearanceBookmark(defaults, sliders = []) {
             result[key] = value;
         }
         if (!Object.keys(result).length || (result.dayStart !== undefined && result.dayEnd !== undefined && result.dayStart >= result.dayEnd)) return null;
+        if (Object.hasOwn(defaults,'typography')) {
+            if (!Object.hasOwn(result,'typography')) result.typography = null;
+            migrateProseSpacing(result);
+        }
         return result;
     }
-    function same(settings, patch) { return Object.keys(patch).every(key => settings[key] === patch[key]); }
+    function same(settings, patch) { return Object.keys(patch).every(key => key === 'typography' ? JSON.stringify(settings[key]) === JSON.stringify(patch[key]) : settings[key] === patch[key]); }
     return {capture, read, same};
 }

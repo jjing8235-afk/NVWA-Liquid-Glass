@@ -8,7 +8,7 @@ const passed=[];
 const android='Mozilla/5.0 (Linux; Android 17; Fixture Build/TEST; wv) AppleWebKit/537.36 Version/4.0 Chrome/155.0.8059.43 Mobile Safari/537.36';
 function env(o={}) {
  const S={enabled:true,refract:true,androidWebViewRefract:false,iosSvgTrial:false,refractMes:true,engine:'physical',tone:'dark',compatibilityMode:'auto',...o.settings};
- const sandbox={S,navigator:{userAgent:o.ua||android,platform:o.platform||'Linux armv8l',maxTouchPoints:o.touch??5},window:o.chrome?{chrome:{}}:{},CSS:{supports:(p,value)=>{if(o.throws)throw Error('unsupported');if(p==='-webkit-backdrop-filter')return o.prefixed===true;return value.startsWith('url')?o.url!==false:o.blur!==false}}};
+ const sandbox={S,navigator:{userAgent:o.ua||android,platform:o.platform||'Linux armv8l',maxTouchPoints:o.touch??5},window:o.chrome?{chrome:{}}:{},document:{},CSS:{supports:(p,value)=>{if(o.throws)throw Error('unsupported');if(p==='-webkit-backdrop-filter')return o.prefixed===true;return value.startsWith('url')?o.url!==false:o.blur!==false}}};
  return {S,sandbox,...vm.runInNewContext(cap+';({canRefract,compatibilityHint,canFull,androidWebViewEligible})',sandbox)};
 }
 const cases=[
@@ -40,7 +40,7 @@ for(const saved of [{},{androidWebViewRefract:true},{androidWebViewRefract:false
 passed.push('Unified auto default preserves legacy fields, unrelated settings and backups');
 const reset=source.match(/const reset = \(\) => \{([\s\S]*?)\n    \};/)[1];
 const settings={compatibilityMode:'blur',androidWebViewRefract:true,unknown:'preserve',v:9,cssBackup:'backup'};
-vm.runInNewContext(reset,{S:settings,DEFAULTS:defaults,clearAll(){},applyRoot(){},sync(){},ctx:{saveSettingsDebounced(){}}});
+vm.runInNewContext(reset,{S:settings,DEFAULTS:defaults,clearAll(){},applyRoot(){},sync(){},syncAppearancePanel(){},typographyStudio:{sync(){}},ctx:{saveSettingsDebounced(){}}});
 assert.equal(settings.compatibilityMode,'auto');assert.equal(settings.androidWebViewRefract,false);assert.equal(settings.iosSvgTrial,false);assert.equal(settings.cssBackup,'backup');assert.equal(settings.unknown,'preserve');
 passed.push('Reset restores auto adaptation and keeps iOS trial off while preserving unknown values and backups');
 const refract=source.match(/function refractAllowed\(it\) \{([\s\S]*?)\n\}/)[1];

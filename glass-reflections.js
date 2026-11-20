@@ -40,11 +40,11 @@ export function createGlassReflections() {
     }
     const wanted=new Map(),jobs=new Map();
     let activeKey='',waitTimer=0;
-    function apply(el,key,url) {
+    function apply(el,key,url,visible = true) {
         if(!enabled||!el.isConnected||wanted.get(el)!==key)return;
         const image='url("'+url+'")';
         if(el.style.getPropertyValue('--ilg-reflection-map')!==image)el.style.setProperty('--ilg-reflection-map',image);
-        if(!el.classList.contains('ilg-reflection'))el.classList.add('ilg-reflection');
+        el.classList.toggle('ilg-reflection', visible);
         known.add(el);
     }
     function pump() {
@@ -87,6 +87,22 @@ export function createGlassReflections() {
             if(url)apply(el,key,url);else release(el);
         } catch { release(el); }
     }
+    // Reuse prepared pixels when re-entering the prewarm band. Away messages
+    // paint no rim; never rasterize a new size just because history was loaded.
+    function paintMessage(el,width,height,radius,visible) {
+        const {key}=reflectionGeometry(width,height,radius,window.devicePixelRatio||1);
+        if (wanted.get(el) === key && el.style.getPropertyValue('--ilg-reflection-map')) {
+            el.classList.toggle('ilg-reflection', visible);
+        } else if (visible) {
+            paint(el,width,height,radius);
+        } else {
+            if (wanted.has(el)) release(el);
+            const item=cache.get(key);
+            if (!item) return;
+            wanted.set(el,key);
+            apply(el,key,item.url,false);
+        }
+    }
     function press(event) {
         if (!enabled || reduced() || document.body.classList.contains('no-blur') || active) return;
         if (event.type === 'pointerdown' && event.button > 0) return;
@@ -115,7 +131,7 @@ export function createGlassReflections() {
         else { clearTimeout(waitTimer);waitTimer=0;background.pause();jobs.clear();activeKey='';reset(); [...known].forEach(release);cache.clear();pixels=0; }
     }
     motion.addEventListener('change', reset);
-    return {paint, release, setEnabled,status:()=>({...background.status(),queued:jobs.size,waitingSurfaces:wanted.size,cacheEntries:cache.size})};
+    return {paint, paintMessage, release, setEnabled,status:()=>({...background.status(),queued:jobs.size,waitingSurfaces:wanted.size,cacheEntries:cache.size})};
 }
 
 export {reflectionPixel};

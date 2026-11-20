@@ -31,12 +31,12 @@ function surface(name) {
 }
 const bar = surface('bar'), pill = surface('pill'), settings = { enabled: true, islands: false };
 let luminance = 0.9;
-const adapt = source.slice(source.indexOf('function adaptBar(bar) {'), source.indexOf("chatEl.addEventListener('scroll', scheduleAdapt"));
+const adapt = source.slice(source.indexOf('function backdropPassesThreshold('), source.indexOf("chatEl.addEventListener('scroll', scheduleAdapt"));
 const adaptEnv = {
     S: settings, islands: [], PILL_SEL: '#pill', lightBg: false,
-    isTopSurface:()=>false,readWallpaperBackdrop:()=>null,wallpaperBackdrop:null,applyTopTone(){},topIconTones:()=>[],
+    isTopSurface:()=>false,readWallpaperBackdrop:()=>null,applyTopTone(){},topIconTones:()=>[],
     document: { getElementById: id => id==='ilg-floor'?null:bar, querySelector: () => pill, body: { dataset: {} } },
-    lumAt() { samples++; return luminance; }, performance: { now: () => now },
+    createBackdropSampler: () => () => { samples++; return luminance; }, performance: { now: () => now },
     requestAnimationFrame: fn => later(fn, 16), setTimeout: later,
 };
 const schedule = vm.runInNewContext(adapt + ';scheduleAdapt', adaptEnv);
@@ -61,6 +61,36 @@ adaptEnv.lightBg = true; luminance = 0.1; schedule(); advance(2200);
 assert(island.classes.has('ilg-over-dark') && !island.classes.has('ilg-over-light'));
 assert(!icon.classes.has('ilg-icon-over-light'), 'Island icons must reset when background brightness changes');
 passed.push('100ms coalescing, trailing sample, disable/re-enable, islands, both tones and read-before-write ordering');
+
+// A match optimized by interval bounds must equal the original full mean,
+// including unknown samples, hysteresis thresholds, and exact ties.
+const toneThreshold = vm.runInNewContext(adapt.slice(0, adapt.indexOf('function adaptBar(')) + ';backdropPassesThreshold');
+let randomState = 2462151941, comparisons = 0, skipped = 0;
+const rng = () => (randomState = (Math.imul(randomState, 1664525) + 1013904223) >>> 0) / 2 ** 32;
+for (const [width, iterations] of [[3, 8500], [4, 8500]]) {
+    const xs = Array.from({ length: width }, (_, i) => i / width);
+    for (const threshold of [.38, .46, .52, .58, .62]) for (let i = 0; i < iterations; i++) {
+        const parts = Array.from({ length: width * 2 }, () => {
+            if (i < 7) return [null, 0, 1, threshold, threshold - 1e-12, threshold + 1e-12, i % 2][i];
+            const r = rng();
+            return r < .22 ? null : r < .38 ? 0 : r > .85 ? 1 : r;
+        });
+        const known = parts.filter(value => value !== null);
+        const avg = known.reduce((n, value) => n + value, 0) / known.length;
+        for (const brighter of [true, false]) {
+            let read = 0;
+            const fallback = i % 2 === 0;
+            const expected = !known.length ? fallback : brighter ? avg > threshold : avg < threshold;
+            const actual = toneThreshold({}, { left: 0, top: 0, width: 40, height: 20 }, xs, [.35, .65], () => parts[read++], threshold, brighter, fallback);
+            assert.equal(actual, expected);
+            comparisons++;
+            skipped += parts.length - read;
+            if (i === 3) assert.equal(read, parts.length, 'Near ties must read every point');
+        }
+    }
+}
+assert(skipped > 10000);
+passed.push(`${comparisons} ink decisions equal the full mean; ${skipped} provably irrelevant hits omitted`);
 
 // Compare real floor lookup with a linear oracle across a long chronological chat.
 let reads = 0, queries = 0;

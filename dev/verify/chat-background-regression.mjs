@@ -34,15 +34,15 @@ for (const value of ['glass', 'transparent', 'invalid']) {
 const normalizeVeil = vm.runInNewContext(bodyOf('normalizeChatVeil') + ';normalizeChatVeil');
 assert.equal(defaults.chatVeil,45);assert.equal(Object.hasOwn(defaults,'cardSolid'),false);
 for (const [input,expected] of [[undefined,45],[null,45],['60',45],[NaN,45],[Infinity,45],[-10,0],[0,0],[44.6,45],[100,100],[130,100]]) assert.equal(normalizeVeil(input),expected);
-const bookmarkSource=fs.readFileSync(new URL('../../appearance-bookmark.js',import.meta.url),'utf8').replace(/^export /gm,'');
-const bookmark=vm.runInNewContext(bookmarkSource+';createAppearanceBookmark')(defaults);
+const {createAppearanceBookmark}=await import('../../appearance-bookmark.js');
+const bookmark=createAppearanceBookmark(defaults);
 const captured=bookmark.capture({...defaults,chatVeil:38,cardSolid:true});assert.equal(captured.values.chatVeil,38);assert(!Object.hasOwn(captured.values,'cardSolid'));
 assert.equal(bookmark.read(captured).chatVeil,38);assert.equal(bookmark.read({...captured,values:{...captured.values,chatVeil:101}}),null);
 const legacy=bookmark.read({...captured,values:{chatBackground:'glass',cardSolid:true}});assert.equal(legacy.chatBackground,'glass');assert(!Object.hasOwn(legacy,'cardSolid'));assert(!Object.hasOwn(legacy,'chatVeil'));
 for(const mode of ['glass','transparent'])for(const enabled of[true,false])for(const level of[0,45,100]){
     const S={...defaults,enabled,chatBackground:mode,chatVeil:level},classes=new Set(),props={};
     const root={style:{setProperty(k,v){props[k]=v}},classList:{toggle(k,on){if(on)classes.add(k);else classes.delete(k)}}};
-    vm.runInNewContext(bodyOf('applySurfaceSettings')+';applySurfaceSettings()',{S,root,lightBg:false,normalizeChatVeil:normalizeVeil});
+    vm.runInNewContext(bodyOf('applySurfaceSettings')+';applySurfaceSettings()',{S,root,lightBg:false,androidHost:false,KIND:{panel:{blur:()=>8}},normalizeChatVeil:normalizeVeil});
     assert.equal(classes.has('ilg-chat-reading'),enabled&&mode==='glass'&&level>0);assert.equal(props['--ilg-reading-level'],level/100);
 }
 const strengthChange=source.match(/veilRange.addEventListener\('input', \(\) => \{([^]*?)\n    \}\);/)[1];
@@ -51,12 +51,14 @@ const actions=[],strength={chatVeil:45};vm.runInNewContext('(function(){'+streng
 function element(classes = []) {
     const tokens = new Set(classes);
     const node = {
-        isConnected: true, offsetWidth: 374, offsetHeight: 240, style: {}, children: [],
+        isConnected: true, offsetWidth: 374, offsetHeight: 240, style: {getPropertyValue(k){return this[k] || '';},setProperty(k,v){this[k]=v;}}, children: [],
         classList: {
             contains: value => tokens.has(value),
             add: value => tokens.add(value), remove: value => tokens.delete(value),
             toggle(value, on) { if (on) tokens.add(value); else tokens.delete(value); },
         },
+        matches() { return false; },
+        get parentElement() { return this.parent || null; },
         setAttribute() {},
         prepend(child) { child.parent = node; node.children.unshift(child); },
         remove() {
@@ -76,15 +78,16 @@ for (const mode of ['glass', 'transparent']) {
                     const it = { kind: 'mes', id: 'test-filter', visible: true };
                     const calls = [];
                     const sandbox = {
+                        HOST_MENU_SEL: '#options',
                         S: { chatBackground: mode, engine, saturate: 1.6, brightness: 1.05 },
                         document: { createElement: () => element(), body: { classList: { contains: () => noBlur } } },
                         items: new Map([[el, it]]), trackable: () => true,
                         KIND: { mes: { blur: () => 3 } }, refractAllowed: () => allowed,
-                        canRefract: () => allowed, isIOS: false, androidWebView:false, devicePixelRatio:1,largeWebViewMessage:()=>false,iosMaterialActive:()=>false, radiusOf: () => 22,
+                        canRefract: () => allowed, isIOS: false, androidHost:false, androidWebView:false, devicePixelRatio:1,largeWebViewMessage:()=>false,iosMaterialActive:()=>false, radiusOf: () => 22,
                         setPhys(node, _item, on) { node.classList.toggle('ilg-phys', on); },
                         measure: () => ({ w: 300, h: 120, r: 22 }),
-                        cssGlassActive: () => engine === 'css', webStyleEnabled: () => false, controlSurface: () => false, controlReadable: () => false,
-                        iosWallpaperRequested:()=>false, iosWallpaper:{release(){}}, webGlass: { release() {}, paint() {} }, reflections: { release() {}, paint() {} },
+                        cssGlassActive: () => engine === 'css', webStyleEnabled: () => false, controlSurface: () => false, controlReadable: () => false, composerGlassSurface: () => false,
+                        iosWallpaperRequested:()=>false, iosWallpaper:{release(){}}, webGlass: { release() {}, paint() {} }, reflections: { release() {}, paint() {}, paintMessage() {} },
                         foldedMenuSurface: () => false,
                         buildPhysical() { calls.push('physical'); }, buildFilter() { calls.push('legacy'); },
                     };
@@ -93,6 +96,8 @@ for (const mode of ['glass', 'transparent']) {
                     const surface = it.backdrop || el;
                     assert.equal(!!it.backdrop, kind !== 'plain');
                     if (kind !== 'plain') assert.equal(el.style.backdropFilter, 'none');
+                    const filter = surface.style.backdropFilter === 'var(--ilg-message-active-filter)'
+                        ? el.style.getPropertyValue('--ilg-message-near-filter') : surface.style.backdropFilter;
                     if (noBlur) {
                         assert.equal(surface.style.backdropFilter, 'none');
                         assert.deepEqual(calls, []);
@@ -101,11 +106,11 @@ for (const mode of ['glass', 'transparent']) {
                         assert.match(surface.style.backdropFilter, /var\(--ilg-reading-filter/);
                     } else if (allowed) {
                         assert.deepEqual(calls, [engine]);
-                        assert(surface.style.backdropFilter.includes('url(#test-filter)'));
+                        assert(filter.includes('url(#test-filter)'));
                     } else {
                         assert(surface.style.backdropFilter.startsWith('blur(' + (mode === 'transparent' ? 0 : 3) + 'px)'), mode + ' ' + kind + ' got ' + surface.style.backdropFilter);
                     }
-                    if (!noBlur) assert.match(surface.style.backdropFilter, /var\(--ilg-reading-filter/, 'Every message engine carries the same CSS reading filter');
+                    if (!noBlur) assert.match(filter, /var\(--ilg-reading-filter/, 'Every message engine carries the same CSS reading filter');
                     if (kind !== 'plain') {
                         const layer = it.backdrop;
                         api.paint(el);
@@ -130,18 +135,18 @@ const builds = [];
 const build = vm.runInNewContext(bodyOf('surfaceBlur') + '\n' + physical + '\n buildPhysical', {
     S: settings,
     KIND: { mes: { blur: () => settings.mesBlur, bezelK: 1, thickK: 1, k: 1 }, bar: { blur: () => 1, bezelK: 1, thickK: 1, k: 1 } },
-    ARC_ONLY: {},
+    ARC_ONLY: {}, HOST_MENU_SEL: '#options', inputGlass: () => false, composerGlassSurface: () => false,
     getMaps: () => ({}), lightAngle: () => 135, controlReadable: () => false, foldedMenuSurface: () => false,
     resizePhysicalFilter: () => false,
     filterOf: it => it.filter ||= { querySelectorAll: () => [] },
     physicalFilter(_maps, options) { builds.push(options.blur); return ''; },
 });
-build({ kind: 'mes' }, {}, 374, 240, 22);
+build({ kind: 'mes' }, element(), 374, 240, 22);
 settings.chatBackground = 'transparent';
-build({ kind: 'mes' }, {}, 374, 240, 22);
-build({ kind: 'bar' }, {}, 374, 50, 22);
+build({ kind: 'mes' }, element(), 374, 240, 22);
+build({ kind: 'bar' }, element(), 374, 50, 22);
 settings.chatBackground = 'glass';
-build({ kind: 'mes' }, {}, 374, 240, 22);
+build({ kind: 'mes' }, element(), 374, 240, 22);
 assert.deepEqual(builds, [3, 0, 1, 3]);
 assert.equal(settings.mesBlur, 3, 'Transparent mode must not overwrite the user blur preference');
 
@@ -155,7 +160,7 @@ console.log(JSON.stringify({ passed: true, renderingCases: cases, checks: [
     'Host no-blur disables both rendering paths',
 ] }, null, 2));
 
-const css = fs.readFileSync(new URL('../../style.css', import.meta.url), 'utf8');
+const css = fs.readFileSync(new URL('../../style.css', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 assert(!css.includes('#sheld::before'), 'No reading layer may cover the chat shell');
 assert(css.includes('.mes.ilg-glass {\n    --ilg-reading-alpha:'), 'Reading tint belongs to each message');
 assert(!source.includes('layout.veil ='), 'Top foreground sampling must use the original wallpaper');

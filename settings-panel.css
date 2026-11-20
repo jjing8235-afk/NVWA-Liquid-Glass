@@ -152,21 +152,11 @@ body.no-blur #ilg-studio[data-tone=light] {--s-sheet:#f7f5f0;}
 #ilg-studio #ilg-appearance-panel .ilg-choose-wallpaper svg {width:18px;height:18px;color:var(--s-accent);}
 #ilg-studio #ilg-appearance-panel .ilg-choose-wallpaper .ilg-wallpaper-arrow {width:16px;height:16px;color:var(--s-muted);}
 /* Reading style + preview */
-#ilg-studio .ilg-group-card > .ilg-reading-section {margin:0;padding:14px;}
 #ilg-studio .ilg-reading-choice {margin:0;}
 #ilg-studio .ilg-reading-choice label > span {background:var(--s-fill);min-height:70px;}
 #ilg-studio .ilg-style-name {display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--s-fg);}
 #ilg-studio .ilg-style-name small {padding:1px 6px;border-radius:6px;background:var(--s-accent-soft);color:var(--s-accent);font-size:10.5px;font-weight:600;line-height:1.5;}
 #ilg-studio .ilg-style-detail {display:block;font-size:12px;line-height:1.5;color:var(--s-muted);}
-#ilg-studio .ilg-preview-heading {display:flex;justify-content:space-between;gap:8px;margin:16px 4px 8px;font-size:11.5px;color:var(--s-muted);}
-#ilg-studio .ilg-preview-tone {color:var(--s-accent);}
-#ilg-studio .ilg-reading-preview {padding:18px 20px;border-radius:14px;background:var(--ilg-preview-bg,var(--s-fill));color:var(--ilg-prose-text,var(--s-fg));font-size:15px;line-height:var(--ilg-prose-leading,1.9);letter-spacing:var(--ilg-prose-tracking,normal);}
-#ilg-studio .ilg-reading-preview p {margin:0 0 8px;}
-#ilg-studio .ilg-reading-preview p:last-child {margin:0;}
-#ilg-studio .ilg-reading-preview strong {font-weight:600;color:var(--ilg-prose-strong);}
-#ilg-studio .ilg-reading-preview q {color:var(--ilg-prose-quote);font-weight:var(--ilg-prose-quote-weight);text-decoration:var(--ilg-prose-quote-decoration);text-decoration-color:var(--ilg-prose-quote-line);text-underline-offset:.23em;background:var(--ilg-prose-quote-fill);padding:var(--ilg-prose-quote-pad,0);border-radius:var(--ilg-prose-quote-radius,0);-webkit-box-decoration-break:clone;box-decoration-break:clone;}
-#ilg-studio .ilg-reading-preview q::before,#ilg-studio .ilg-reading-preview q::after {content:none;}
-#ilg-studio .ilg-reading-preview em {color:var(--ilg-prose-muted);font-style:var(--ilg-prose-em-style);}
 /* Material preset groups and original-glass fine tuning */
 #ilg-studio #ilg-appearance-panel .ilg-studio-web-presets .ilg-web-presets {margin:0;}
 #ilg-studio .ilg-group-card > .ilg-presets {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0;padding:0;background:transparent;}
@@ -295,9 +285,6 @@ body.reduced-motion #ilg-studio *,body.reduced-motion #ilg-studio *::before,body
 #ilg-studio .ilg-style-sample {display:block;min-height:3em;margin:6px 0 4px;font-family:var(--s-sample-font,inherit);font-size:18px;line-height:1.5;font-weight:400;letter-spacing:.025em;color:var(--s-fg);}
 #ilg-studio .ilg-reading-choice [data-reading-style=moon] {--s-sample-font:"Songti SC","STSong","Noto Serif CJK SC","Noto Serif SC","SimSun","宋体",serif;}
 #ilg-studio .ilg-reading-choice [data-reading-style=sunny] {--s-sample-font:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC Variable","Microsoft YaHei",sans-serif;}
-#ilg-studio .ilg-reading-font-note {margin:10px 3px 0;font-size:12px;line-height:1.65;color:var(--s-muted);}
-#ilg-studio .ilg-reading-preview {font-family:var(--ilg-prose-font,inherit);}
-html.ilg:is([data-ilg-reading-style="moon"],[data-ilg-reading-style="sunny"]) #ilg-studio .ilg-reading-preview p:not(:last-child) {margin-bottom:var(--ilg-prose-gap);}
 @media(max-width:680px) {
  #ilg-studio #ilg-studio-page-text .ilg-reading-choice label > span {padding:12px;min-height:144px;}
  #ilg-studio .ilg-style-sample {font-size:16.5px;}
@@ -322,8 +309,6 @@ html.ilg:is([data-ilg-reading-style="moon"],[data-ilg-reading-style="sunny"]) #i
 #ilg-studio .ilg-style-sample > span {display:block;}
 #ilg-studio .ilg-style-sample q {display:inline;color:var(--s-reading-accent);font-weight:400;font-style:normal;background:var(--s-reading-quote);padding:var(--s-reading-quote-pad);border-radius:var(--s-reading-quote-radius);-webkit-box-decoration-break:clone;box-decoration-break:clone;}
 #ilg-studio .ilg-style-sample q::before,#ilg-studio .ilg-style-sample q::after {content:none;}
-#ilg-studio .ilg-reading-preview {line-break:strict;font-kerning:normal;}
-#ilg-studio .ilg-reading-preview p:not(:last-child) {margin-bottom:var(--ilg-prose-gap,.82em);}
 
 /* 2026-11-09 手机触摸区域：看得见的部分保持原样，能点的范围扩到 44px（苹果和谷歌都建议的最小触摸尺寸）。
    用 ::before 扩大点击区，不改布局、不和旁边的按钮重叠。 */

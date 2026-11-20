@@ -109,8 +109,8 @@ const drawer = { parentElement: holder, classList: { contains: k => k === 'drawe
 const panel = { parentElement: drawer, closest: () => null };
 const internal = { parentElement: panel, closest: () => null };
 const process = vm.runInNewContext('(function(muts){' + observerBody + '})', {
-    holder, applyFold() { folds++; }, requestAnimationFrame(callback) { callback(); },
-    layoutIslands() { layouts++; }, syncFold() { syncs++; },
+    holder, applyFold() { folds++; },
+    scheduleIslandLayout() { layouts++; }, syncFold() { syncs++; },
 });
 process([{ type: 'childList', target: internal }, { type: 'attributes', target: internal }]);
 assert.deepEqual([folds, layouts, syncs], [0, 0, 0]);

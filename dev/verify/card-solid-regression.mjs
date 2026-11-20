@@ -33,11 +33,11 @@ function computed(el, pseudo) {
 }
 const S = { cardSolid: true };
 const message = { classList: { contains: () => true, toggle() {} } };
-const api = vm.runInNewContext(parse + '\n' + block + '\n' + card + '\n({tagCard})', {
-    S, root: { classList: { contains: () => false } }, getComputedStyle: computed, paint() {},
+const api = vm.runInNewContext(parse + '\n' + block + '\n' + card + '\n({applyCardMarkers})', {
+    S, root: { classList: { contains: () => false } }, getComputedStyle: computed, paint() {}, flickerCapture: null,
     MutationObserver: class { observe() {} disconnect() {} }, chatEl: { querySelectorAll: () => [] },
 });
-const test = children => api.tagCard({ children, closest: () => message });
+const test = children => api.applyCardMarkers([{ children, closest: () => message }]);
 const frame = node('iframe');
 const oldFrame = node('iframe', { previous: 'var(--ilg-card-fallback)' });
 const image = node('div', { image: 'url("opaque-resource")' });

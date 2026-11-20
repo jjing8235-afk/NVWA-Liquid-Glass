@@ -30,7 +30,7 @@ export function fontLoadMayChangeText(faces, texts) {
 const MARK = 'ilg-render-away', SIZE = '--ilg-message-height';
 const WIDTH_EPSILON = .25;
 const TAGS = new Set('P BR Q EM I B STRONG S DEL U A UL OL LI BLOCKQUOTE H1 H2 H3 H4 H5 H6 HR CODE PRE SPAN'.split(' '));
-const OWN_CLASSES = new Set(['ilg-prose', 'ilg-indentable']);
+const OWN_CLASSES = new Set(['ilg-prose', 'ilg-indentable', 'ilg-type-prose']);
 export function createMessageRendering(chat, { onReset = () => {}, onWidthFeedback = () => {} } = {}) {
     const doc = chat.ownerDocument, root = doc.documentElement, win = doc.defaultView;
     const supported = !!win.CSS?.supports?.('content-visibility', 'auto') && !!win.CSS?.supports?.('contain-intrinsic-block-size', 'auto 1px');
@@ -46,18 +46,32 @@ export function createMessageRendering(chat, { onReset = () => {}, onWidthFeedba
         }
         return true;
     }
-    function clear(el, state) {
+    function reveal(el, state) {
         if (!state.culled) return;
-        state.culled = false; el.classList.remove(MARK); el.style.removeProperty(SIZE);
+        state.culled = false;
+        el.classList.remove(MARK);
+    }
+    function clear(el, state) {
+        reveal(el, state);
+        if (state.boundHeight === null) return;
+        state.boundHeight = null;
+        el.style.removeProperty(SIZE);
     }
     function apply(el, state) {
-        if (externalMessageRendering(chat)) { clear(el, state); return; }
-        if (state.near !== false || state.height === null || excluded(el) || !el.isConnected) { clear(el, state); return; }
+        if (externalMessageRendering(chat) || excluded(el) || !el.isConnected) { clear(el, state); return; }
+        if (state.near !== false || state.height === null) { reveal(el, state); return; }
         if (state.recheckWidth !== null) return;
         if (state.plain === null) state.plain = plain(el);
         if (!state.plain) { clear(el, state); return; }
         if (!state.culled) {
-            el.style.setProperty(SIZE, state.height + 'px'); el.classList.add(MARK); state.culled = true;
+            // The variable is only consumed by MARK. Keep it across viewport
+            // crossings: changing inline style can invalidate every host row.
+            if (state.boundHeight !== state.height) {
+                el.style.setProperty(SIZE, state.height + 'px');
+                state.boundHeight = state.height;
+            }
+            el.classList.add(MARK);
+            state.culled = true;
         }
     }
     function forgetResize(el) {
@@ -71,7 +85,7 @@ export function createMessageRendering(chat, { onReset = () => {}, onWidthFeedba
     function invalidateAll() { for (const [el, state] of states) reset(el, state); }
     function environmentKey() {
         const vars = ['--mainFontSize', '--mainFontFamily', '--fontScale', '--ilg-prose-leading-user', '--ilg-prose-inset'];
-        return [externalMessageRendering(chat), root.dataset.ilgReadingStyle, ...['ilg-avline', 'ilg-indent', 'ilg-justify', 'ilg-font', 'ilg-prose-inset-on'].map(c => root.classList.contains(c)),
+        return [externalMessageRendering(chat), root.dataset.ilgReadingStyle, root.dataset.ilgTypeLayout, ...['ilg-avline', 'ilg-indent', 'ilg-justify', 'ilg-font', 'ilg-prose-inset-on'].map(c => root.classList.contains(c)),
             ...vars.map(k => root.style.getPropertyValue(k)), chat.style.getPropertyValue('--ilg-chat-font-size'),
             doc.body.style.fontFamily, doc.body.style.fontSize, doc.body.style.lineHeight, doc.body.style.letterSpacing, doc.body.style.wordSpacing, doc.body.classList.contains('documentstyle'), doc.body.classList.contains('waifuMode')].join('|');
     }
@@ -103,7 +117,7 @@ export function createMessageRendering(chat, { onReset = () => {}, onWidthFeedba
     function listen(on) {
         if (on) {
             environment = environmentKey();
-            observer.observe(root, { attributes: true, attributeFilter: ['class', 'style', 'data-ilg-reading-style'] });
+            observer.observe(root, { attributes: true, attributeFilter: ['class', 'style', 'data-ilg-reading-style', 'data-ilg-type-layout'] });
             observer.observe(chat, { attributes: true, attributeFilter: ['class', 'style'] });
             observer.observe(doc.body, { attributes: true, attributeFilter: ['class', 'style'] });
             doc.fonts?.addEventListener('loading', fontsLoading);
@@ -154,7 +168,7 @@ export function createMessageRendering(chat, { onReset = () => {}, onWidthFeedba
         track(el) {
             if (!supported || states.has(el)) return;
             if (!states.size) listen(true);
-            states.set(el, { near: null, height: null, width: null, recheckWidth: null, plain: null, culled: false });
+            states.set(el, { near: null, height: null, boundHeight: null, width: null, recheckWidth: null, plain: null, culled: false });
         },
         resize(el, contentHeight, contentWidth) {
             if (!states.has(el)) return;
