@@ -4957,6 +4957,13 @@ html.ilg body #chat .mes:not(.smallSysMes):not([is_system="true"]) .mes_text > :
     :is(html.ilg, .ilg-type-page) { --ilg-prose-leading-eff: calc(var(--ilg-prose-leading) - .1); }
 }
 
+/* BaiBai's skipped rows need their intrinsic height in the chat flex column.
+   Shrinking those rows can collapse the scroll range when the tail changes.
+   Preserve BaiBai's rendering and scroll ownership; only fix the flex sizing. */
+html.ilg body #chat.bai-bai-toolkit-long-chat-render-optimized > .mes.bai-bai-toolkit-long-chat-contained {
+    flex-shrink: 0;
+}
+
 /* Plain messages outside the existing 200px visibility margin keep their measured
    content height. Flex items must not shrink when their contents are skipped.
    Visible messages and custom/iframe renderers retain their normal overflow. */

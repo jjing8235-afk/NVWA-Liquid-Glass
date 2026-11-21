@@ -1,6 +1,25 @@
 {
-  "currentVersion": "2.0.6",
-  "currentDisplayVersion": "2.0.6",
+  "currentVersion": "2.0.7",
+  "currentDisplayVersion": "2.0.7",
+  "verification2_0_7": {
+    "version": "2.0.7",
+    "date": "2026-11-21",
+    "formalBase": "60207a41ae4461e6f32dd39880ef7da86b9bad2b",
+    "manifestAndSyntax": "passed",
+    "browserSuites": ["baibai-compat-browser", "reading-anchor-browser", "message-rendering-browser"],
+    "isolatedSillyTavern": {
+      "version": "1.18.0",
+      "baibaiVersion": "1.2.0",
+      "baibaiCommit": "d828d6812994414cef24be9e5f995a264e9fe370",
+      "passingCombinations": 9,
+      "scope": "Synthetic long chats and mocked generation in desktop Edge, including narrow Android and foldable viewport emulation. No physical-device acceptance."
+    },
+    "offlineRegressions": {
+      "passed": 32,
+      "total": 37,
+      "sameFailuresOn2_0_6": ["form-scroll", "keyboard-lifecycle", "popup-boundary", "resize-batch", "web-map-raster"]
+    }
+  },
   "verification2_0_6": {
     "version": "2.0.6",
     "date": "2026-11-20",
